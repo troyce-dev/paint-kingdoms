@@ -219,6 +219,7 @@ a.btn { text-decoration: none; display: inline-block; }
   <span class="pill" id="conn">Connecting to the class map…</span>
   <span class="pill" id="roundPill">Round 1</span>
   <span class="pill" id="codePill" hidden></span>
+  <a class="btn small ghost" href="#teacher" id="teacherLink">Teacher: get class code</a>
   
 </header>
 
@@ -1185,7 +1186,7 @@ function renderJoin() {
   if (online && !CLASS) {
     if (area.querySelector("#codeForm")) return;
     joinSig = "";
-    area.innerHTML = `<div class="join"><h2>Join your class</h2><p>Type the class code shown on the board.</p>
+    area.innerHTML = `<div class="join"><h2>Join your class</h2><p>Type the class code shown on the board. <a href="#teacher">Teacher? Get a class code here.</a></p>
       <form id="codeForm" autocomplete="off"><label for="kCode">Class code</label>
       <input type="text" class="codein" id="kCode" maxlength="5" required placeholder="ABC23" spellcheck="false" autocapitalize="characters">
       <div style="margin-top:16px"><button class="btn" id="codeBtn">Join class</button></div></form></div>`;
@@ -1481,12 +1482,19 @@ document.querySelectorAll('[data-act="newclass"]').forEach((btn) => btn.addEvent
 }));
 async function createClass() {
   if (!online) return false;
+  const mk = $("mkClass"); if (mk) { mk.disabled = true; mk.textContent = "Creating…"; }
   for (let i = 0; i < 6; i++) {
     const code = newCode();
     try {
       const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, created: Date.now() }));
       if (res.committed) { local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
-    } catch (e) { toast("Couldn't create a class. Check that the game server is set up (see the README)."); return false; }
+    } catch (e) {
+      const why = String((e && (e.code || e.message)) || "unknown error");
+      const st = $("bStart");
+      st.innerHTML = `<h2>Couldn't create a class</h2><p>${/permission/i.test(why) ? "Firebase refused the request. Open Realtime Database → Rules in the Firebase console, paste in the rules from database.rules.json, and click Publish." : "The game couldn't reach the database. Check your internet connection, then try again."}</p><p style="font-size:13px">Details: ${why.replace(/[<>&]/g, "")}</p><button class="btn" type="button" id="mkClass">Try again</button>`;
+      $("mkClass").addEventListener("click", createClass);
+      return false;
+    }
   }
   return false;
 }
