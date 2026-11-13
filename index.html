@@ -206,6 +206,29 @@ a.btn { text-decoration: none; display: inline-block; }
 .b-ctrl .btn.ghost { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,.4); }
 @media (max-width: 760px) { .b-board { top: auto; bottom: 90px; max-height: 32%; } .b-feed { display: none; } }
 @media (prefers-reduced-motion: reduce) { .bump { animation: none; } .toast { transition: none; } }
+/* ---- v4: aiming, gauge, empires ---- */
+.stage { touch-action: none; user-select: none; -webkit-user-select: none; }
+.stage canvas { cursor: crosshair; }
+.gauge { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(14, 20, 40, 0.78); color: #FFFFFF; font-weight: 800; pointer-events: none; }
+.gauge .gbar { width: min(260px, 50vw); height: 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+.gauge .gfill { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, #5BE08F, #F3B61F 60%, #E2412F); }
+.gauge .gtxt { font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; font-size: 14px; }
+.viewbtns { display: inline-flex; gap: 6px; }
+.viewbtns button { width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-size: 18px; line-height: 1; }
+.viewbtns button:hover { border-color: var(--accent); }
+.meter { grid-column: 1 / -1; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.meter .track { position: relative; height: 10px; border-radius: 99px; background: var(--bg); overflow: hidden; margin-top: 4px; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--bad); }
+.meter .mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
+.meter b { color: var(--ink); }
+.empire-tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 99px; font-weight: 800; font-size: 12px; background: var(--bg); color: var(--ink); }
+.empire-tag i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.win { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 35; width: min(520px, calc(100% - 32px)); padding: 28px; border-radius: 18px; background: rgba(14, 20, 40, 0.9); color: #FFFFFF; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+.win h2 { font-size: clamp(26px, 4vw, 40px); color: #FFFFFF; margin-bottom: 8px; }
+.win p { color: #C9D2EA; margin: 0 0 14px; }
+.win .crown { width: 64px; height: 48px; margin: 0 auto 10px; display: block; }
+.win .btn { background: #F3B61F; color: #18203A; }
+.row .land small.ok { color: var(--good); }
 </style>
 </head>
 <body>
@@ -213,14 +236,13 @@ a.btn { text-decoration: none; display: inline-block; }
 <header class="top">
   <div class="logo">
     <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3c7 0 15 5 15 14 0 6-4 7-4 11s3 4 3 6c0 3-4 4-7 2s-3-5-7-5-6 6-11 6c-4 0-6-3-5-6s4-4 4-8-5-5-5-10C3 7 12 3 20 3z" fill="#2F45D0"/><path d="M12 22l3-7 4 5 4-6 4 6 3-5v7z" fill="#F3B61F"/></svg>
-    <div><h1>Paint Kingdoms</h1><div class="tagline">Answer SAT math. Load your cannon. Defend your castle.</div></div>
+    <div><h1>Paint Kingdoms</h1><div class="tagline">Answer SAT math. Aim your cannon. Swamp every castle.</div></div>
   </div>
   <div class="spacer"></div>
-  <span class="pill" id="conn">Connecting to the class map…</span>
+  <span class="pill" id="conn">Connecting…</span>
   <span class="pill" id="roundPill">Round 1</span>
   <span class="pill" id="codePill" hidden></span>
   <a class="btn small ghost" href="#teacher" id="teacherLink">Teacher: get class code</a>
-  
 </header>
 
 <main class="layout">
@@ -231,6 +253,7 @@ a.btn { text-decoration: none; display: inline-block; }
       <div class="stats" id="myStats"></div>
       <div class="lbl">paint loaded in your cannon</div>
       <div class="castle-status" id="castleStatus"></div>
+      <div class="meter" id="meter" hidden></div>
     </div>
     <div id="qArea"></div>
   </section>
@@ -239,25 +262,28 @@ a.btn { text-decoration: none; display: inline-block; }
     <section class="panel mapwrap" aria-label="Siege table">
       <div class="maphead">
         <h2>Siege Table</h2>
-        <div class="brushes" role="group" aria-label="Paint shot size">
-          <button type="button" data-brush="dot" aria-pressed="false">Drop<small>1 square</small></button>
-          <button type="button" data-brush="splash" aria-pressed="true">Splash<small>5 squares</small></button>
-          <button type="button" data-brush="blob" aria-pressed="false">Blob<small>9 squares</small></button>
+        <div class="brushes" role="group" aria-label="Paint load">
+          <button type="button" data-size="small" aria-pressed="false">Small<small>1 paint</small></button>
+          <button type="button" data-size="medium" aria-pressed="true">Medium<small>2 paint</small></button>
+          <button type="button" data-size="large" aria-pressed="false">Large<small>3 paint</small></button>
         </div>
+        <div class="viewbtns"><button type="button" id="rotL" aria-label="Turn the table left" title="Turn the table left">⟲</button><button type="button" id="rotR" aria-label="Turn the table right" title="Turn the table right">⟳</button></div>
       </div>
       <div id="banner"></div>
-      <div class="stage" id="studentStage"></div>
-      <div class="mapnote" id="mapNote">Click a square to fire your cannon. Drag to turn the table.</div>
+      <div class="stage" id="studentStage" tabindex="0" aria-label="Siege table. Point to aim, hold to charge, release to fire.">
+        <div class="gauge" id="gauge" hidden><span>Power</span><div class="gbar"><div class="gfill" id="gfill"></div></div><div class="gtxt" id="gtxt">0.0 away</div></div>
+      </div>
+      <div class="mapnote" id="mapNote">Point at the table to aim. Hold the mouse button (or Space) to charge, then let go to fire.</div>
       <div class="rules">
-        <div><b>Paint: 1 per empty square, 2 per enemy square</b>Your cannon reaches 7 squares from your castle, plus anywhere touching your land.</div>
-        <div><b>Castle shot: 4 paint</b>Click an enemy castle. 1 damage, or 3 if their shield is down. 0 hearts = conquered.</div>
-        <div><b>Correct answer</b>Earns paint and repairs 1 heart on your castle.</div>
-        <div><b>Wrong answer</b>Your shield drops for 45 seconds and 3 of your blobs explode.</div>
+        <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
+        <div><b>Swamp a castle</b>Cover 70% of a castle's ring with your color to capture it. Take a kingdom's home castle and its whole empire joins you.</div>
+        <div><b>Correct answer</b>Earns paint and splashes a fresh coat of your color on your castle.</div>
+        <div><b>Wrong answer</b>Your shield drops for 45 seconds (your castle falls at 45%) and 3 of your blobs explode.</div>
       </div>
     </section>
     <div class="subgrid">
-      <section class="panel ledger" aria-label="Leaderboard">
-        <h2>Kingdom Ledger</h2>
+      <section class="panel ledger" aria-label="Empires">
+        <h2>Empires</h2>
         <div class="rows" id="rows"></div>
       </section>
       <section class="panel logp" aria-label="Battle log">
@@ -278,7 +304,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="codebox" id="bCodeBox" hidden><div class="eyebrow">Class code</div><div class="code" id="bCode">·····</div><p id="bJoined"></p></div>
   </div>
   <div class="glass b-start" id="bStart" hidden></div>
-  <div class="glass b-board"><h2>Kingdom Ledger</h2><div class="rows" id="bRows"></div></div>
+  <div class="glass b-board"><h2>Empires</h2><div class="rows" id="bRows"></div></div>
   <div class="glass b-feed"><div class="eyebrow" style="color:#AEB8D6;margin-bottom:6px">Battle log</div><div class="log" id="bLog"></div></div>
   <div class="glass b-ctrl">
     <button class="btn small" type="button" data-act="double" hidden>Turn on double paint</button>
@@ -287,6 +313,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <a class="btn small ghost" href="#play">Student view</a>
   </div>
 </div>
+<div class="win" id="winBox" hidden role="status"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="three.min.js"></script>
@@ -577,7 +604,8 @@ const GENS = [
 ];
 
 /* ======================= Game constants ======================= */
-const W = 36, H = 22;
+const W = 36, H = 22;                 // board size in world units
+const GR = 4, GW = W * GR, GH = H * GR; // logic raster: 4 cells per unit
 const COLORS = [
   {hex:"#E2412F", name:"Vermilion"}, {hex:"#2F45D0", name:"Cobalt"}, {hex:"#1E9E63", name:"Emerald"}, {hex:"#F3B61F", name:"Saffron"}, {hex:"#C2318F", name:"Magenta"},
   {hex:"#13A3A8", name:"Teal"}, {hex:"#F07F1A", name:"Tangerine"}, {hex:"#7B4BD6", name:"Violet"}, {hex:"#86B520", name:"Lime"}, {hex:"#3D9BE9", name:"Sky"},
@@ -586,50 +614,169 @@ const COLORS = [
   {hex:"#3A3F4B", name:"Charcoal"}, {hex:"#A7B0BE", name:"Silver"}, {hex:"#FF4FD8", name:"Hot Pink"}, {hex:"#7A7F1E", name:"Olive"}, {hex:"#4F7A94", name:"Steel"},
 ];
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-function _unusedHash(code) { let h = 2166136261; const t = "pk-" + String(code).toUpperCase().replace(/[^A-Z0-9]/g, ""); for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 function newCode() { let c = ""; const a = new Uint32Array(5); crypto.getRandomValues(a); for (const v of a) c += CODE_CHARS[v % CODE_CHARS.length]; return c; }
-const BRUSH = {
-  dot: [[0,0]],
-  splash: [[0,0],[1,0],[-1,0],[0,1],[0,-1]],
-  blob: [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
-};
-const COST_EMPTY = 1, COST_ENEMY = 2, COST_CASTLE = 4, CONQUEST_BONUS = 4, REBUILD_COST = 3, START_PAINT = 6;
-const MAX_HP = 6, RANGE = 7, VULN_MS = 45000, EXPLODE_N = 3, WRONG_COOLDOWN = 10;
+const SIZES = { small: { r: 0.95, cost: 1, name: "Small" }, medium: { r: 1.35, cost: 2, name: "Medium" }, large: { r: 1.85, cost: 3, name: "Large" } };
+const START_PAINT = 6, MAX_RANGE = 15, MIN_RANGE = 1.5, CASTLE_ZONE = 2.2, SWAMP = 0.7, SWAMP_VULN = 0.45;
+const VULN_MS = 45000, EXPLODE_N = 3, WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95;
 
 /* ======================= State ======================= */
 let fdb = null, myId = "local", isTeacher = false, online = false, CLASS = null;
-const S = { round: 1, double: false, owner: null, players: new Map(), cells: new Map(), castles: new Map(), hits: new Map(), claims: new Map() };
-let brush = "splash", route = "play";
+const S = { round: 1, double: false, owner: null, offset: 0, players: new Map(), claims: new Map(), events: new Map() };
+let paintSize = "medium", route = "play";
 const feed = [];
 const $ = (id) => document.getElementById(id);
-const key = (x, y) => x + "_" + y;
+const now = () => Date.now() + S.offset;
 const local = {
   get(k, d) { try { const v = localStorage.getItem("pk_" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem("pk_" + k, JSON.stringify(v)); } catch {} },
 };
-
 function active(p) { return !!p && p.round === S.round; }
 function me() { const p = S.players.get(myId); return active(p) ? p : null; }
-function cellAt(x, y) {
-  if (x < 0 || y < 0 || x >= W || y >= H) return null;
-  const c = S.cells.get(key(x, y));
-  return c && c.owner && c.round === S.round ? c : null;
+function colorOf(id) { const p = S.players.get(id); return p ? p.color : "#9A9A9A"; }
+function nameOf(id) { const p = S.players.get(id); return (p && p.name) || "A kingdom"; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + (myId || "x").slice(0, 4).replace(/[^A-Za-z0-9]/g, ""); }
+
+/* ======================= Deterministic world (replayed from events) ======================= */
+function rng(seed) { let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+const shapeCache = new Map();
+function shapeOf(seed) {
+  if (shapeCache.has(seed)) return shapeCache.get(seed);
+  const r = rng(seed), k = [];
+  for (let i = 0; i < 5; i++) k.push({ f: 2 + Math.floor(r() * 6), a: ((0.05 + r() * 0.1) / (i + 1)) * 1.7, p: r() * Math.PI * 2 });
+  const drops = [], nd = 7 + Math.floor(r() * 9);
+  for (let i = 0; i < nd; i++) drops.push({ ang: r() * Math.PI * 2, d: 1.08 + r() * 0.95, s: 0.04 + r() * 0.15, tail: r() < 0.45 });
+  const streaks = [], ns = 3 + Math.floor(r() * 5);
+  for (let i = 0; i < ns; i++) streaks.push({ spread: (r() - 0.5) * 1.3, d: 0.95 + r() * 1.3, len: 0.22 + r() * 0.5, w: 0.06 + r() * 0.1 });
+  const glints = [{ x: -0.3 + r() * 0.15, y: -0.32 + r() * 0.12, s: 0.18 + r() * 0.1 }, { x: 0.1 + r() * 0.2, y: -0.05 + r() * 0.2, s: 0.07 + r() * 0.05 }];
+  const sh = { k, drops, streaks, glints };
+  shapeCache.set(seed, sh); return sh;
 }
-function effCastle(owner) { const c = S.castles.get(owner); return c && c.round === S.round && !c.fallen ? c : null; }
-function castleAt(x, y) { for (const [o, c] of S.castles) if (c.round === S.round && !c.fallen && c.x === x && c.y === y) return { ...c, owner: o }; return null; }
-function hpOf(owner) {
-  const c = effCastle(owner); if (!c) return 0;
-  const ev = [...S.hits.values()].filter((h) => h.round === S.round && h.target === owner && h.t >= c.builtAt)
-    .sort((a, b) => a.t - b.t || (a.id < b.id ? -1 : 1));
-  let hp = MAX_HP;
-  for (const h of ev) hp = Math.max(0, Math.min(MAX_HP, hp - h.dmg));
-  return hp;
+function radiusAt(sh, ang) { let m = 1; for (const h of sh.k) m += h.a * Math.sin(h.f * ang + h.p); return m; }
+
+const Wd = { order: [], grid: new Int16Array(GW * GH).fill(-1), ids: [], idx: new Map(), castles: new Map(), vuln: new Map(), conquests: [], winner: null, zones: new Map() };
+function idIndex(id) { if (!Wd.idx.has(id)) { Wd.idx.set(id, Wd.ids.length); Wd.ids.push(id); } return Wd.idx.get(id); }
+function headOf(id) { const c = Wd.castles.get(id); return c ? c.empire : id; }
+const cmpEv = (a, b) => a.t - b.t || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+function onBoard(x, z) { return x > -W / 2 && x < W / 2 && z > -H / 2 && z < H / 2; }
+function evRadius(ev) { return ev.k === "join" ? JOIN_R : ev.k === "fortify" ? FORTIFY_R : ev.k === "erase" ? ERASE_R : ev.r; }
+function stamp(ownerIdx, x, z, rad, seed) {
+  const sh = shapeOf(seed), cx = (x + W / 2) * GR, cz = (z + H / 2) * GR, R = rad * GR * 1.4, rr = rad * GR;
+  const y0 = Math.max(0, Math.floor(cz - R)), y1 = Math.min(GH - 1, Math.ceil(cz + R)), x0 = Math.max(0, Math.floor(cx - R)), x1 = Math.min(GW - 1, Math.ceil(cx + R));
+  for (let gy = y0; gy <= y1; gy++) for (let gx = x0; gx <= x1; gx++) {
+    const dx = gx + 0.5 - cx, dz = gy + 0.5 - cz, d = Math.hypot(dx, dz);
+    if (d <= R && d <= rr * radiusAt(sh, Math.atan2(dz, dx))) Wd.grid[gy * GW + gx] = ownerIdx;
+  }
 }
-function isVuln(owner) { const c = effCastle(owner); return !!c && (c.vulnUntil || 0) > Date.now(); }
-function colorOf(owner) { const p = S.players.get(owner); return p ? p.color : "#9A9A9A"; }
-function nameOf(owner) { const p = S.players.get(owner); return (p && p.name) || "A kingdom"; }
-function landCount(owner) { let n = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c && c.owner === owner) n++; } return n; }
-function uid() { return (myId || "x").slice(-6).replace(/[^A-Za-z0-9]/g, "") + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function zoneOf(c) {
+  const key = c.x + "," + c.z;
+  if (Wd.zones.has(key)) return Wd.zones.get(key);
+  const out = [], cx = (c.x + W / 2) * GR, cz = (c.z + H / 2) * GR, R = CASTLE_ZONE * GR;
+  for (let gy = Math.max(0, Math.floor(cz - R)); gy <= Math.min(GH - 1, Math.ceil(cz + R)); gy++)
+    for (let gx = Math.max(0, Math.floor(cx - R)); gx <= Math.min(GW - 1, Math.ceil(cx + R)); gx++)
+      if (Math.hypot(gx + 0.5 - cx, gy + 0.5 - cz) <= R) out.push(gy * GW + gx);
+  Wd.zones.set(key, out); return out;
+}
+function coverage(c) {
+  const z = zoneOf(c), counts = new Map();
+  for (const i of z) { const o = Wd.grid[i]; if (o < 0) continue; const h = headOf(Wd.ids[o]); if (h === c.empire) continue; counts.set(h, (counts.get(h) || 0) + 1); }
+  let best = null, n = 0; counts.forEach((v, k) => { if (v > n) { n = v; best = k; } });
+  return { emp: best, pct: z.length ? n / z.length : 0 };
+}
+function isVulnAt(owner, t) { return (Wd.vuln.get(owner) || 0) > t; }
+function checkSwamp(ev) {
+  const rad = evRadius(ev);
+  for (const c of Wd.castles.values()) {
+    if (Math.hypot(c.x - ev.x, c.z - ev.z) > rad * 1.5 + CASTLE_ZONE) continue;
+    const cov = coverage(c), thr = isVulnAt(c.owner, ev.t) ? SWAMP_VULN : SWAMP;
+    if (!cov.emp || cov.pct < thr) continue;
+    const victim = c.empire, attacker = cov.emp, whole = c.owner === victim;
+    const taken = [];
+    for (const k of Wd.castles.values()) if (whole ? k.empire === victim : k === c) { k.empire = attacker; taken.push(k.owner); }
+    Wd.conquests.push({ key: ev.id + ":" + c.owner, t: ev.t, attacker, victim, castle: c.owner, whole, taken, by: ev.by });
+  }
+}
+function applyEvent(ev) {
+  ev._conq = Wd.conquests.length;
+  if (ev.k === "join") {
+    if (!Wd.castles.has(ev.by)) Wd.castles.set(ev.by, { owner: ev.by, x: ev.x, z: ev.z, empire: ev.by, t: ev.t });
+    const c = Wd.castles.get(ev.by); ev._emp = c.empire; ev._x = c.x; ev._z = c.z;
+    stamp(idIndex(c.empire), c.x, c.z, JOIN_R, ev.seed);
+  } else if (ev.k === "shot") {
+    const c = Wd.castles.get(ev.by); if (!c) { ev._skip = true; return; }
+    ev._emp = c.empire; ev._from = [c.x, c.z]; ev._x = ev.x; ev._z = ev.z;
+    if (onBoard(ev.x, ev.z)) { stamp(idIndex(c.empire), ev.x, ev.z, ev.r, ev.seed); checkSwamp(ev); } else ev._sea = true;
+  } else if (ev.k === "fortify") {
+    const c = Wd.castles.get(ev.by); if (!c) { ev._skip = true; return; }
+    ev._emp = c.empire; ev._x = c.x; ev._z = c.z;
+    stamp(idIndex(c.empire), c.x, c.z, FORTIFY_R, ev.seed);
+  } else if (ev.k === "erase") {
+    ev._x = ev.x; ev._z = ev.z; stamp(-1, ev.x, ev.z, ERASE_R, ev.seed);
+  } else if (ev.k === "vuln") {
+    Wd.vuln.set(ev.by, Math.max(Wd.vuln.get(ev.by) || 0, ev.until));
+  }
+  ev._conqEnd = Wd.conquests.length;
+}
+function computeWinner() {
+  const heads = new Set(); for (const c of Wd.castles.values()) heads.add(c.empire);
+  Wd.winner = Wd.castles.size >= 2 && heads.size === 1 ? [...heads][0] : null;
+}
+function fullReplay() {
+  Wd.grid.fill(-1); Wd.castles.clear(); Wd.vuln.clear(); Wd.conquests = [];
+  Wd.order = [...S.events.values()].filter((e) => e.round === S.round).sort(cmpEv);
+  for (const e of Wd.order) applyEvent(e);
+  computeWinner();
+}
+const announced = new Set();
+function ingestEvents(entries, animate) {
+  const fresh = []; let outOfOrder = false;
+  const last = Wd.order[Wd.order.length - 1];
+  for (const [id, d] of entries) {
+    if (!d || S.events.has(id)) continue;
+    const ev = { ...d, id }; S.events.set(id, ev);
+    if (ev.round !== S.round) continue;
+    fresh.push(ev);
+    if (last && cmpEv(ev, last) < 0) outOfOrder = true;
+  }
+  if (!fresh.length) return;
+  fresh.sort(cmpEv);
+  if (outOfOrder) fullReplay();
+  else { for (const ev of fresh) { Wd.order.push(ev); applyEvent(ev); } computeWinner(); }
+  if (!animate) { for (const c of Wd.conquests) announced.add(c.key); for (const ev of fresh) arena.drawEvent(ev, false); if (outOfOrder) arena.paintLater(); return; }
+  for (const ev of fresh) animateEvent(ev);
+  if (outOfOrder) arena.paintLater(3000);
+}
+function newConquests(ev) {
+  const out = [];
+  for (const c of Wd.conquests) if (!announced.has(c.key) && (!ev || c.key.startsWith(ev.id + ":"))) { announced.add(c.key); out.push(c); }
+  return out;
+}
+function announce(list) {
+  for (const c of list) {
+    const msg = c.whole && c.taken.length > 1
+      ? `${nameOf(c.attacker)} swamped ${nameOf(c.castle)}'s home castle and took all ${c.taken.length} of its castles!`
+      : `${nameOf(c.attacker)} swamped ${nameOf(c.castle)}'s castle!`;
+    log(msg, colorOf(c.attacker));
+    if (c.taken.includes(myId) && headOf(myId) === c.attacker && c.attacker !== myId) toast(`${nameOf(c.attacker)} swamped your castle. You now fight for their empire!`);
+    else if (c.attacker === headOf(myId) && route === "play") toast(`Your empire captured ${nameOf(c.castle)}'s castle!`);
+  }
+  if (list.length) { arena.paintAll(); renderAll(); }
+  const w = Wd.winner;
+  if (w && !announced.has("win:" + w + ":" + S.round)) { announced.add("win:" + w + ":" + S.round); log(`${nameOf(w)} conquered every kingdom!`, colorOf(w)); }
+}
+function animateEvent(ev) {
+  if (ev._skip || ev.k === "vuln") {
+    if (ev.k === "vuln" && ev.by !== myId) log(`${nameOf(ev.by)} missed a question. Their shield is down!`, "#BF3328");
+    return;
+  }
+  if (ev.k === "shot") {
+    arena.fire(ev, () => { arena.drawEvent(ev, true); announce(newConquests(ev)); renderAll(); });
+  } else if (ev.k === "join") {
+    arena.drawEvent(ev, true); if (ev.by !== myId) log(`${nameOf(ev.by)} built a castle.`, colorOf(ev.by));
+  } else {
+    arena.drawEvent(ev, true);
+    announce(newConquests(ev));
+  }
+}
 
 /* ======================= Writes ======================= */
 let writeErrShown = false;
@@ -643,30 +790,28 @@ function handleWriteError(e) {
 const clean = (d) => JSON.parse(JSON.stringify(d));
 const classRef = (path) => fdb.ref(`classes/${CLASS}` + (path ? "/" + path : ""));
 async function dbSet(path, data) { if (!online || !CLASS) return; try { await classRef(path).set(clean(data)); } catch (e) { handleWriteError(e); } }
-async function dbUpdate(path, data) { if (!online || !CLASS) return; try { await classRef(path).update(clean(data)); } catch (e) { handleWriteError(e); } }
-async function dbCells(entries) {
-  if (!online || !CLASS || !entries.length) return;
-  const up = {}; for (const [k, d] of entries) up["cells/" + k] = clean(d);
-  try { await classRef().update(up); } catch (e) { handleWriteError(e); }
-}
 function writeMe(patch) {
   const next = { ...(S.players.get(myId) || {}), ...patch };
-  S.players.set(myId, next);
-  renderAll();
+  S.players.set(myId, next); renderAll();
   dbSet("players/" + myId, next);
+}
+function pushEvent(ev) {
+  const id = uid(), payload = { ...ev, round: S.round, by: ev.by || myId, t: ev.t || now() };
+  ingestEvents([[id, payload]], true);
+  dbSet("events/" + id, payload);
+  return id;
 }
 
 /* ======================= Feed ======================= */
 function log(text, color) {
   const d = new Date();
   feed.unshift({ text, color, t: `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}` });
-  feed.length = Math.min(feed.length, 30);
-  renderLog();
+  feed.length = Math.min(feed.length, 30); renderLog();
 }
 function renderLog() {
   for (const [id, n] of [["log", 8], ["bLog", 6]]) {
     const el = $(id); el.innerHTML = "";
-    if (!feed.length) { const e = document.createElement("p"); e.className = "empty"; e.style.margin = "0"; e.textContent = "Shots, hits and conquests show up here as they happen."; el.appendChild(e); continue; }
+    if (!feed.length) { const e = document.createElement("p"); e.className = "empty"; e.style.margin = "0"; e.textContent = "Castles built, swamped and conquered show up here."; el.appendChild(e); continue; }
     feed.slice(0, n).forEach((f) => {
       const row = document.createElement("div"); if (f.color) row.style.borderLeftColor = f.color;
       const t = document.createElement("time"); t.textContent = f.t;
@@ -675,102 +820,155 @@ function renderLog() {
   }
 }
 
+/* ======================= Paint surface (canvas textures) ======================= */
+const CW = 2048, CH = Math.round(2048 * H / W), PX = CW / W, LO = 0.5;
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function shade(h, f) { const [r, g, b] = hexRgb(h); const m = (v) => Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f)); return `rgb(${m(r)},${m(g)},${m(b)})`; }
+class PaintLayer {
+  constructor(T) {
+    const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+    this.base = mk(CW, CH); this.color = mk(CW, CH); this.bump = mk(CW * LO, CH * LO); this.rough = mk(CW * LO, CH * LO);
+    this.cx = this.color.getContext("2d"); this.bx = this.bump.getContext("2d"); this.rx = this.rough.getContext("2d");
+    this.paintBase();
+    this.colorTex = new T.CanvasTexture(this.color); this.bumpTex = new T.CanvasTexture(this.bump); this.roughTex = new T.CanvasTexture(this.rough);
+    this.colorTex.anisotropy = 4; this.dirty = false;
+    this.clear();
+  }
+  paintBase() {
+    const g = this.base.getContext("2d"), r = rng(12345);
+    g.fillStyle = "#EFE8D7"; g.fillRect(0, 0, CW, CH);
+    for (let i = 0; i < 26000; i++) { const v = r(); g.fillStyle = v < 0.5 ? "rgba(120,100,70,0.05)" : "rgba(255,255,255,0.12)"; g.fillRect(r() * CW, r() * CH, 1 + r() * 2.5, 1 + r() * 2.5); }
+    g.strokeStyle = "rgba(140,120,90,0.05)"; g.lineWidth = 1;
+    for (let y = 0; y < CH; y += 4) { g.beginPath(); g.moveTo(0, y + r()); g.lineTo(CW, y + r()); g.stroke(); }
+    for (let x = 0; x < CW; x += 4) { g.beginPath(); g.moveTo(x + r(), 0); g.lineTo(x + r(), CH); g.stroke(); }
+    const v = g.createRadialGradient(CW / 2, CH / 2, CH * 0.3, CW / 2, CH / 2, CW * 0.62); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(90,70,40,0.14)");
+    g.fillStyle = v; g.fillRect(0, 0, CW, CH);
+  }
+  clear() {
+    this.cx.drawImage(this.base, 0, 0);
+    this.bx.fillStyle = "#000"; this.bx.fillRect(0, 0, this.bump.width, this.bump.height);
+    this.rx.fillStyle = "#E6E6E6"; this.rx.fillRect(0, 0, this.rough.width, this.rough.height);
+    this.dirty = true;
+  }
+  paths(ev, from) {
+    const sh = shapeOf(ev.seed), x = (ev._x + W / 2) * PX, y = (ev._z + H / 2) * PX, rr = evRadius(ev) * PX;
+    const body = new Path2D();
+    for (let i = 0; i <= 72; i++) { const a = (i / 72) * Math.PI * 2, rad = rr * radiusAt(sh, a); const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad; i ? body.lineTo(px, py) : body.moveTo(px, py); }
+    body.closePath();
+    const extra = new Path2D(), tails = new Path2D();
+    for (const d of sh.drops) {
+      const dx = x + Math.cos(d.ang) * rr * d.d, dy = y + Math.sin(d.ang) * rr * d.d, ds = rr * d.s;
+      const dp = new Path2D(); dp.arc(dx, dy, ds, 0, Math.PI * 2); extra.addPath(dp);
+      if (d.tail && d.d < 1.6) {
+        const ex = x + Math.cos(d.ang) * rr * radiusAt(sh, d.ang) * 0.92, ey = y + Math.sin(d.ang) * rr * radiusAt(sh, d.ang) * 0.92, nx = -Math.sin(d.ang), ny = Math.cos(d.ang), w = ds * 0.8;
+        const tp = new Path2D();
+        tp.moveTo(ex + nx * w * 1.6, ey + ny * w * 1.6); tp.quadraticCurveTo((ex + dx) / 2, (ey + dy) / 2, dx + nx * ds * 0.5, dy + ny * ds * 0.5);
+        tp.lineTo(dx - nx * ds * 0.5, dy - ny * ds * 0.5); tp.quadraticCurveTo((ex + dx) / 2, (ey + dy) / 2, ex - nx * w * 1.6, ey - ny * w * 1.6); tp.closePath();
+        tails.addPath(tp);
+      }
+    }
+    if (from && ev.k === "shot") {
+      const base = Math.atan2(ev._z - from[1], ev._x - from[0]);
+      for (const s of sh.streaks) {
+        const a = base + s.spread, cx = x + Math.cos(a) * rr * s.d, cy = y + Math.sin(a) * rr * s.d;
+        const sp = new Path2D(); sp.ellipse(cx, cy, rr * s.len, rr * s.w, a, 0, Math.PI * 2); tails.addPath(sp);
+      }
+    }
+    return { body, extra, tails, x, y, rr, sh };
+  }
+  draw(ev, colorHex) {
+    if (ev.k === "erase") return this.erase(ev);
+    const P = this.paths(ev, ev._from), g = this.cx;
+    g.save();
+    g.fillStyle = shade(colorHex, -0.18); g.translate(1.5, 2.5); g.fill(P.body); g.fill(P.extra); g.fill(P.tails); g.translate(-1.5, -2.5);
+    g.fillStyle = colorHex; g.fill(P.body); g.fill(P.extra); g.fill(P.tails);
+    g.save(); g.clip(P.body);
+    const grd = g.createRadialGradient(P.x - P.rr * 0.35, P.y - P.rr * 0.4, P.rr * 0.05, P.x, P.y, P.rr * 1.15);
+    grd.addColorStop(0, "rgba(255,255,255,0.30)"); grd.addColorStop(0.45, "rgba(255,255,255,0.06)"); grd.addColorStop(1, "rgba(0,0,0,0.16)");
+    g.fillStyle = grd; g.fillRect(P.x - P.rr * 2, P.y - P.rr * 2, P.rr * 4, P.rr * 4);
+    for (const gl of P.sh.glints) { g.fillStyle = "rgba(255,255,255,0.45)"; g.beginPath(); g.ellipse(P.x + gl.x * P.rr, P.y + gl.y * P.rr, P.rr * gl.s, P.rr * gl.s * 0.45, -0.6, 0, Math.PI * 2); g.fill(); }
+    g.restore();
+    g.lineWidth = Math.max(1.5, P.rr * 0.035); g.strokeStyle = shade(colorHex, -0.3); g.globalAlpha = 0.5; g.stroke(P.body); g.globalAlpha = 1;
+    g.restore();
+    for (const [c, fill, blur] of [[this.bx, "#FFFFFF", 3], [this.rx, "#3C3C3C", 0]]) {
+      c.save(); c.setTransform(LO, 0, 0, LO, 0, 0); c.filter = blur ? `blur(${blur}px)` : "none"; c.fillStyle = fill; c.fill(P.body); c.fill(P.extra); c.fill(P.tails); c.restore();
+    }
+    this.dirty = true;
+  }
+  erase(ev) {
+    const P = this.paths(ev, null), g = this.cx;
+    g.save(); g.clip(P.body); g.drawImage(this.base, 0, 0); g.restore();
+    for (const [c, fill] of [[this.bx, "#000"], [this.rx, "#E6E6E6"]]) { c.save(); c.setTransform(LO, 0, 0, LO, 0, 0); c.fillStyle = fill; c.fill(P.body); c.restore(); }
+    this.dirty = true;
+  }
+}
+
 /* ======================= 3D Arena ======================= */
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-function hash(x, y, s) { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
-const tw = (x) => x - W / 2 + 0.5, tz = (y) => y - H / 2 + 0.5;
-
 class Arena {
-  constructor() {
-    this.ok = false;
-    try { if (!window.THREE) throw new Error("no three"); this.init(); this.ok = true; } catch (e) { this.ok = false; }
-  }
+  constructor() { this.ok = false; try { if (!window.THREE) throw new Error("no three"); this.init(); this.ok = true; } catch (e) { console.error(e); this.ok = false; } }
   init() {
     const T = THREE; this.T = T;
     const r = this.renderer = new T.WebGLRenderer({ antialias: true });
     r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     r.shadowMap.enabled = true; r.shadowMap.type = T.PCFShadowMap; this.perf = { n: 0, sum: 0, checked: false };
     const sc = this.scene = new T.Scene();
-    sc.background = new T.Color("#A9CBE8");
-    sc.fog = new T.Fog("#A9CBE8", 60, 120);
+    sc.background = new T.Color("#A9CBE8"); sc.fog = new T.Fog("#A9CBE8", 60, 120);
     this.camera = new T.PerspectiveCamera(36, 1.6, 0.1, 250);
-    this.az = 0; this.el = 0.92; this.mode = "student"; this.time = 0;
-    sc.add(new T.HemisphereLight("#EAF2FF", "#5A4A36", 0.75));
-    const sun = new T.DirectionalLight("#FFF4E0", 0.95); sun.position.set(12, 26, 10); sun.castShadow = true;
+    this.az = 0; this.targetAz = 0; this.el = 0.95; this.mode = "student"; this.time = 0;
+    sc.add(new T.HemisphereLight("#EAF2FF", "#5A4A36", 0.5));
+    const sun = this.sun = new T.DirectionalLight("#FFF4E0", 0.78); sun.position.set(-10, 24, -8); sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 18, bottom: -18, near: 1, far: 80 }); sun.shadow.bias = -0.0008;
     sc.add(sun);
-    const sea = new T.Mesh(new T.PlaneGeometry(260, 260), new T.MeshStandardMaterial({ color: "#3F86C0", roughness: 0.55 }));
+    const sea = new T.Mesh(new T.PlaneGeometry(260, 260), new T.MeshStandardMaterial({ color: "#3F86C0", roughness: 0.85, metalness: 0 }));
     sea.rotation.x = -Math.PI / 2; sea.position.y = -1.3; sc.add(sea);
-    const frame = new T.Mesh(new T.BoxGeometry(W + 2.2, 1.1, H + 2.2), new T.MeshStandardMaterial({ color: "#7A5A3C", roughness: 0.8 }));
-    frame.position.y = -0.7; frame.receiveShadow = true; sc.add(frame);
-    const slab = new T.Mesh(new T.BoxGeometry(W + 0.6, 1.0, H + 0.6), new T.MeshStandardMaterial({ color: "#EFE8D8", roughness: 0.95 }));
-    slab.position.y = -0.5; slab.receiveShadow = true; sc.add(slab);
-    const pts = [];
-    for (let x = 0; x <= W; x++) pts.push(x - W / 2, 0.004, -H / 2, x - W / 2, 0.004, H / 2);
-    for (let y = 0; y <= H; y++) pts.push(-W / 2, 0.004, y - H / 2, W / 2, 0.004, y - H / 2);
-    const lg = new T.BufferGeometry(); lg.setAttribute("position", new T.Float32BufferAttribute(pts, 3));
-    sc.add(new T.LineSegments(lg, new T.LineBasicMaterial({ color: "#D6CCB4" })));
-    this.paint = new T.InstancedMesh(new T.SphereGeometry(0.5, 16, 10), new T.MeshStandardMaterial({ roughness: 0.28, metalness: 0.02 }), W * H);
-    this.paint.instanceMatrix.setUsage(T.DynamicDrawUsage); this.paint.receiveShadow = true;
-    this.inst = []; this.dummy = new T.Object3D(); this.tmpC = new T.Color();
-    for (let i = 0; i < W * H; i++) { this.inst.push({ s: 0, from: 0, to: 0, t0: -1, owner: null, pending: false }); this.paint.setColorAt(i, this.tmpC.set("#ffffff")); this.applyInst(i); }
-    sc.add(this.paint);
-    this.hl = new T.InstancedMesh(new T.PlaneGeometry(0.9, 0.9).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.6, depthWrite: false }), 30);
-    this.hl.count = 0; this.hl.renderOrder = 2; sc.add(this.hl);
-    this.ring = new T.Mesh(new T.RingGeometry(RANGE - 0.06, RANGE + 0.06, 128).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.7, depthWrite: false }));
-    this.ring.position.y = 0.12; this.ring.visible = false; sc.add(this.ring);
+    const frame = new T.Mesh(new T.BoxGeometry(W + 1.8, 1.1, H + 1.8), new T.MeshStandardMaterial({ color: "#7A5A3C", roughness: 0.8 }));
+    frame.position.y = -0.56; frame.receiveShadow = true; sc.add(frame);
+    this.layer = new PaintLayer(T);
+    const top = new T.Mesh(new T.PlaneGeometry(W, H), new T.MeshStandardMaterial({ map: this.layer.colorTex, bumpMap: this.layer.bumpTex, bumpScale: 0.06, roughnessMap: this.layer.roughTex, roughness: 1, metalness: 0 }));
+    top.rotation.x = -Math.PI / 2; top.position.y = 0.002; top.receiveShadow = true; sc.add(top);
+    // aiming helpers
+    this.aim = new T.Group(); this.aim.visible = false; sc.add(this.aim);
+    const lineGeo = new T.BufferGeometry().setFromPoints([new T.Vector3(0.8, 0, 0), new T.Vector3(MAX_RANGE, 0, 0)]);
+    this.aimLine = new T.Line(lineGeo, new T.LineDashedMaterial({ color: "#18203A", dashSize: 0.35, gapSize: 0.25, transparent: true, opacity: 0.7 }));
+    this.aimLine.computeLineDistances(); this.aimLine.position.y = 0.05; this.aim.add(this.aimLine);
+    this.ticks = [];
+    for (let d = 3; d <= MAX_RANGE; d += 3) {
+      const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; const x = cv.getContext("2d");
+      x.fillStyle = "rgba(24,32,58,0.85)"; x.beginPath(); x.arc(32, 32, 26, 0, Math.PI * 2); x.fill();
+      x.fillStyle = "#FFFFFF"; x.font = "bold 30px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(String(d), 32, 34);
+      const sp = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(cv), depthTest: false, transparent: true }));
+      sp.scale.set(0.55, 0.55, 1); sp.position.set(d, 0.25, 0); sp.renderOrder = 6; this.aim.add(sp); this.ticks.push(sp);
+    }
+    this.powerDot = new T.Mesh(new T.RingGeometry(0.35, 0.55, 32).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#FFFFFF", transparent: true, opacity: 0.95, depthWrite: false }));
+    this.powerDot.position.y = 0.06; this.powerDot.visible = false; this.aim.add(this.powerDot);
+    this.rangeRing = new T.Mesh(new T.RingGeometry(MAX_RANGE - 0.05, MAX_RANGE + 0.05, 160).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#18203A", transparent: true, opacity: 0.25, depthWrite: false }));
+    this.rangeRing.position.y = 0.04; this.rangeRing.visible = false; sc.add(this.rangeRing);
+    this.lastMark = new T.Mesh(new T.RingGeometry(0.18, 0.28, 24).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#18203A", transparent: true, opacity: 0.8, depthWrite: false }));
+    this.lastMark.position.y = 0.05; this.lastMark.visible = false; sc.add(this.lastMark);
     this.castles = new Map(); this.proj = []; this.parts = []; this.mats = new Map();
-    this.partGeo = new T.SphereGeometry(0.07, 6, 5); this.ballGeo = new T.SphereGeometry(0.2, 14, 10);
-    this.stoneGeo = { base: new T.BoxGeometry(1.35, 0.16, 1.35), keep: new T.BoxGeometry(0.62, 1.0, 0.62), wall: new T.BoxGeometry(1.0, 0.5, 0.14), tower: new T.CylinderGeometry(0.17, 0.2, 1.05, 10), merlon: new T.BoxGeometry(0.12, 0.12, 0.12), roof: new T.ConeGeometry(0.26, 0.42, 10), gate: new T.BoxGeometry(0.26, 0.32, 0.06), pole: new T.CylinderGeometry(0.018, 0.018, 0.7, 6), wheel: new T.CylinderGeometry(0.12, 0.12, 0.05, 12), carriage: new T.BoxGeometry(0.2, 0.08, 0.32), barrel: new T.CylinderGeometry(0.075, 0.095, 0.55, 14), band: new T.TorusGeometry(0.08, 0.018, 6, 14), flag: new T.PlaneGeometry(0.38, 0.24).translate(0.19, 0, 0), dome: new T.SphereGeometry(1.15, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2) };
+    this.partGeo = new T.SphereGeometry(0.07, 6, 5); this.ballGeo = new T.SphereGeometry(0.22, 18, 12);
+    this.stoneGeo = { base: new T.BoxGeometry(1.35, 0.16, 1.35), keep: new T.BoxGeometry(0.62, 1.0, 0.62), wall: new T.BoxGeometry(1.0, 0.5, 0.14), tower: new T.CylinderGeometry(0.17, 0.2, 1.05, 10), merlon: new T.BoxGeometry(0.12, 0.12, 0.12), roof: new T.ConeGeometry(0.26, 0.42, 10), gate: new T.BoxGeometry(0.26, 0.32, 0.06), pole: new T.CylinderGeometry(0.018, 0.018, 0.7, 6), wheel: new T.CylinderGeometry(0.12, 0.12, 0.05, 12), carriage: new T.BoxGeometry(0.2, 0.08, 0.32), barrel: new T.CylinderGeometry(0.075, 0.095, 0.55, 14), flag: new T.PlaneGeometry(0.38, 0.24).translate(0.19, 0, 0), dome: new T.SphereGeometry(1.15, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2) };
+    this.zoneGeo = new T.RingGeometry(CASTLE_ZONE - 0.05, CASTLE_ZONE + 0.05, 72).rotateX(-Math.PI / 2);
     this.raycaster = new T.Raycaster(); this.plane = new T.Plane(new T.Vector3(0, 1, 0), 0); this.v3 = new T.Vector3();
     this.clock = new T.Clock();
     const loop = () => { requestAnimationFrame(loop); this.tick(); };
     loop();
   }
   mount(el) {
-    if (!this.ok) { el.innerHTML = `<div class="nogl">The 3D table needs WebGL, which is turned off in this browser. You can still answer questions, but you can't fire until WebGL is on.</div>`; return; }
+    if (!this.ok) { const d = document.createElement("div"); d.className = "nogl"; d.textContent = "The 3D table needs WebGL, which is turned off in this browser. You can still answer questions, but you can't fire until WebGL is on."; el.appendChild(d); return; }
     el.appendChild(this.renderer.domElement); this.host = el;
     if (!this.ro) this.ro = new ResizeObserver(() => this.resize());
     this.ro.disconnect(); this.ro.observe(el); this.resize();
   }
-  resize() {
-    if (!this.host) return;
-    const w = Math.max(50, this.host.clientWidth), h = Math.max(50, this.host.clientHeight);
-    this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
-  }
-  applyInst(i) {
-    const st = this.inst[i], x = i % W, y = Math.floor(i / W), s = Math.max(0.0001, st.s);
-    const j1 = hash(x, y, 1) - 0.5, j2 = hash(x, y, 2) - 0.5, j3 = hash(x, y, 3);
-    this.dummy.position.set(tw(x) + j1 * 0.1, 0.02, tz(y) + j2 * 0.1);
-    this.dummy.rotation.set(0, j3 * Math.PI, 0);
-    this.dummy.scale.set((1.16 + j3 * 0.12) * s, 0.2 * Math.min(1.4, s), (1.1 + hash(x, y, 4) * 0.14) * s);
-    this.dummy.updateMatrix(); this.paint.setMatrixAt(i, this.dummy.matrix); this.paint.instanceMatrix.needsUpdate = true;
-  }
-  setCell(x, y, owner, animate) {
-    if (!this.ok) return;
-    const i = y * W + x, st = this.inst[i];
-    st.pending = false; st.owner = owner;
-    if (owner) { this.paint.setColorAt(i, this.tmpC.set(colorOf(owner))); this.paint.instanceColor.needsUpdate = true; }
-    const to = owner ? 1 : 0;
-    if (animate && !reduceMotion) { st.from = st.s; st.to = to; st.t0 = this.time; }
-    else { st.s = to; st.to = to; st.t0 = -1; this.applyInst(i); }
-  }
-  markPending(x, y) { if (this.ok) this.inst[y * W + x].pending = true; }
-  syncCells() {
-    if (!this.ok) return;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const i = y * W + x, st = this.inst[i]; if (st.pending) continue;
-      const c = cellAt(x, y), owner = c ? c.owner : null;
-      if (owner) this.paint.setColorAt(i, this.tmpC.set(colorOf(owner)));
-      if (st.owner !== owner) { st.owner = owner; st.s = owner ? 1 : 0; st.to = st.s; st.t0 = -1; this.applyInst(i); }
-    }
-    this.paint.instanceColor.needsUpdate = true;
-  }
-  mat(color, opts) {
-    const k = color + JSON.stringify(opts || {});
-    if (!this.mats.has(k)) this.mats.set(k, new this.T.MeshStandardMaterial({ color, roughness: 0.6, ...(opts || {}) }));
-    return this.mats.get(k);
-  }
+  resize() { if (!this.host) return; const w = Math.max(50, this.host.clientWidth), h = Math.max(50, this.host.clientHeight); this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
+  /* paint */
+  colorFor(ev) { return colorOf(headOf(ev._emp)); }
+  drawEvent(ev, live) { if (!this.ok || ev._skip || ev._sea || ev.k === "vuln") return; this.layer.draw(ev, this.colorFor(ev)); if (live && ev.k === "erase") this.puff(new this.T.Vector3(ev._x, 0.2, ev._z), "#F2F2F2", 6, 3); }
+  paintAll() { if (!this.ok) return; clearTimeout(this.pl); this.layer.clear(); for (const ev of Wd.order) if (!ev._inFlight) this.drawEvent(ev, false); }
+  paintLater(ms) { clearTimeout(this.pl); this.pl = setTimeout(() => this.paintAll(), ms || 0); }
+  /* castles */
+  mat(color, opts) { const k = color + JSON.stringify(opts || {}); if (!this.mats.has(k)) this.mats.set(k, new this.T.MeshStandardMaterial({ color, roughness: 0.6, ...(opts || {}) })); return this.mats.get(k); }
   buildCastleGeo() {
     const T = this.T, G = this.stoneGeo, P = 0.52;
     const merge = (parts) => {
@@ -789,127 +987,118 @@ class Arena {
     for (const [mx, mz] of [[-0.24,-0.24],[0.24,-0.24],[-0.24,0.24],[0.24,0.24],[0,-0.24],[0,0.24],[-0.24,0],[0.24,0]]) stone.push([G.merlon, mx, 1.22, mz]);
     const roofs = [];
     for (const [sx, sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]) { stone.push([G.tower, sx * P, 0.68, sz * P]); roofs.push([G.roof, sx * P, 1.41, sz * P]); }
-    this.castleGeo = {
-      stone: merge(stone), roofs: merge(roofs),
-      trim: merge([[G.gate, 0, 0.32, P + 0.07], [G.pole, 0, 1.5, 0]]),
-      carriage: merge([[G.wheel, -0.13, 0.12, 0, 0, Math.PI / 2], [G.wheel, 0.13, 0.12, 0, 0, Math.PI / 2], [G.carriage, 0, 0.16, 0]]),
-    };
+    this.castleGeo = { stone: merge(stone), roofs: merge(roofs), trim: merge([[G.gate, 0, 0.32, P + 0.07], [G.pole, 0, 1.5, 0]]), carriage: merge([[G.wheel, -0.13, 0.12, 0, 0, Math.PI / 2], [G.wheel, 0.13, 0.12, 0, 0, Math.PI / 2], [G.carriage, 0, 0.16, 0]]) };
   }
-  makeCastle(color) {
+  makeCastle() {
     const T = this.T, G = this.stoneGeo;
     if (!this.castleGeo) this.buildCastleGeo();
-    const CG = this.castleGeo, g = new T.Group();
+    const CG = this.castleGeo, g = new T.Group(), body = new T.Group(); g.add(body);
     const stone = new T.MeshStandardMaterial({ color: "#DCD6C8", roughness: 0.85 });
-    const add = (geo, m, shadow, parent) => { const o = new T.Mesh(geo, m); o.castShadow = shadow; o.receiveShadow = shadow; (parent || g).add(o); return o; };
-    add(CG.stone, stone, true);
-    add(CG.roofs, this.mat(color), true);
-    add(CG.trim, this.mat("#3B2A1E"), false);
-    const flag = new T.Mesh(G.flag, this.mat(color, { side: T.DoubleSide, roughness: 0.7 }));
-    flag.position.set(0, 1.72, 0); g.add(flag);
-    const shield = new T.Mesh(G.dome, new T.MeshStandardMaterial({ color, transparent: true, opacity: 0.16, emissive: color, emissiveIntensity: 0.25, depthWrite: false, side: T.DoubleSide }));
-    g.add(shield);
+    const roof = new T.MeshStandardMaterial({ color: "#888888", roughness: 0.5 });
+    const flagM = new T.MeshStandardMaterial({ color: "#888888", side: T.DoubleSide, roughness: 0.7 });
+    const add = (geo, m, shadow, parent) => { const o = new T.Mesh(geo, m); o.castShadow = shadow; o.receiveShadow = shadow; (parent || body).add(o); return o; };
+    add(CG.stone, stone, true); add(CG.roofs, roof, true); add(CG.trim, this.mat("#3B2A1E"), false);
+    const flag = new T.Mesh(G.flag, flagM); flag.position.set(0, 1.72, 0); body.add(flag);
+    const shieldM = new T.MeshStandardMaterial({ color: "#888888", transparent: true, opacity: 0.15, emissive: "#888888", emissiveIntensity: 0.25, depthWrite: false, side: T.DoubleSide });
+    const shield = new T.Mesh(G.dome, shieldM); body.add(shield);
     const cannon = new T.Group();
     add(CG.carriage, this.mat("#5A3D26"), false, cannon);
-    const pivot = new T.Group(); pivot.position.set(0, 0.24, 0); pivot.rotation.x = -0.6; cannon.add(pivot);
+    const pivot = new T.Group(); pivot.position.set(0, 0.24, 0); pivot.rotation.x = -0.75; cannon.add(pivot);
     const barrel = add(G.barrel, this.mat("#2C2F38", { metalness: 0.6, roughness: 0.35 }), false, pivot); barrel.rotation.x = Math.PI / 2; barrel.position.z = 0.2;
-    g.add(cannon);
-    const cv = document.createElement("canvas"); cv.width = 320; cv.height = 112;
+    body.add(cannon);
+    const zoneM = new T.MeshBasicMaterial({ color: "#888888", transparent: true, opacity: 0.55, depthWrite: false });
+    const zone = new T.Mesh(this.zoneGeo, zoneM); zone.position.y = 0.03; g.add(zone);
+    const cv = document.createElement("canvas"); cv.width = 320; cv.height = 120;
     const tex = new T.CanvasTexture(cv);
     const label = new T.Sprite(new T.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-    label.scale.set(2.5, 0.875, 1); label.position.set(0, 2.55, 0); label.renderOrder = 5; g.add(label);
-    return { g, stone, flag, shield, cannon, pivot, barrel, label, cv, tex, labelKey: "", shake: 0, rise: 0, crumble: -1, recoil: 0, phase: Math.random() * 6 };
+    label.scale.set(2.6, 0.975, 1); label.position.set(0, 3.9, 0); label.renderOrder = 5; g.add(label);
+    body.scale.setScalar(1.55);
+    return { g, body, stone, roof, flagM, shieldM, zoneM, flag, shield, cannon, pivot, barrel, label, cv, tex, labelKey: "", colorKey: "", shake: 0, rise: 0, recoil: 0, phase: Math.random() * 6 };
   }
-  drawLabel(c, name, hp, vuln, isMe) {
-    const k = `${name}|${hp}|${vuln}|${isMe}`; if (c.labelKey === k) return; c.labelKey = k;
-    const x = c.cv.getContext("2d"); x.clearRect(0, 0, 320, 112);
-    x.fillStyle = vuln ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.8)";
-    x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 308, 100, 22); else x.rect(6, 6, 308, 100); x.fill();
-    if (isMe) { x.strokeStyle = "#F3B61F"; x.lineWidth = 5; x.stroke(); }
-    x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.font = "600 30px Fredoka, 'Trebuchet MS', sans-serif";
-    let n = name; while (x.measureText(n).width > 284 && n.length > 3) n = n.slice(0, -1);
-    if (n !== name) n = n.slice(0, -1) + "…";
-    x.fillText(n, 160, 46);
-    x.font = "30px sans-serif"; let hs = "";
-    for (let i = 0; i < MAX_HP; i++) hs += i < hp ? "♥" : "♡";
-    x.fillStyle = vuln ? "#FFD0C8" : "#FF6B5E"; x.fillText(vuln ? hs + "  ⚠" : hs, 160, 90);
+  drawLabel(c, it) {
+    const k = [it.name, it.empName, it.pct.toFixed(2), it.thr, it.vuln, it.isMe, it.color].join("|"); if (c.labelKey === k) return; c.labelKey = k;
+    const x = c.cv.getContext("2d"); x.clearRect(0, 0, 320, 120);
+    x.fillStyle = it.vuln ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.82)";
+    x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 308, 108, 22); else x.rect(6, 6, 308, 108); x.fill();
+    if (it.isMe) { x.strokeStyle = "#F3B61F"; x.lineWidth = 5; x.stroke(); }
+    x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.font = "600 28px Fredoka, 'Trebuchet MS', sans-serif";
+    const fit = (s, w) => { let n = s; while (x.measureText(n).width > w && n.length > 3) n = n.slice(0, -1); return n === s ? s : n.slice(0, -1) + "…"; };
+    x.fillText(fit(it.name, 290), 160, 40);
+    x.font = "600 19px 'Nunito Sans', sans-serif"; x.fillStyle = "#C9D2EA";
+    x.fillText(fit(it.empName ? "Fights for " + it.empName : it.vuln ? "Shield down!" : "Free kingdom", 290), 160, 66);
+    // swamp meter
+    x.fillStyle = "rgba(255,255,255,0.2)"; x.fillRect(30, 82, 260, 14);
+    x.fillStyle = it.pct >= it.thr * 0.75 ? "#FF6B5E" : "#F3B61F"; x.fillRect(30, 82, Math.min(1, it.pct / it.thr) * 260, 14);
+    x.fillStyle = "#FFFFFF"; x.fillRect(289, 78, 3, 22);
     c.tex.needsUpdate = true;
   }
   syncCastles(list) {
     if (!this.ok) return;
     const keep = new Set();
     for (const it of list) {
-      const k = it.owner + ":" + it.builtAt; keep.add(k);
-      let c = this.castles.get(k);
-      if (c && c.color !== it.color) { this.scene.remove(c.g); this.castles.delete(k); c = null; }
+      keep.add(it.owner);
+      let c = this.castles.get(it.owner);
       if (!c) {
-        for (const [k2, oc] of this.castles) if (k2.startsWith(it.owner + ":") && k2 !== k) { this.scene.remove(oc.g); this.castles.delete(k2); }
-        c = this.makeCastle(it.color); c.owner = it.owner; c.color = it.color; c.x = it.x; c.y = it.y;
-        c.g.scale.setScalar(1.55); c.g.position.set(tw(it.x), 0, tz(it.y)); c.rise = it.fresh && !reduceMotion ? 0.001 : 0;
-        const dx = -tw(it.x), dz = -tz(it.y), L = Math.hypot(dx, dz) || 1;
-        c.cannon.position.set((dx / L) * 0.95, 0, (dz / L) * 0.95); c.cannon.rotation.y = Math.atan2(dx, dz);
-        this.scene.add(c.g); this.castles.set(k, c);
+        c = this.makeCastle(); c.owner = it.owner; c.x = it.x; c.z = it.z;
+        c.g.position.set(it.x, 0, it.z); c.rise = it.fresh && !reduceMotion ? 0.001 : 0;
+        const L = Math.hypot(it.x, it.z) || 1; c.baseYaw = Math.atan2(-it.x / L, -it.z / L);
+        c.cannon.position.set((-it.x / L) * 0.62, 0, (-it.z / L) * 0.62); c.cannon.rotation.y = c.baseYaw;
+        this.scene.add(c.g); this.castles.set(it.owner, c);
+      }
+      const ck = it.color + "|" + it.conquered;
+      if (c.colorKey !== ck) {
+        c.colorKey = ck; c.roof.color.set(it.color); c.flagM.color.set(it.color); c.shieldM.color.set(it.color); c.shieldM.emissive.set(it.color); c.zoneM.color.set(it.color);
+        c.stone.color.set(it.conquered ? shade(it.color, 0.55) : "#DCD6C8"); if (it.conquered && !c.firstColor) c.shake = 0.6;
+        c.firstColor = true;
       }
       c.vuln = it.vuln; c.shield.visible = !it.vuln;
-      this.drawLabel(c, it.name, it.hp, it.vuln, it.isMe);
+      this.drawLabel(c, it);
     }
-    for (const [k, c] of this.castles) if (!keep.has(k) && c.crumble < 0) { this.scene.remove(c.g); this.castles.delete(k); }
+    for (const [k, c] of this.castles) if (!keep.has(k)) { this.scene.remove(c.g); this.castles.delete(k); }
   }
-  castleOf(owner) { if (!this.ok) return null; for (const c of this.castles.values()) if (c.owner === owner && c.crumble < 0) return c; return null; }
-  fire(owner, tx, ty, color, onLand) {
-    if (!this.ok) { if (onLand) onLand(); return; }
-    const T = this.T, c = this.castleOf(owner);
-    const to = new T.Vector3(tw(tx), 0.12, tz(ty));
+  castleOf(owner) { return this.ok ? this.castles.get(owner) || null : null; }
+  aimAt(owner, yaw, power) {
+    if (!this.ok) return;
+    const c = this.castleOf(owner);
+    if (!c || yaw == null) { this.aim.visible = false; this.rangeRing.visible = false; return; }
+    this.aim.visible = true; this.aim.position.set(c.x, 0, c.z); this.aim.rotation.y = -yaw;
+    this.rangeRing.visible = true; this.rangeRing.position.set(c.x, 0.04, c.z);
+    c.cannon.rotation.y = Math.atan2(Math.cos(yaw), Math.sin(yaw));
+    if (power == null) this.powerDot.visible = false;
+    else { this.powerDot.visible = true; this.powerDot.position.x = MIN_RANGE + power * (MAX_RANGE - MIN_RANGE); }
+  }
+  markLanding(x, z) { if (!this.ok) return; this.lastMark.visible = true; this.lastMark.position.set(x, 0.05, z); }
+  fire(ev, onLand) {
+    if (!this.ok) { onLand(); return; }
+    const T = this.T, c = this.castleOf(ev.by), to = new T.Vector3(ev.x, ev._sea ? -1.25 : 0.1, ev.z), color = this.colorFor(ev);
     let from;
     if (c) {
-      const cp = c.cannon.getWorldPosition(new T.Vector3());
-      c.cannon.rotation.y = Math.atan2(to.x - cp.x, to.z - cp.z);
-      c.g.updateMatrixWorld(true); from = c.barrel.getWorldPosition(new T.Vector3()); c.recoil = 1;
-      this.puff(from, "#EFEFEF", 8, 1.2);
-    } else from = new T.Vector3(to.x, 9, to.z);
-    const d = from.distanceTo(to);
-    const m = new T.Mesh(this.ballGeo, this.mat(color, { roughness: 0.25 })); m.castShadow = true;
-    m.position.copy(from); this.scene.add(m);
-    this.proj.push({ m, from, to, t: 0, dur: reduceMotion ? 0.05 : 0.55 + d * 0.045, h: 1.2 + d * 0.28, color, onLand, trail: 0 });
+      const yaw = Math.atan2(ev.z - c.z, ev.x - c.x);
+      c.cannon.rotation.y = Math.atan2(Math.cos(yaw), Math.sin(yaw)); c.g.updateMatrixWorld(true);
+      from = c.barrel.getWorldPosition(new T.Vector3()); c.recoil = 1; this.puff(from, "#EFEFEF", 10, 1.4);
+    } else from = new T.Vector3(ev.x, 9, ev.z);
+    const d = Math.hypot(to.x - from.x, to.z - from.z);
+    const m = new T.Mesh(this.ballGeo, this.mat(color, { roughness: 0.15 })); m.castShadow = true; m.position.copy(from); this.scene.add(m);
+    ev._inFlight = true;
+    const dur = reduceMotion ? 0.05 : 0.55 + d * 0.055;
+    let landed = false;
+    const done = () => { if (landed) return; landed = true; ev._inFlight = false; onLand(); };
+    setTimeout(done, dur * 1000 + 1200); // backup if the tab is hidden or rendering stalls
+    this.proj.push({ m, from, to, t0: performance.now(), t: 0, dur, h: d / 4 + 0.6, color, sea: ev._sea, done, trail: 0 });
   }
-  puff(pos, color, n, speed) {
+  puff(pos, color, n, speed, grav = true) {
     const T = this.T;
     for (let i = 0; i < n; i++) {
       if (this.parts.length > 500) break;
-      const m = new T.Mesh(this.partGeo, this.mat(color, { roughness: 0.3 })); m.position.copy(pos);
+      const m = new T.Mesh(this.partGeo, this.mat(color, { roughness: 0.2 })); m.position.copy(pos);
       const a = Math.random() * Math.PI * 2, u = Math.random();
-      m.userData = { v: new T.Vector3(Math.cos(a) * speed * u, speed * (0.6 + Math.random()), Math.sin(a) * speed * u), life: 0.7 + Math.random() * 0.6, age: 0, s: 0.7 + Math.random() * 0.9 };
+      m.userData = { v: new T.Vector3(Math.cos(a) * speed * u, speed * (0.6 + Math.random()), Math.sin(a) * speed * u), life: 0.6 + Math.random() * 0.6, age: 0, s: 0.7 + Math.random() * 1.1, nograv: !grav };
       m.scale.setScalar(m.userData.s); this.scene.add(m); this.parts.push(m);
     }
   }
-  burst(x, y, color, n) { if (this.ok) this.puff(new this.T.Vector3(tw(x), 0.15, tz(y)), color, n || 16, 4.2); }
-  castleHit(owner) {
-    if (!this.ok) return;
-    const c = this.castleOf(owner); if (!c) return;
-    c.shake = 0.45; this.puff(c.g.position.clone().setY(1), "#DCD6C8", 10, 3);
-  }
-  repairFx(owner) {
-    if (!this.ok) return;
-    const c = this.castleOf(owner); if (!c) return;
-    const T = this.T;
-    for (let i = 0; i < 12; i++) { const m = new T.Mesh(this.partGeo, this.mat("#5BE08F", { emissive: "#2FBF6A", emissiveIntensity: 0.8 })); m.position.copy(c.g.position).add(new T.Vector3((Math.random() - 0.5) * 1.2, 0.3, (Math.random() - 0.5) * 1.2)); m.userData = { v: new T.Vector3(0, 1.4 + Math.random(), 0), life: 1.1, age: 0, s: 1.2, nograv: true }; this.scene.add(m); this.parts.push(m); }
-  }
-  crumble(owner) {
-    if (!this.ok) return;
-    for (const c of this.castles.values()) if (c.owner === owner && c.crumble < 0) {
-      c.crumble = 0.0001; this.puff(c.g.position.clone().setY(0.6), "#BDB6A6", 30, 3.5); this.puff(c.g.position.clone().setY(0.8), c.color, 16, 3);
-    }
-  }
-  showRange(owner) {
-    if (!this.ok) return;
-    const c = owner && this.castleOf(owner);
-    this.ring.visible = !!c; if (c) this.ring.position.set(tw(c.x), 0.12, tz(c.y));
-  }
-  highlight(cells, ok) {
-    if (!this.ok) return;
-    this.hl.material.color.set(ok ? "#FFFFFF" : "#FF5A4A");
-    this.hl.count = Math.min(30, cells.length);
-    cells.slice(0, 30).forEach(([x, y], i) => { this.dummy.position.set(tw(x), 0.14, tz(y)); this.dummy.rotation.set(0, 0, 0); this.dummy.scale.set(1, 1, 1); this.dummy.updateMatrix(); this.hl.setMatrixAt(i, this.dummy.matrix); });
-    this.hl.instanceMatrix.needsUpdate = true;
+  sparkle(owner, color) {
+    const c = this.castleOf(owner); if (!c) return; const T = this.T;
+    for (let i = 0; i < 14; i++) { const m = new T.Mesh(this.partGeo, this.mat(color, { emissive: color, emissiveIntensity: 0.6 })); m.position.set(c.x + (Math.random() - 0.5) * 2, 0.3, c.z + (Math.random() - 0.5) * 2); m.userData = { v: new T.Vector3(0, 1.4 + Math.random(), 0), life: 1.1, age: 0, s: 1.3, nograv: true }; this.scene.add(m); this.parts.push(m); }
   }
   pick(clientX, clientY) {
     if (!this.ok) return null;
@@ -917,160 +1106,90 @@ class Arena {
     const ndc = new this.T.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
     if (!this.raycaster.ray.intersectPlane(this.plane, this.v3)) return null;
-    const x = Math.floor(this.v3.x + W / 2), y = Math.floor(this.v3.z + H / 2);
-    return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null;
+    return [this.v3.x, this.v3.z];
   }
-  placeCamera() {
+  placeCamera(dt) {
+    this.az += (this.targetAz - this.az) * Math.min(1, dt * 5);
     const az = this.mode === "board" ? Math.sin(this.time * 0.06) * 0.42 : this.az;
     const asp = this.camera.aspect, tf = Math.tan((this.camera.fov * Math.PI) / 360);
     const hw = Math.abs(Math.cos(az)) * (W / 2 + 1.4) + Math.abs(Math.sin(az)) * (H / 2 + 1.4);
     const hd = Math.abs(Math.sin(az)) * (W / 2 + 1.4) + Math.abs(Math.cos(az)) * (H / 2 + 1.4);
-    const dist = Math.max(hw / (tf * asp), (hd * Math.sin(this.el) + 1.6) / tf) * (this.mode === "board" ? 1.1 : 1.14);
+    const dist = Math.max(hw / (tf * asp), (hd * Math.sin(this.el) + 1.6) / tf) * (this.mode === "board" ? 1.08 : 1.12);
     this.camera.position.set(Math.sin(az) * Math.cos(this.el) * dist, Math.sin(this.el) * dist, Math.cos(az) * Math.cos(this.el) * dist);
     this.camera.lookAt(0, 0.3, 0);
   }
   tick() {
     const raw = this.clock.getDelta(), dt = Math.min(0.05, raw); this.time += dt; const t = this.time;
     if (!this.host) return;
-    // Auto quality: if this device averages under ~25 fps for 3 s, drop shadows.
     if (!this.perf.checked && document.visibilityState === "visible" && this.time > 2) {
       this.perf.n++; this.perf.sum += raw;
-      if (this.perf.sum > 3) {
-        this.perf.checked = true;
-        if (this.perf.sum / this.perf.n > 0.04 && this.renderer.shadowMap.enabled) {
-          this.renderer.shadowMap.enabled = false;
-          this.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); });
-        }
-      }
+      if (this.perf.sum > 3) { this.perf.checked = true; if (this.perf.sum / this.perf.n > 0.04 && this.renderer.shadowMap.enabled) { this.renderer.shadowMap.enabled = false; this.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); }); } }
     }
-    for (let i = 0; i < this.inst.length; i++) {
-      const st = this.inst[i]; if (st.t0 < 0) continue;
-      const u = (t - st.t0) / 0.42;
-      if (u >= 1) { st.s = st.to; st.t0 = -1; }
-      else st.s = st.to ? Math.min(1.25, 0.2 + 0.8 * (1 - Math.pow(1 - u, 3)) + Math.sin(u * Math.PI) * 0.22) : st.from * (1 - u);
-      this.applyInst(i);
-    }
-    for (const [k, c] of this.castles) {
+    if (this.layer.dirty) { this.layer.colorTex.needsUpdate = true; this.layer.bumpTex.needsUpdate = true; this.layer.roughTex.needsUpdate = true; this.layer.dirty = false; }
+    for (const c of this.castles.values()) {
       c.flag.rotation.y = Math.sin(t * 3 + c.phase) * 0.35;
-      let px = tw(c.x), pz = tz(c.y), py = 0;
-      if (c.rise > 0) { c.rise += dt / 0.8; if (c.rise >= 1) c.rise = 0; else py = -1.6 * Math.pow(1 - c.rise, 2); }
+      let px = c.x, pz = c.z, py = 0;
+      if (c.rise > 0) { c.rise += dt / 0.8; if (c.rise >= 1) c.rise = 0; else py = -2.4 * Math.pow(1 - c.rise, 2); }
       if (c.shake > 0) { c.shake -= dt; px += Math.sin(t * 70) * 0.12 * c.shake; pz += Math.cos(t * 63) * 0.1 * c.shake; }
-      if (c.crumble > 0) {
-        c.crumble += dt / 1.6; py = -2.2 * c.crumble * c.crumble; c.g.rotation.z = c.crumble * 0.5; c.g.rotation.x = c.crumble * 0.3;
-        if (c.crumble >= 1) { this.scene.remove(c.g); this.castles.delete(k); continue; }
-      }
       c.g.position.set(px, py, pz);
       if (c.recoil > 0) { c.recoil = Math.max(0, c.recoil - dt * 4); c.barrel.position.z = 0.2 - c.recoil * 0.14; }
       const pulse = c.vuln ? (Math.sin(t * 7) + 1) / 2 : 0;
       c.stone.emissive.setRGB(0.55 * pulse, 0.05 * pulse, 0.02 * pulse);
-      c.shield.material.opacity = 0.13 + Math.sin(t * 2 + c.phase) * 0.04;
+      c.zoneM.opacity = c.vuln ? 0.4 + pulse * 0.5 : 0.5;
+      c.shieldM.opacity = 0.12 + Math.sin(t * 2 + c.phase) * 0.04;
     }
+    if (this.powerDot.visible) this.powerDot.material.opacity = 0.7 + Math.sin(t * 12) * 0.25;
     for (let i = this.proj.length - 1; i >= 0; i--) {
-      const p = this.proj[i]; p.t += dt / p.dur; const u = Math.min(1, p.t);
+      const p = this.proj[i]; p.t = (performance.now() - p.t0) / 1000 / p.dur; const u = Math.min(1, p.t);
       p.m.position.lerpVectors(p.from, p.to, u); p.m.position.y += 4 * p.h * u * (1 - u);
-      if ((p.trail += dt) > 0.05 && !reduceMotion) { p.trail = 0; this.puff(p.m.position, p.color, 1, 0.2); }
+      const wob = 1 + Math.sin(t * 30 + i) * 0.12; p.m.scale.set(wob, 2 - wob, wob);
+      if ((p.trail += dt) > 0.04 && !reduceMotion) { p.trail = 0; this.puff(p.m.position, p.color, 1, 0.25); }
       if (p.t >= 1) {
         this.scene.remove(p.m); this.proj.splice(i, 1);
-        this.puff(p.to, p.color, 18, 3.4);
-        try { if (p.onLand) p.onLand(); } catch (e) {}
+        if (p.sea) this.puff(p.to, "#DDEEFF", 22, 3.2); else this.puff(p.to, p.color, 24, 3.8);
+        try { p.done(); } catch (e) { console.error(e); }
       }
     }
     for (let i = this.parts.length - 1; i >= 0; i--) {
       const m = this.parts[i], d = m.userData; d.age += dt;
       if (!d.nograv) d.v.y -= 9.8 * dt;
       m.position.addScaledVector(d.v, dt);
-      if (m.position.y < 0.05 && !d.nograv) { m.position.y = 0.05; d.v.multiplyScalar(0.4); d.v.y = 0; }
+      if (m.position.y < 0.05 && !d.nograv && m.position.y > -1) { m.position.y = 0.05; d.v.multiplyScalar(0.35); d.v.y = 0; }
       m.scale.setScalar(d.s * Math.max(0, 1 - d.age / d.life));
       if (d.age >= d.life) { this.scene.remove(m); this.parts.splice(i, 1); }
     }
-    this.placeCamera();
+    this.placeCamera(dt);
     this.renderer.render(this.scene, this.camera);
   }
 }
 const arena = new Arena();
 
-/* ======================= Ingest: data → state + animation ======================= */
-function ingestCells(entries, animate) {
-  const groups = new Map();
-  for (const [k, d] of entries) {
-    const prev = S.cells.get(k);
-    const prevOwner = prev && prev.round === S.round ? prev.owner || null : null;
-    if (d) S.cells.set(k, d); else S.cells.delete(k);
-    const newOwner = d && d.round === S.round ? d.owner || null : null;
-    if (prevOwner === newOwner) continue;
-    const [x, y] = k.split("_").map(Number);
-    if (!animate) { arena.setCell(x, y, newOwner, false); continue; }
-    if (newOwner) { if (!groups.has(newOwner)) groups.set(newOwner, []); groups.get(newOwner).push([x, y]); arena.markPending(x, y); }
-    else { arena.setCell(x, y, null, true); arena.burst(x, y, colorOf(prevOwner), 18); }
-  }
-  groups.forEach((list, owner) => {
-    const cx = Math.round(list.reduce((s, c) => s + c[0], 0) / list.length), cy = Math.round(list.reduce((s, c) => s + c[1], 0) / list.length);
-    const target = list.find(([x, y]) => x === cx && y === cy) || list[0];
-    arena.fire(owner, target[0], target[1], colorOf(owner), () => list.forEach(([x, y]) => { const c = cellAt(x, y); arena.setCell(x, y, c ? c.owner : null, true); }));
-  });
-}
-function ingestHits(entries, animate) {
-  for (const [id, d] of entries) {
-    const known = S.hits.has(id);
-    S.hits.set(id, { ...d, id });
-    if (known || !animate || d.round !== S.round) continue;
-    if (d.dmg < 0) { arena.repairFx(d.target); continue; }
-    const c = effCastle(d.target);
-    if (c) arena.fire(d.attacker, c.x, c.y, colorOf(d.attacker), () => arena.castleHit(d.target));
-    log(`${nameOf(d.attacker)} hit ${nameOf(d.target)}'s castle${d.dmg > 1 ? " for triple damage" : ""}.`, colorOf(d.attacker));
-    if (d.target === myId && d.attacker !== myId) toast(`${nameOf(d.attacker)} hit your castle! Answer correctly to repair it.`);
-  }
-  syncCastles();
-}
-function ingestCastles(entries, animate) {
-  for (const [id, d] of entries) {
-    const prev = S.castles.get(id);
-    S.castles.set(id, d);
-    if (!animate || d.round !== S.round) continue;
-    const wasUp = prev && prev.round === S.round && !prev.fallen, isUp = !d.fallen;
-    if (wasUp && !isUp) {
-      setTimeout(() => arena.crumble(id), 900);
-      log(`${nameOf(d.fellBy)} conquered ${nameOf(id)}'s castle!`, colorOf(d.fellBy));
-      if (id === myId && d.fellBy !== myId) toast(`${nameOf(d.fellBy)} conquered your castle! Rebuild it on one of your squares.`);
-    } else if (isUp && (!wasUp || prev.builtAt !== d.builtAt)) {
-      d.fresh = true;
-      log(`${nameOf(id)} built a castle.`, colorOf(id));
-    } else if (isUp && wasUp && (d.vulnUntil || 0) > (prev.vulnUntil || 0) + 1000) {
-      log(`${nameOf(id)} missed a question. Their shield is down!`, "#BF3328");
-    }
-  }
-  syncCastles();
+function castleInfo(c) {
+  const cov = coverage(c), vuln = isVulnAt(c.owner, now()), thr = vuln ? SWAMP_VULN : SWAMP;
+  return { cov, vuln, thr };
 }
 function syncCastles() {
   const list = [];
-  for (const [o, c] of S.castles) if (c.round === S.round && !c.fallen)
-    list.push({ owner: o, x: c.x, y: c.y, builtAt: c.builtAt, fresh: c.fresh, color: colorOf(o), name: nameOf(o), hp: hpOf(o), vuln: isVuln(o), isMe: o === myId && route !== "teacher" });
-  for (const c of S.castles.values()) c.fresh = false;
+  for (const c of Wd.castles.values()) {
+    const { cov, vuln, thr } = castleInfo(c), conquered = c.empire !== c.owner;
+    list.push({ owner: c.owner, x: c.x, z: c.z, fresh: now() - c.t < 4000, color: colorOf(c.empire), name: nameOf(c.owner), empName: conquered ? nameOf(c.empire) : "", conquered, pct: cov.pct, thr, vuln, isMe: c.owner === myId && route !== "teacher" });
+  }
   arena.syncCastles(list);
-  arena.showRange(route === "play" && effCastle(myId) ? myId : null);
 }
 
 /* ======================= Questions ======================= */
-let progress = { seen: [], sigs: [], n: 0 }, progressRef = null, progressReady = false, lastGen = null;
+let progress = { seen: [], sigs: [], n: 0 }, progressReady = false, lastGen = null;
 let current = null, answered = false, lastResult = null, cooldownUntil = 0, cdTimer = null;
-function saveProgress() {
-  progress.sigs = progress.sigs.slice(-400);
-  local.set("progress_" + myId, progress);
-}
+function saveProgress() { progress.sigs = progress.sigs.slice(-400); local.set("progress_" + myId, progress); }
 function pickQuestion() {
   const unseen = Q.filter((q) => !progress.seen.includes(q.id));
   let q = null;
   if (unseen.length && Math.random() < 0.5) q = pick(unseen);
   else {
-    for (let i = 0; i < 30 && !q; i++) {
-      const g = pick(GENS.filter((g) => g.key !== lastGen));
-      const cand = g.make();
-      if (!progress.sigs.includes(cand.sig)) { q = cand; lastGen = g.key; }
-    }
+    for (let i = 0; i < 30 && !q; i++) { const g = pick(GENS.filter((g) => g.key !== lastGen)); const cand = g.make(); if (!progress.sigs.includes(cand.sig)) { q = cand; lastGen = g.key; } }
     if (!q) q = unseen.length ? pick(unseen) : pick(GENS).make();
   }
-  current = q; answered = false; lastResult = null;
-  renderQuestion();
+  current = q; answered = false; lastResult = null; renderQuestion();
 }
 function parseNum(s) {
   s = String(s).trim().replace(/[−–]/g, "-").replace(/,/g, "").replace(/\s+/g, "").replace(/%$/, "");
@@ -1079,10 +1198,7 @@ function parseNum(s) {
   if (/^-?\d*\.?\d+$/.test(s)) return Number(s);
   return NaN;
 }
-function checkNum(input, ans) {
-  const v = parseNum(input); if (Number.isNaN(v)) return null;
-  return Number.isInteger(ans) ? Math.abs(v - ans) < 1e-9 : Math.abs(v - ans) <= 0.001;
-}
+function checkNum(input, ans) { const v = parseNum(input); if (Number.isNaN(v)) return null; return Number.isInteger(ans) ? Math.abs(v - ans) < 1e-9 : Math.abs(v - ans) <= 0.001; }
 function submitAnswer(choice) {
   if (answered || !current) return;
   const p = me(); if (!p) return;
@@ -1090,45 +1206,37 @@ function submitAnswer(choice) {
   if (current.type === "mc") ok = choice === current.ans;
   else { typed = $("gridIn").value; ok = checkNum(typed, current.ans); if (ok === null) { toast("Enter a number, like 12, -3, 0.75, or 7/2."); return; } }
   answered = true;
-  if (current.id) { if (!progress.seen.includes(current.id)) progress.seen.push(current.id); }
-  else progress.sigs.push(current.sig);
+  if (current.id) { if (!progress.seen.includes(current.id)) progress.seen.push(current.id); } else progress.sigs.push(current.sig);
   progress.n = (progress.n || 0) + 1; saveProgress();
   const streak = ok ? (p.streak || 0) + 1 : 0;
-  let reward = 0, exploded = 0, repaired = false;
+  let reward = 0, exploded = 0;
   if (ok) {
     reward = current.diff === "hard" ? 5 : 3;
     if (streak % 3 === 0) reward += 2;
     if (S.double) reward *= 2;
-    if (effCastle(myId) && hpOf(myId) < MAX_HP) { repaired = true; addHit(myId, -1); }
-  } else {
-    cooldownUntil = Date.now() + WRONG_COOLDOWN * 1000;
-    exploded = punish();
-  }
-  lastResult = { ok, choice, reward, streak, exploded, repaired, typed };
+    if (Wd.castles.has(myId)) pushEvent({ k: "fortify", seed: (Math.random() * 4294967295) >>> 0 });
+  } else { cooldownUntil = Date.now() + WRONG_COOLDOWN * 1000; exploded = punish(); }
+  lastResult = { ok, choice, reward, streak, exploded, typed };
   writeMe({ paint: (p.paint || 0) + reward, correct: (p.correct || 0) + (ok ? 1 : 0), answered: (p.answered || 0) + 1, streak });
   renderQuestion();
   if (ok) { const a = $("paintAmt"); a.classList.remove("bump"); void a.offsetWidth; a.classList.add("bump"); }
 }
 function punish() {
-  const c = effCastle(myId); if (!c) return 0;
-  const nc = { ...c, vulnUntil: Date.now() + VULN_MS };
-  ingestCastles([[myId, nc]], true); dbUpdate("castles/" + myId, { vulnUntil: nc.vulnUntil });
-  const mine = [];
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const cc = cellAt(x, y); if (cc && cc.owner === myId && !(x === c.x && y === c.y)) mine.push([x, y, Math.hypot(x - c.x, y - c.y) + Math.random() * 1.5]); }
-  mine.sort((a, b) => b[2] - a[2]);
-  const boom = mine.slice(0, EXPLODE_N);
-  const entries = boom.map(([x, y]) => [key(x, y), { owner: null, cap: false, round: S.round, t: Date.now() }]);
-  ingestCells(entries, true);
-  dbCells(entries);
-  if (boom.length) log(`${nameOf(myId)} missed a question. ${boom.length} blob${boom.length > 1 ? "s" : ""} exploded!`, colorOf(myId));
-  return boom.length;
-}
-function addHit(target, dmg) {
-  const id = uid(), hit = { target, attacker: myId, dmg, round: S.round, t: Date.now() };
-  ingestHits([[id, hit]], true); dbSet("hits/" + id, hit);
+  if (!Wd.castles.has(myId)) return 0;
+  const t = now();
+  pushEvent({ k: "vuln", until: t + VULN_MS, t });
+  log(`${nameOf(myId)} missed a question. Shield down!`, "#BF3328");
+  const myEmp = headOf(myId), cells = [];
+  for (let i = 0; i < Wd.grid.length; i++) { const o = Wd.grid[i]; if (o >= 0 && headOf(Wd.ids[o]) === myEmp) cells.push(i); }
+  const picks = [];
+  for (let tries = 0; tries < 200 && picks.length < EXPLODE_N && cells.length; tries++) {
+    const i = cells[Math.floor(Math.random() * cells.length)], x = (i % GW + 0.5) / GR - W / 2, z = (Math.floor(i / GW) + 0.5) / GR - H / 2;
+    if (picks.every(([a, b]) => Math.hypot(a - x, b - z) > 2.2)) picks.push([x, z]);
+  }
+  for (const [x, z] of picks) pushEvent({ k: "erase", x: +x.toFixed(2), z: +z.toFixed(2), seed: (Math.random() * 4294967295) >>> 0 });
+  return picks.length;
 }
 function fmtAns(q) { if (q.ansText) return q.ansText; return Number.isInteger(q.ans) ? neg(q.ans) : String(+q.ans.toFixed(4)); }
-
 function renderQuestion() {
   const area = $("qArea");
   if (!me()) { renderJoin(); return; }
@@ -1137,22 +1245,15 @@ function renderQuestion() {
   const diffTag = q.diff === "hard" ? `<span class="tag hard">Hard · 5 paint</span>` : `<span class="tag med">Medium · 3 paint</span>`;
   let html = `<div class="qmeta"><span class="tag">${q.dom}</span><span class="tag">${q.topic}</span>${diffTag}</div><p class="qtext">${q.q}</p>`;
   if (q.type === "mc") {
-    html += `<div class="choices">` + q.ch.map((c, i) => {
-      let cls = "choice"; if (answered) { if (i === q.ans) cls += " right"; else if (r && i === r.choice) cls += " wrong"; }
-      return `<button type="button" class="${cls}" data-i="${i}" ${answered ? "disabled" : ""}><span class="letter">${"ABCD"[i]}</span><span>${c}</span></button>`;
-    }).join("") + `</div>`;
+    html += `<div class="choices">` + q.ch.map((c, i) => { let cls = "choice"; if (answered) { if (i === q.ans) cls += " right"; else if (r && i === r.choice) cls += " wrong"; } return `<button type="button" class="${cls}" data-i="${i}" ${answered ? "disabled" : ""}><span class="letter">${"ABCD"[i]}</span><span>${c}</span></button>`; }).join("") + `</div>`;
   } else {
-    html += `<form class="gridin" id="gridForm"><input id="gridIn" inputmode="text" autocomplete="off" aria-label="Your answer" placeholder="Your answer" ${answered ? "disabled" : ""}><button class="btn" ${answered ? "disabled" : ""}>Check</button></form>
-      <div class="hint">Student-produced response. Fractions like 7/2 or decimals like 3.5 both work.</div>`;
+    html += `<form class="gridin" id="gridForm"><input id="gridIn" inputmode="text" autocomplete="off" aria-label="Your answer" placeholder="Your answer" ${answered ? "disabled" : ""}><button class="btn" ${answered ? "disabled" : ""}>Check</button></form><div class="hint">Student-produced response. Fractions like 7/2 or decimals like 3.5 both work.</div>`;
   }
   if (answered && r) {
-    if (r.ok) {
-      html += `<div class="feedback ok"><strong>Correct! +${r.reward} paint${r.streak % 3 === 0 ? " (streak bonus)" : ""}${S.double ? " · double paint" : ""}${r.repaired ? " · castle repaired" : ""}</strong>${q.ex}</div>
-        <div class="next-row"><button class="btn" id="nextBtn" type="button">Next question</button><span class="cool">Streak: ${r.streak}</span></div>`;
-    } else {
+    if (r.ok) html += `<div class="feedback ok"><strong>Correct! +${r.reward} paint${r.streak % 3 === 0 ? " (streak bonus)" : ""}${S.double ? " · double paint" : ""} · fresh coat on your castle</strong>${q.ex}</div><div class="next-row"><button class="btn" id="nextBtn" type="button">Next question</button><span class="cool">Streak: ${r.streak}</span></div>`;
+    else {
       const shown = q.type === "mc" ? `The answer is ${"ABCD"[q.ans]}.` : `The answer is ${fmtAns(q)}.`;
-      html += `<div class="feedback no"><strong>Not quite. ${shown}</strong>${q.ex}<span class="pun">Your shield is down for ${VULN_MS / 1000} seconds${r.exploded ? ` and ${r.exploded} of your blobs exploded` : ""}. Enemy shots now do triple damage.</span></div>
-        <div class="next-row"><button class="btn" id="nextBtn" type="button" disabled>Next question</button><span class="cool" id="cdText"></span></div>`;
+      html += `<div class="feedback no"><strong>Not quite. ${shown}</strong>${q.ex}<span class="pun">Your shield is down for ${VULN_MS / 1000} seconds${r.exploded ? ` and ${r.exploded} of your blobs exploded` : ""}. Your castle can be swamped at ${Math.round(SWAMP_VULN * 100)}% instead of ${Math.round(SWAMP * 100)}%.</span></div><div class="next-row"><button class="btn" id="nextBtn" type="button" disabled>Next question</button><span class="cool" id="cdText"></span></div>`;
     }
   }
   area.innerHTML = html;
@@ -1172,7 +1273,7 @@ function runCooldown() {
   tick(); cdTimer = setInterval(tick, 250);
 }
 
-/* ======================= Join / found ======================= */
+/* ======================= Join ======================= */
 let joinColor = null, joinSig = "";
 function takenColors() {
   const s = new Set();
@@ -1212,7 +1313,7 @@ function renderJoin() {
   area.innerHTML = `<div class="join">
     ${online ? `<div class="qmeta"><span class="tag">Class ${CLASS}</span><button type="button" class="tag" id="leaveBtn" style="border:0">Change class</button></div>` : ""}
     <h2>${prev && prev.round && prev.round !== S.round ? "A new round has begun" : "Build your kingdom"}</h2>
-    <p>You are your own kingdom with your own color. You get a castle, a cannon and ${START_PAINT} paint. Answer questions to load more paint, and protect your castle by getting them right.</p>
+    <p>You start as your own kingdom with your own color, a castle, a cannon and ${START_PAINT} paint. Swamp other castles with your paint to grow your empire. The last empire standing wins.</p>
     <form id="joinForm" autocomplete="off">
       <label for="kName">Kingdom name</label>
       <input type="text" id="kName" maxlength="24" required placeholder="e.g. The Quadratic Empire">
@@ -1237,198 +1338,176 @@ function renderJoin() {
     const ok = await claimColor(idx);
     if (!ok) { toast(`Someone just took ${COLORS[idx].name}. Pick another color.`); joinColor = null; joinSig = ""; renderJoin(); return; }
     current = null;
-    writeMe({ name, color: joinColor, round: S.round, paint: START_PAINT, correct: 0, answered: 0, streak: 0, conquests: 0 });
-    found(); renderAll();
+    writeMe({ name, color: joinColor, round: S.round, paint: START_PAINT, correct: 0, answered: 0, streak: 0, shots: 0 });
+    if (!Wd.castles.has(myId)) found();
+    if (!online) addPracticeTargets();
+    renderAll();
   });
 }
 async function claimColor(idx) {
   if (!online) return true;
   try {
-    const res = await classRef("colors/c" + idx).transaction((cur) => {
-      if (cur && cur.owner && cur.owner !== myId && cur.round === S.round) return;
-      return { owner: myId, idx, round: S.round, t: Date.now() };
-    });
+    const res = await classRef("colors/c" + idx).transaction((cur) => { if (cur && cur.owner && cur.owner !== myId && cur.round === S.round) return; return { owner: myId, idx, round: S.round, t: Date.now() }; });
     return !!res.committed;
   } catch (e) { handleWriteError(e); return false; }
 }
+function findSpot() {
+  const cs = [...Wd.castles.values()]; let best = null, bestScore = -1;
+  for (let i = 0; i < 400; i++) {
+    const x = -W / 2 + 2.6 + Math.random() * (W - 5.2), z = -H / 2 + 2.6 + Math.random() * (H - 5.2);
+    let dmin = 99; for (const c of cs) dmin = Math.min(dmin, Math.hypot(c.x - x, c.z - z));
+    const gi = Math.floor((z + H / 2) * GR) * GW + Math.floor((x + W / 2) * GR), painted = Wd.grid[gi] >= 0 ? 2 : 0;
+    const score = Math.min(dmin, 8) - painted - Math.hypot(x / W, z / H) * 3 + Math.random() * 0.3;
+    if (score > bestScore) { bestScore = score; best = [x, z]; }
+  }
+  return best;
+}
 function found() {
-  const open = [], loose = [];
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-    if (cellAt(x, y) || castleAt(x, y)) continue;
-    loose.push([x, y]);
-    let clear = true;
-    for (let dy = -3; dy <= 3 && clear; dy++) for (let dx = -3; dx <= 3; dx++) if (cellAt(x + dx, y + dy)) { clear = false; break; }
-    if (clear) open.push([x, y]);
-  }
-  const list = open.length ? open : loose;
-  if (!list.length) { toast("The map is full. Ask your teacher to start a new round."); return; }
-  const [x, y] = pick(list);
-  buildCastle(x, y);
-  const entries = [[x, y], ...BRUSH.splash.slice(1).map(([dx, dy]) => [x + dx, y + dy])].filter(([a, b]) => a >= 0 && b >= 0 && a < W && b < H && !cellAt(a, b))
-    .map(([a, b]) => [key(a, b), { owner: myId, cap: false, round: S.round, t: Date.now() }]);
-  ingestCells(entries, true); dbCells(entries);
-  toast("Your castle is up. Earn paint, then click the table to fire.");
+  const [x, z] = findSpot();
+  pushEvent({ k: "join", x: +x.toFixed(2), z: +z.toFixed(2), seed: (Math.random() * 4294967295) >>> 0 });
+  toast("Your castle is up. Aim at a rival castle and swamp it with paint!");
 }
-function buildCastle(x, y) {
-  const c = { owner: myId, x, y, round: S.round, builtAt: Date.now(), fallen: false, vulnUntil: 0 };
-  ingestCastles([[myId, c]], true); dbSet("castles/" + myId, c);
+function addPracticeTargets() {
+  [["bot1", "Practice Fort", "#7B4BD6"], ["bot2", "Training Keep", "#13A3A8"]].forEach(([id, name, color]) => {
+    if (S.players.has(id)) return;
+    S.players.set(id, { name, color, round: S.round, paint: 0, correct: 0, answered: 0 });
+    const [x, z] = findSpot(); pushEvent({ k: "join", by: id, x: +x.toFixed(2), z: +z.toFixed(2), seed: (Math.random() * 4294967295) >>> 0 });
+  });
 }
 
-/* ======================= Firing ======================= */
-function myCells() { const out = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c && c.owner === myId) out.push([x, y]); } return out; }
-function reachable(x, y) {
-  const c = effCastle(myId);
-  if (c && Math.hypot(x - c.x, y - c.y) <= RANGE) return true;
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const cc = cellAt(x + dx, y + dy); if (cc && cc.owner === myId) return true; }
-  return false;
+/* ======================= Aiming & firing ======================= */
+let aimYaw = null, charging = null, lastPower = 0;
+const PERIOD = 1.25;
+function powerAt(ms) { const ph = (ms / 1000 / PERIOD) % 2; return ph < 1 ? ph : 2 - ph; }
+function myCastle() { return Wd.castles.get(myId) || null; }
+function canFire() {
+  const p = me(), c = myCastle();
+  if (!p || !c) return "Build your castle first.";
+  if (Wd.winner) return `${nameOf(Wd.winner)} has conquered every kingdom. Wait for your teacher to start a new round.`;
+  const cost = SIZES[paintSize].cost;
+  if ((p.paint || 0) < cost) return `A ${SIZES[paintSize].name.toLowerCase()} load costs ${cost} paint and you have ${p.paint || 0}. Answer questions to earn more.`;
+  return null;
 }
-function plan(x, y) {
+function setAimFromPoint(pt) { const c = myCastle(); if (!c || !pt) return; aimYaw = Math.atan2(pt[1] - c.z, pt[0] - c.x); }
+function startCharge() {
+  if (route !== "play") return;
+  const why = canFire(); if (why) { toast(why); return; }
+  if (aimYaw == null) { const c = myCastle(); aimYaw = Math.atan2(-c.z, -c.x); }
+  charging = { t0: performance.now() };
+  $("gauge").hidden = false;
+}
+function releaseCharge() {
+  if (!charging) return;
+  const p = powerAt(performance.now() - charging.t0); charging = null; $("gauge").hidden = true;
+  fireShot(p);
+}
+function fireShot(power) {
+  const why = canFire(); if (why) { toast(why); return; }
+  const c = myCastle(), size = SIZES[paintSize], d = MIN_RANGE + power * (MAX_RANGE - MIN_RANGE);
+  const x = c.x + Math.cos(aimYaw) * d, z = c.z + Math.sin(aimYaw) * d;
   const p = me();
-  if (!p) return { msg: "Build your castle first." };
-  const mineN = myCells().length, castle = effCastle(myId), target = cellAt(x, y), tc = castleAt(x, y);
-  if (!castle) {
-    if (!mineN) return { msg: "Your kingdom was wiped out. Use “Rebuild” above to start again." };
-    if (target && target.owner === myId && !tc) return { kind: "rebuild", cost: REBUILD_COST, cells: [[x, y]], msg: `Rebuild your castle here for ${REBUILD_COST} paint.` };
-    return { msg: "Your castle fell. Click one of your own squares to rebuild it." };
-  }
-  if (!reachable(x, y)) return { blocked: true, cells: [[x, y]], msg: `Out of range. Your cannon reaches ${RANGE} squares from your castle, or any square touching your land.` };
-  if (tc && tc.owner !== myId) {
-    const v = isVuln(tc.owner), dmg = v ? 3 : 1, hp = hpOf(tc.owner);
-    return { kind: "siege", cost: COST_CASTLE, cells: [[x, y]], victim: tc.owner, dmg, msg: `Fire at ${nameOf(tc.owner)}'s castle (${hp}/${MAX_HP} hearts${v ? ", shield down" : ""}) for ${COST_CASTLE} paint. ${dmg} damage${hp <= dmg ? ". This shot conquers it!" : "."}` };
-  }
-  if (tc && tc.owner === myId) return { blocked: true, cells: [[x, y]], msg: "That's your own castle." };
-  const area = []; let cost = 0;
-  for (const [dx, dy] of BRUSH[brush]) {
-    const nx = x + dx, ny = y + dy;
-    if (nx < 0 || ny < 0 || nx >= W || ny >= H || castleAt(nx, ny)) continue;
-    const c = cellAt(nx, ny); if (c && c.owner === myId) continue;
-    area.push([nx, ny]); cost += c ? COST_ENEMY : COST_EMPTY;
-  }
-  if (!area.length) return { blocked: true, cells: [[x, y]], msg: "Nothing to paint here. Those squares are already yours." };
-  const enemy = area.filter(([a, b]) => cellAt(a, b)).length;
-  return { kind: "paint", cost, cells: area, msg: `${area.length} square${area.length > 1 ? "s" : ""}${enemy ? ` (${enemy} enemy)` : ""} for ${cost} paint.` };
+  writeMe({ paint: p.paint - size.cost, shots: (p.shots || 0) + 1 });
+  pushEvent({ k: "shot", x: +x.toFixed(2), z: +z.toFixed(2), r: size.r, seed: (Math.random() * 4294967295) >>> 0 });
+  arena.markLanding(x, z); lastPower = power;
+  $("mapNote").textContent = onBoard(x, z) ? `Last shot landed ${d.toFixed(1)} away. Adjust your power to hit closer or farther.` : `Splash! That one landed in the sea, ${d.toFixed(1)} away. Use less power.`;
 }
-function act(x, y) {
-  const p = me();
-  if (!p) { toast("Build your castle first."); return; }
-  const pl = plan(x, y);
-  if (!pl.kind) { toast(pl.msg); return; }
-  if (pl.cost > (p.paint || 0)) { toast(`That costs ${pl.cost} paint and you have ${p.paint || 0}. Answer questions to earn more.`); return; }
-  const now = Date.now();
-  if (pl.kind === "rebuild") {
-    buildCastle(x, y); writeMe({ paint: p.paint - pl.cost }); toast("Castle rebuilt. Your shield is up.");
-  } else if (pl.kind === "siege") {
-    let paint = p.paint - pl.cost;
-    const vc = effCastle(pl.victim);
-    addHit(pl.victim, pl.dmg);
-    if (hpOf(pl.victim) <= 0) {
-      const flips = [];
-      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const c = cellAt(vc.x + dx, vc.y + dy); if (c && c.owner === pl.victim) flips.push([key(vc.x + dx, vc.y + dy), { owner: myId, cap: false, round: S.round, t: now }]); }
-      const fallen = { ...vc, fallen: true, fellBy: myId, fellAt: now };
-      ingestCastles([[pl.victim, fallen]], true); dbUpdate("castles/" + pl.victim, { fallen: true, fellBy: myId, fellAt: now });
-      setTimeout(() => { ingestCells(flips, true); dbCells(flips); renderAll(); }, 900);
-      paint += CONQUEST_BONUS;
-      writeMe({ paint, conquests: (p.conquests || 0) + 1 });
-      toast(`You conquered ${nameOf(pl.victim)}'s castle! +${CONQUEST_BONUS} paint in plunder.`);
-    } else writeMe({ paint });
-  } else {
-    const entries = pl.cells.map(([a, b]) => [key(a, b), { owner: myId, cap: false, round: S.round, t: now }]);
-    ingestCells(entries, true); dbCells(entries);
-    writeMe({ paint: p.paint - pl.cost });
-  }
-  touchArmed = null; refreshHover();
+function aimTick() {
+  if (route === "play" && me() && myCastle() && !Wd.winner) {
+    const p = charging ? powerAt(performance.now() - charging.t0) : null;
+    arena.aimAt(myId, aimYaw ?? Math.atan2(-myCastle().z, -myCastle().x), p);
+    if (charging) { $("gfill").style.width = (p * 100).toFixed(1) + "%"; $("gtxt").textContent = (MIN_RANGE + p * (MAX_RANGE - MIN_RANGE)).toFixed(1) + " away"; }
+  } else arena.aimAt(null);
+  requestAnimationFrame(aimTick);
 }
-
-let hover = null, touchArmed = null, down = null;
-function refreshHover() {
-  const n = $("mapNote");
-  if (!hover || route !== "play") { arena.highlight([], true); n.textContent = me() ? "Click a square to fire your cannon. Drag to turn the table. On a phone, tap once to aim and again to fire." : "Build your castle to start firing."; return; }
-  const pl = plan(hover[0], hover[1]);
-  const affordable = pl.kind && pl.cost <= ((me() || {}).paint || 0);
-  arena.highlight(pl.cells || [hover], !!affordable);
-  const c = cellAt(hover[0], hover[1]), tc = castleAt(hover[0], hover[1]);
-  n.textContent = (c && !tc ? `${nameOf(c.owner)}'s land. ` : "") + pl.msg + (touchArmed && pl.kind ? " Tap again to fire." : "");
-}
+requestAnimationFrame(aimTick);
 const stageEl = $("studentStage");
-stageEl.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, az: arena.az, drag: false, id: e.pointerId }; });
-stageEl.addEventListener("pointermove", (e) => {
-  if (down && e.pointerId === down.id) {
-    const dx = e.clientX - down.x;
-    if (Math.abs(dx) > 8) down.drag = true;
-    if (down.drag) { arena.az = down.az - dx * 0.008; return; }
-  }
-  if (e.pointerType === "touch") return;
-  const c = arena.pick(e.clientX, e.clientY);
-  if (String(c) !== String(hover)) { hover = c; refreshHover(); }
+stageEl.addEventListener("pointermove", (e) => { setAimFromPoint(arena.pick(e.clientX, e.clientY)); });
+stageEl.addEventListener("pointerdown", (e) => {
+  if (e.button && e.button !== 0) return;
+  e.preventDefault(); stageEl.focus({ preventScroll: true });
+  try { stageEl.setPointerCapture(e.pointerId); } catch {}
+  setAimFromPoint(arena.pick(e.clientX, e.clientY)); startCharge();
 });
-stageEl.addEventListener("pointerup", (e) => {
-  const wasDrag = down && down.drag; down = null;
-  if (wasDrag) return;
-  const c = arena.pick(e.clientX, e.clientY); if (!c) return;
-  if (e.pointerType === "touch") {
-    if (touchArmed && touchArmed[0] === c[0] && touchArmed[1] === c[1]) act(c[0], c[1]);
-    else { touchArmed = c; hover = c; refreshHover(); }
-    return;
-  }
-  act(c[0], c[1]);
+stageEl.addEventListener("pointerup", () => releaseCharge());
+stageEl.addEventListener("pointercancel", () => { charging = null; $("gauge").hidden = true; });
+stageEl.addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener("keydown", (e) => {
+  if (route !== "play" || /INPUT|TEXTAREA|BUTTON|SELECT/.test((document.activeElement || {}).tagName || "")) return;
+  if (e.code === "Space") { e.preventDefault(); if (!e.repeat && !charging) startCharge(); }
+  if (e.code === "ArrowLeft" || e.code === "ArrowRight") { e.preventDefault(); const c = myCastle(); if (!c) return; if (aimYaw == null) aimYaw = Math.atan2(-c.z, -c.x); aimYaw += (e.code === "ArrowLeft" ? -1 : 1) * 0.035 * (Math.cos(arena.az) >= 0 ? 1 : -1); }
 });
-stageEl.addEventListener("pointerleave", () => { down = null; if (!touchArmed) { hover = null; refreshHover(); } });
-document.querySelectorAll("[data-brush]").forEach((b) => b.addEventListener("click", () => {
-  brush = b.dataset.brush; document.querySelectorAll("[data-brush]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); refreshHover();
+window.addEventListener("keyup", (e) => { if (e.code === "Space" && charging) { e.preventDefault(); releaseCharge(); } });
+$("rotL").addEventListener("click", () => { arena.targetAz -= Math.PI / 4; });
+$("rotR").addEventListener("click", () => { arena.targetAz += Math.PI / 4; });
+document.querySelectorAll("[data-size]").forEach((b) => b.addEventListener("click", () => {
+  paintSize = b.dataset.size; document.querySelectorAll("[data-size]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
 }));
 
 /* ======================= Panels ======================= */
-function hearts(hp) { let s = ""; for (let i = 0; i < MAX_HP; i++) s += i < hp ? "♥" : `<span class="off">♥</span>`; return s; }
+function empireStats() {
+  const area = new Map(); let total = 0;
+  for (let i = 0; i < Wd.grid.length; i++) { const o = Wd.grid[i]; if (o < 0) continue; const h = headOf(Wd.ids[o]); area.set(h, (area.get(h) || 0) + 1); total++; }
+  const emp = new Map();
+  for (const c of Wd.castles.values()) { if (!emp.has(c.empire)) emp.set(c.empire, { id: c.empire, castles: 0, members: [] }); const e = emp.get(c.empire); e.castles++; e.members.push(c.owner); }
+  const list = [...emp.values()].map((e) => ({ ...e, area: (area.get(e.id) || 0) / (GW * GH) }));
+  list.sort((a, b) => b.castles - a.castles || b.area - a.area);
+  return list;
+}
 function renderWell() {
   const p = me();
   $("paintAmt").textContent = p ? p.paint || 0 : 0;
-  $("dropPath").setAttribute("fill", p ? p.color : "#8A93AB");
+  const c = myCastle(), emp = c ? c.empire : myId;
+  $("dropPath").setAttribute("fill", p ? colorOf(emp) : "#8A93AB");
   const acc = p && p.answered ? Math.round((100 * p.correct) / p.answered) : null;
-  $("myStats").innerHTML = p ? `<b>${landCount(myId)}</b> squares<br><b>${p.correct || 0}</b>/${p.answered || 0} correct${acc != null ? ` · ${acc}%` : ""}` : "";
-  const cs = $("castleStatus");
-  if (!p) { cs.innerHTML = ""; return; }
-  const c = effCastle(myId);
-  if (!c) { cs.innerHTML = `<span class="shield down">No castle</span>`; return; }
-  const v = isVuln(myId), left = Math.ceil(((c.vulnUntil || 0) - Date.now()) / 1000);
-  cs.innerHTML = `<span class="hearts" aria-label="${hpOf(myId)} of ${MAX_HP} hearts">${hearts(hpOf(myId))}</span><span class="shield ${v ? "down" : ""}">${v ? `Shield down · ${left}s` : "Shield up"}</span>`;
+  $("myStats").innerHTML = p ? `<b>${p.shots || 0}</b> shots<br><b>${p.correct || 0}</b>/${p.answered || 0} correct${acc != null ? ` · ${acc}%` : ""}` : "";
+  const cs = $("castleStatus"), mt = $("meter");
+  if (!p || !c) { cs.innerHTML = ""; mt.hidden = true; return; }
+  const { cov, vuln, thr } = castleInfo(c), left = Math.ceil(((Wd.vuln.get(myId) || 0) - now()) / 1000);
+  const conquered = c.empire !== myId;
+  cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>${conquered ? "Fighting for " : "Free kingdom: "}${escapeHtml(nameOf(emp))}</span><span class="shield ${vuln ? "down" : ""}">${vuln ? `Shield down · ${left}s` : "Shield up"}</span>`;
+  mt.hidden = false;
+  mt.innerHTML = `Enemy paint on your castle: <b>${Math.round(cov.pct * 100)}%</b>${cov.emp ? ` (${escapeHtml(nameOf(cov.emp))})` : ""}. Captured at <b>${Math.round(thr * 100)}%</b>.<div class="track"><div class="fill" style="width:${Math.min(100, cov.pct * 100)}%"></div><div class="mark" style="left:calc(${thr * 100}% - 1px)"></div></div>`;
 }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
 function renderBanner() {
-  const b = $("banner"), p = me(); b.innerHTML = "";
-  if (!p) return;
-  if (!effCastle(myId)) {
-    if (!myCells().length) {
-      b.innerHTML = `<div class="banner"><span><b>Your kingdom was wiped off the map.</b> Build a new castle somewhere open. You keep your paint.</span><button class="btn small" id="refound" type="button">Rebuild</button></div>`;
-      $("refound").addEventListener("click", () => { found(); renderAll(); });
-    } else b.innerHTML = `<div class="banner"><span><b>Your castle fell!</b> Click one of your own squares to rebuild it for ${REBUILD_COST} paint. You can't fire until you do.</span></div>`;
-  }
+  const b = $("banner"); b.innerHTML = "";
+  const c = myCastle();
+  if (me() && !c && (!online || CLASS)) {
+    b.innerHTML = `<div class="banner"><span><b>You don't have a castle on the map yet.</b></span><button class="btn small" id="buildBtn" type="button">Build my castle</button></div>`;
+    $("buildBtn").addEventListener("click", () => { found(); renderAll(); });
+  } else if (me() && c && c.empire !== myId) b.innerHTML = `<div class="banner"><span><b>Your castle was swamped.</b> You now fight for ${escapeHtml(nameOf(c.empire))}. Your shots paint in their color, and if they win, you win with them.</span></div>`;
 }
 function renderRows(el, compact) {
-  const counts = new Map();
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c) counts.set(c.owner, (counts.get(c.owner) || 0) + 1); }
-  const list = [];
-  S.players.forEach((p, id) => { if (active(p)) list.push({ id, p, land: counts.get(id) || 0 }); });
-  list.sort((a, b) => b.land - a.land || (b.p.correct || 0) - (a.p.correct || 0));
-  el.innerHTML = "";
+  const list = empireStats(); el.innerHTML = "";
   if (!list.length) { el.innerHTML = `<p class="empty" style="margin:0">No kingdoms yet. Students join with the class code and build the first castle.</p>`; return; }
-  list.slice(0, 40).forEach((r, i) => {
-    const row = document.createElement("div"); row.className = "row" + (r.id === myId && !compact ? " me" : "");
+  const myEmp = myCastle() ? myCastle().empire : null;
+  list.forEach((e, i) => {
+    const row = document.createElement("div"); row.className = "row" + (e.id === myEmp && !compact ? " me" : "");
     const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = i + 1;
-    const dot = document.createElement("span"); dot.className = "dotc"; dot.style.background = r.p.color;
-    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.p.name || "Unnamed";
-    if (!compact) { const sm = document.createElement("small"); sm.textContent = `${r.p.correct || 0} correct · ${r.p.conquests || 0} conquest${r.p.conquests === 1 ? "" : "s"}`; nm.appendChild(sm); }
-    const land = document.createElement("span"); land.className = "land"; land.textContent = r.land; land.title = "Squares of land";
-    const st = document.createElement("small");
-    st.textContent = effCastle(r.id) ? "♥".repeat(hpOf(r.id)) + (isVuln(r.id) ? " ⚠" : "") : "no castle";
-    land.appendChild(st);
+    const dot = document.createElement("span"); dot.className = "dotc"; dot.style.background = colorOf(e.id);
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = nameOf(e.id);
+    if (!compact) { const sm = document.createElement("small"); sm.textContent = e.members.length > 1 ? `${e.members.length} players: ${e.members.filter((m) => m !== e.id).map(nameOf).slice(0, 3).join(", ")}${e.members.length > 4 ? "…" : ""} joined` : "Independent"; nm.appendChild(sm); }
+    const land = document.createElement("span"); land.className = "land"; land.textContent = `${e.castles} castle${e.castles > 1 ? "s" : ""}`;
+    const st = document.createElement("small"); st.className = "ok"; st.textContent = `${Math.round(e.area * 100)}% of map`; land.appendChild(st);
     row.append(rank, dot, nm, land); el.appendChild(row);
   });
 }
+function renderWin() {
+  const box = $("winBox"), w = Wd.winner;
+  if (!w) { box.hidden = true; return; }
+  const n = Wd.castles.size;
+  const key = w + "|" + n + "|" + isTeacher + "|" + route + "|" + S.round;
+  if (box.dataset.closed === key) { box.hidden = true; return; }
+  box.hidden = false;
+  if (box.dataset.k === key) return; box.dataset.k = key;
+  box.innerHTML = `<svg class="crown" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 40 8 10l14 14L32 4l10 20 14-14 4 30z" fill="#F3B61F"/><rect x="4" y="40" width="56" height="6" rx="2" fill="#C99212"/></svg>
+    <h2>${escapeHtml(nameOf(w))} wins!</h2><p>Their empire swamped all ${n} castles on the map.</p>${!online ? `<button class="btn" type="button" id="winRound">Play again</button>` : isTeacher && route === "teacher" ? `<button class="btn" type="button" id="winRound">Start a new round</button>` : `<p>Waiting for your teacher to start a new round.</p><button class="btn" type="button" id="winClose">Close</button>`}`;
+  const b = $("winRound"); if (b) b.addEventListener("click", startNewRound);
+  const cl = $("winClose"); if (cl) cl.addEventListener("click", () => { box.dataset.closed = key; box.hidden = true; });
+}
 function renderTeacher() {
   isTeacher = online ? !!CLASS && S.owner === myId : true;
-  document.querySelectorAll("[data-act]").forEach((b) => {
-    b.hidden = !isTeacher;
-    if (b.dataset.act === "double") b.textContent = S.double ? "Turn off double paint" : "Turn on double paint";
-  });
+  document.querySelectorAll("[data-act]").forEach((b) => { b.hidden = !isTeacher; if (b.dataset.act === "double") b.textContent = S.double ? "Turn off double paint" : "Turn on double paint"; });
   $("codePill").hidden = !CLASS; $("codePill").textContent = CLASS ? `Class ${CLASS}` : "";
   $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = CLASS || "";
   $("bJoined").textContent = `${joinedCount()} of ${COLORS.length} players joined`;
@@ -1437,41 +1516,38 @@ function renderTeacher() {
   if (route === "teacher" && !isTeacher) {
     st.hidden = false;
     if (!online) st.innerHTML = `<h2>Game server not connected</h2><p>${setupMsg}</p>`;
-    else if (!st.querySelector("#mkClass")) {
-      st.innerHTML = `<h2>Start a class</h2><p>Create a class code, then put this screen on the projector. Students go to the website and type the code.</p><button class="btn" type="button" id="mkClass">Create class code</button>`;
-      $("mkClass").addEventListener("click", createClass);
-    }
+    else if (!st.querySelector("#mkClass")) { st.innerHTML = `<h2>Start a class</h2><p>Create a class code, then put this screen on the projector. Students go to the website and type the code.</p><button class="btn" type="button" id="mkClass">Create class code</button>`; $("mkClass").addEventListener("click", createClass); }
   } else st.hidden = true;
   const rt = `Round ${S.round}${S.double ? " · Double paint!" : ""}`;
-  $("roundPill").textContent = rt; $("bRound").textContent = rt;
-  $("roundPill").classList.toggle("hot", S.double);
+  $("roundPill").textContent = rt; $("bRound").textContent = rt; $("roundPill").classList.toggle("hot", S.double);
 }
 function renderAll() {
-  renderWell(); renderBanner(); renderRows($("rows"), false); renderRows($("bRows"), true); renderTeacher();
+  renderWell(); renderBanner(); renderRows($("rows"), false); renderRows($("bRows"), true); renderTeacher(); renderWin();
   const area = $("qArea");
   if (!me()) renderJoin();
   else if (!current || area.querySelector("#joinForm") || area.querySelector(".loadingq")) {
     if (progressReady) { current = null; pickQuestion(); } else area.innerHTML = `<p class="empty loadingq">Loading your question set…</p>`;
   }
-  syncCastles(); refreshHover();
+  syncCastles();
 }
 setInterval(() => { renderWell(); syncCastles(); }, 1000);
 
-let armReset = 0;
-document.querySelectorAll('[data-act="round"]').forEach((btn) => btn.addEventListener("click", async () => {
-  if (Date.now() - armReset > 4000) { armReset = Date.now(); btn.textContent = "Click again to wipe the map"; setTimeout(() => (btn.textContent = "Start a new round"), 4000); return; }
-  armReset = 0; btn.textContent = "Start a new round";
-  if (!online) { S.round++; current = null; arena.syncCells(); renderAll(); log(`Round ${S.round} has begun. The map is clear.`); return; }
+async function startNewRound() {
+  if (!online) { S.round++; current = null; fullReplay(); arena.paintAll(); renderAll(); log(`Round ${S.round} has begun. The map is clean.`); return; }
   try {
     await classRef("meta").update({ round: (S.round || 1) + 1, double: false });
-    toast("New round started. The map is clear. Same class code.");
-    setTimeout(() => classRef().update({ cells: null, hits: null, castles: null, colors: null }).catch(() => {}), 2500);
+    toast("New round started. The map is clean. Same class code.");
+    setTimeout(() => classRef().update({ events: null, colors: null }).catch(() => {}), 2500);
   } catch { toast("Couldn't start a new round. Only the teacher who made this class can."); }
+}
+let armReset = 0;
+document.querySelectorAll('[data-act="round"]').forEach((btn) => btn.addEventListener("click", () => {
+  if (Date.now() - armReset > 4000) { armReset = Date.now(); btn.textContent = "Click again to wipe the map"; setTimeout(() => (btn.textContent = "Start a new round"), 4000); return; }
+  armReset = 0; btn.textContent = "Start a new round"; startNewRound();
 }));
 document.querySelectorAll('[data-act="double"]').forEach((btn) => btn.addEventListener("click", async () => {
   if (!online) { S.double = !S.double; renderAll(); return; }
-  try { await classRef("meta").update({ double: !S.double }); }
-  catch { toast("Couldn't change double paint. Only the teacher who made this class can."); }
+  try { await classRef("meta").update({ double: !S.double }); } catch { toast("Couldn't change double paint. Only the teacher who made this class can."); }
 }));
 let armClass = 0;
 document.querySelectorAll('[data-act="newclass"]').forEach((btn) => btn.addEventListener("click", () => {
@@ -1489,9 +1565,8 @@ async function createClass() {
       const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, created: Date.now() }));
       if (res.committed) { local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
     } catch (e) {
-      const why = String((e && (e.code || e.message)) || "unknown error");
-      const st = $("bStart");
-      st.innerHTML = `<h2>Couldn't create a class</h2><p>${/permission/i.test(why) ? "Firebase refused the request. Open Realtime Database → Rules in the Firebase console, paste in the rules from database.rules.json, and click Publish." : "The game couldn't reach the database. Check your internet connection, then try again."}</p><p style="font-size:13px">Details: ${why.replace(/[<>&]/g, "")}</p><button class="btn" type="button" id="mkClass">Try again</button>`;
+      const why = String((e && (e.code || e.message)) || "unknown error"), st = $("bStart");
+      st.innerHTML = `<h2>Couldn't create a class</h2><p>${/permission/i.test(why) ? "Firebase refused the request. Open Realtime Database → Rules in the Firebase console, paste in the rules from database.rules.json, and click Publish." : "The game couldn't reach the database. Check your internet connection, then try again."}</p><p style="font-size:13px">Details: ${escapeHtml(why)}</p><button class="btn" type="button" id="mkClass">Try again</button>`;
       $("mkClass").addEventListener("click", createClass);
       return false;
     }
@@ -1500,7 +1575,7 @@ async function createClass() {
 }
 
 let toastT;
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3600); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3800); }
 
 /* ======================= Routing ======================= */
 function applyRoute() {
@@ -1508,8 +1583,7 @@ function applyRoute() {
   $("boardView").hidden = route !== "teacher"; $("studentView").hidden = route === "teacher";
   arena.mode = route === "teacher" ? "board" : "student";
   arena.mount(route === "teacher" ? $("boardStage") : $("studentStage"));
-  if (route === "teacher") { hover = null; arena.highlight([], true); }
-  syncCastles(); refreshHover(); renderTeacher();
+  syncCastles(); renderTeacher(); renderWin();
 }
 window.addEventListener("hashchange", applyRoute);
 
@@ -1518,83 +1592,55 @@ const setupMsg = "This copy of the game isn't connected to a Firebase database y
 let subs = [], renderQueued = false;
 function scheduleRender() { if (renderQueued) return; renderQueued = true; setTimeout(() => { renderQueued = false; renderAll(); }, 60); }
 function listen(ref, ev, fn) { ref.on(ev, fn, () => {}); subs.push(() => ref.off(ev, fn)); }
-function batcher(fn) { let q = []; return (item) => { q.push(item); if (q.length === 1) setTimeout(() => { const b = q; q = []; fn(b); scheduleRender(); }, 40); }; }
-function resetState() {
-  S.players = new Map(); S.cells = new Map(); S.castles = new Map(); S.hits = new Map(); S.claims = new Map();
-  S.round = 1; S.double = false; S.owner = null; current = null;
-  arena.syncCells(); syncCastles();
-}
-function leaveClass() {
-  subs.forEach((f) => f()); subs = []; CLASS = null; local.set("code", ""); resetState(); renderAll();
-}
+function resetWorld() { fullReplay(); arena.paintAll(); }
+function leaveClass() { subs.forEach((f) => f()); subs = []; CLASS = null; S.events = new Map(); local.set("code", ""); S.players = new Map(); S.claims = new Map(); S.round = 1; S.double = false; S.owner = null; current = null; resetWorld(); renderAll(); }
 async function connectClass(code) {
   let meta;
   try { meta = await fdb.ref(`classes/${code}/meta`).once("value"); } catch { return false; }
   if (!meta.exists()) return false;
   subs.forEach((f) => f()); subs = [];
-  resetState();
-  CLASS = code;
-  if (route !== "teacher") local.set("code", code);
-  const m = meta.val(); S.round = m.round || 1; S.double = !!m.double; S.owner = m.owner;
+  CLASS = code; if (route !== "teacher") local.set("code", code);
+  const m = meta.val(); S.round = m.round || 1; S.double = !!m.double; S.owner = m.owner; current = null;
   const b = fdb.ref("classes/" + code);
-  const [pl, co, ce, ca, hi] = await Promise.all(["players", "colors", "cells", "castles", "hits"].map((k) => b.child(k).once("value").catch(() => null)));
+  const [pl, co, ev] = await Promise.all(["players", "colors", "events"].map((k) => b.child(k).once("value").catch(() => null)));
   S.players = new Map(Object.entries((pl && pl.val()) || {}));
   S.claims = new Map(Object.entries((co && co.val()) || {}));
-  ingestCastles(Object.entries((ca && ca.val()) || {}), false);
-  ingestCells(Object.entries((ce && ce.val()) || {}), false);
-  ingestHits(Object.entries((hi && hi.val()) || {}), false);
+  S.events = new Map(); fullReplay(); arena.paintAll();
+  ingestEvents(Object.entries((ev && ev.val()) || {}), false);
   listen(b.child("meta"), "value", (s) => {
     const d = s.val(); if (!d) { toast("Your teacher closed this class."); leaveClass(); return; }
     const changed = (d.round || 1) !== S.round;
     S.round = d.round || 1; S.double = !!d.double; S.owner = d.owner;
-    if (changed) { current = null; arena.syncCells(); log(`Round ${S.round} has begun. The map is clear.`); }
+    if (changed) { current = null; resetWorld(); log(`Round ${S.round} has begun. The map is clean.`); }
     scheduleRender();
   });
-  listen(b.child("players"), "value", (s) => { S.players = new Map(Object.entries(s.val() || {})); arena.syncCells(); scheduleRender(); });
+  let colorSig = "";
+  listen(b.child("players"), "value", (s) => {
+    S.players = new Map(Object.entries(s.val() || {}));
+    const sig = [...S.players].map(([id, p]) => id + ":" + p.color).sort().join(",");
+    if (sig !== colorSig) { colorSig = sig; arena.paintLater(300); }
+    scheduleRender();
+  });
   listen(b.child("colors"), "value", (s) => { S.claims = new Map(Object.entries(s.val() || {})); scheduleRender(); });
-  const cellQ = batcher((items) => ingestCells(items, true));
-  listen(b.child("cells"), "child_added", (s) => cellQ([s.key, s.val()]));
-  listen(b.child("cells"), "child_changed", (s) => cellQ([s.key, s.val()]));
-  listen(b.child("cells"), "child_removed", (s) => cellQ([s.key, null]));
-  const castleQ = batcher((items) => ingestCastles(items, true));
-  listen(b.child("castles"), "child_added", (s) => castleQ([s.key, s.val()]));
-  listen(b.child("castles"), "child_changed", (s) => castleQ([s.key, s.val()]));
-  listen(b.child("castles"), "child_removed", (s) => { S.castles.delete(s.key); syncCastles(); scheduleRender(); });
-  const hitQ = batcher((items) => ingestHits(items, true));
-  listen(b.child("hits"), "child_added", (s) => hitQ([s.key, s.val()]));
-  listen(b.child("hits"), "child_removed", (s) => { S.hits.delete(s.key); });
+  let q = [];
+  listen(b.child("events"), "child_added", (s) => {
+    q.push([s.key, s.val()]);
+    if (q.length === 1) setTimeout(() => { const batch = q; q = []; ingestEvents(batch, true); scheduleRender(); }, 40);
+  });
   renderAll();
   return true;
 }
-function loadProgress() {
-  progress = { seen: [], sigs: [], n: 0, ...local.get("progress_" + myId, {}) };
-  progressReady = true; renderAll();
-}
+function loadProgress() { progress = { seen: [], sigs: [], n: 0, ...local.get("progress_" + myId, {}) }; progressReady = true; renderAll(); }
 async function boot() {
   renderLog(); applyRoute(); renderAll();
   const cfg = window.FIREBASE_CONFIG;
   const configured = window.firebase && cfg && cfg.apiKey && !/PASTE/.test(cfg.apiKey) && cfg.databaseURL && !/PASTE/.test(cfg.databaseURL);
-  if (!configured) {
-    online = false; myId = "local";
-    $("conn").textContent = "Practice mode · game server not set up";
-    loadProgress(); return;
-  }
-  try {
-    firebase.initializeApp(cfg);
-    fdb = firebase.database();
-    const cred = await firebase.auth().signInAnonymously();
-    myId = cred.user.uid;
-  } catch (e) {
-    online = false; myId = "local";
-    $("conn").textContent = "Practice mode · couldn't reach the game server";
-    toast("Couldn't reach the game server. You can still practice on your own.");
-    loadProgress(); return;
-  }
+  if (!configured) { online = false; myId = "local"; $("conn").textContent = "Practice mode · game server not set up"; loadProgress(); return; }
+  try { firebase.initializeApp(cfg); fdb = firebase.database(); const cred = await firebase.auth().signInAnonymously(); myId = cred.user.uid; }
+  catch (e) { online = false; myId = "local"; $("conn").textContent = "Practice mode · couldn't reach the game server"; toast("Couldn't reach the game server. You can still practice on your own."); loadProgress(); return; }
   online = true;
-  fdb.ref(".info/connected").on("value", (s) => {
-    const up = !!s.val();
-    $("conn").textContent = up ? "Live" : "Reconnecting…"; $("conn").classList.toggle("live", up);
-  });
+  fdb.ref(".info/connected").on("value", (s) => { const up = !!s.val(); $("conn").textContent = up ? "Live" : "Reconnecting…"; $("conn").classList.toggle("live", up); });
+  fdb.ref(".info/serverTimeOffset").on("value", (s) => { S.offset = s.val() || 0; });
   loadProgress();
   const saved = route === "teacher" ? local.get("teacherCode", "") : local.get("code", "");
   if (saved) { const ok = await connectClass(saved); if (!ok) local.set(route === "teacher" ? "teacherCode" : "code", ""); }

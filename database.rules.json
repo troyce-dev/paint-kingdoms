@@ -21,19 +21,10 @@
             ".write": "auth != null && newData.child('owner').val() === auth.uid && (!data.exists() || data.child('owner').val() === auth.uid || data.child('round').val() !== root.child('classes/' + $code + '/meta/round').val())"
           }
         },
-        "cells": {
-          "$cell": {
-            ".write": "auth != null && root.child('classes/' + $code + '/players/' + auth.uid).exists()"
-          }
-        },
-        "castles": {
-          "$owner": {
-            ".write": "auth != null && root.child('classes/' + $code + '/players/' + auth.uid).exists()"
-          }
-        },
-        "hits": {
-          "$hid": {
-            ".write": "auth != null && !data.exists() && newData.child('attacker').val() === auth.uid && root.child('classes/' + $code + '/players/' + auth.uid).exists()"
+        "events": {
+          "$eid": {
+            ".write": "auth != null && !data.exists() && newData.child('by').val() === auth.uid && root.child('classes/' + $code + '/players/' + auth.uid).exists()",
+            ".validate": "newData.hasChildren(['k', 'by', 't', 'round']) && newData.child('k').isString() && newData.child('k').val().length <= 8"
           }
         }
       }

@@ -1,6 +1,6 @@
 # Paint Kingdoms
 
-A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn paint, fire it from cannons, defend their castles, and conquer each other's kingdoms. No student sign-in: students go to the website and type a class code.
+A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn paint, aim cannons to fire it, and swamp each other's castles until one empire rules the map. No student sign-in: students go to the website and type a class code.
 
 - **Student page:** `https://troyce-dev.github.io/paint-kingdoms/`
 - **Teacher / projector page:** `https://troyce-dev.github.io/paint-kingdoms/#teacher`
@@ -64,10 +64,13 @@ Open the student page. The pill at the top should say **Live**, not "Practice mo
 Teacher control is tied to the browser that created the class. If you change computers or clear your browser data, create a new class code.
 
 ## How the game works
-- Correct answer: 3 paint (medium) or 5 paint (hard), +2 for every 3 in a row, and 1 heart repaired on your castle.
-- Wrong answer: your shield drops for 45 seconds (enemy shots do triple damage), 3 of your blobs explode, and the next question is locked for 10 seconds.
-- Paint costs 1 per empty square and 2 per enemy square. A castle shot costs 4 paint. Castles have 6 hearts. A castle at 0 hearts is conquered, and the attacker takes the nearby land.
-- Questions: 42 written SAT-style items plus 23 question types that generate new numbers every time. Each Chromebook remembers which questions it has seen, so students don't get repeats.
+- **Goal:** conquer every kingdom. The game is won when one empire owns every castle on the map.
+- **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. The power sets how far the blob flies (1.5 to 15 away), and a dot on the aim line shows where it will land. Choose a Small (1 paint), Medium (2) or Large (3) load. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
+- **Swamping:** every castle has a ring around it. Cover 70% of that ring with your empire's paint to capture the castle. Capture a kingdom's *home* castle and its whole empire, every castle it owns, joins you.
+- **Conquered players keep playing.** They fight for the empire that captured them, their shots paint in that empire's color, and they win if it wins.
+- **Correct answer:** 3 paint (medium) or 5 paint (hard), +2 for every 3 in a row, and a fresh coat of your color splashed on your own castle.
+- **Wrong answer:** your shield drops for 45 seconds (your castle can be captured at 45% instead of 70%), 3 of your blobs explode off the board, and the next question is locked for 10 seconds.
+- **Questions:** 42 written SAT-style items plus 23 question types that generate new numbers every time. Each Chromebook remembers which questions it has seen, so students don't get repeats.
 
 ## School network notes
 If the game won't load on student Chromebooks, ask IT to allow:
