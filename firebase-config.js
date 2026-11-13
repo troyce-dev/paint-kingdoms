@@ -1,16 +1,15 @@
 // Paint Kingdoms: Firebase settings
 // ---------------------------------------------------------------
-// Replace this whole object with the "firebaseConfig" object that
-// Firebase shows you in Project settings > Your apps > Web app.
-// Make sure it includes "databaseURL". See README.md, step 4.
-//
-// These values are safe to publish. They identify your project;
-// the security rules in database.rules.json are what protect it.
+// These values come from Firebase: Project settings > Your apps > Web app.
+// They are safe to publish. They identify the project; the security
+// rules in database.rules.json are what protect it.
 
 window.FIREBASE_CONFIG = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
-  databaseURL: "PASTE_DATABASE_URL",
-  projectId: "PASTE_PROJECT_ID",
-  appId: "PASTE_APP_ID",
+  apiKey: "AIzaSyD44YDpWui2ahfUYTw5Q401h0Enk8tZRdk",
+  authDomain: "satfire-41b35.firebaseapp.com",
+  databaseURL: "https://satfire-41b35-default-rtdb.firebaseio.com",
+  projectId: "satfire-41b35",
+  storageBucket: "satfire-41b35.firebasestorage.app",
+  messagingSenderId: "557175978991",
+  appId: "1:557175978991:web:36d0f7c301f2529596141a",
 };
