@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Paint Kingdoms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
+<style>
+/* Layout: student console = question easel left, 3D siege table right, ledger + battle log under it. #board = full-screen projector arena with floating cards. */
+:root {
+  --bg: #E8EBF1;
+  --surface: #FFFFFF;
+  --ink: #18203A;
+  --muted: #5A6480;
+  --line: #D5DAE5;
+  --accent: #2F45D0;
+  --accent-ink: #FFFFFF;
+  --good: #17824A;
+  --good-bg: #E3F4EA;
+  --bad: #BF3328;
+  --bad-bg: #FBE7E4;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151E; --surface: #1C2130; --ink: #E9ECF5; --muted: #9AA3BC; --line: #2C3346; --accent: #8E9CFF; --accent-ink: #10142A;
+    --good: #52CC86; --good-bg: #13301F; --bad: #FF8073; --bad-bg: #3A1814; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151E; --surface: #1C2130; --ink: #E9ECF5; --muted: #9AA3BC; --line: #2C3346; --accent: #8E9CFF; --accent-ink: #10142A;
+  --good: #52CC86; --good-bg: #13301F; --bad: #FF8073; --bad-bg: #3A1814; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 32px;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; line-height: 1.15; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a.btn { text-decoration: none; display: inline-block; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.top { max-width: 1360px; margin: 0 auto 14px; display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo h1 { font-size: 28px; letter-spacing: -0.01em; }
+.logo svg { width: 38px; height: 38px; flex: none; }
+.tagline { color: var(--muted); font-size: 14px; }
+.top .spacer { flex: 1; }
+.pill { font-size: 13px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); white-space: nowrap; }
+.pill.live::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+.pill.hot { color: var(--bad); border-color: var(--bad); font-weight: 800; }
+
+.layout { max-width: 1360px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); align-items: start; }
+.right { display: grid; gap: 16px; min-width: 0; }
+.subgrid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) { .subgrid { grid-template-columns: minmax(0, 1fr); } }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 800; color: var(--muted); }
+
+.well { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2px 14px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.well .drop { width: 40px; height: 50px; grid-row: span 2; }
+.well .amt { font-family: var(--display); font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.well .lbl { color: var(--muted); font-size: 13px; }
+.well .stats { text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; grid-row: span 2; }
+.well .stats b { color: var(--ink); }
+.castle-status { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+.castle-status:empty { display: none; }
+.hearts { font-size: 18px; letter-spacing: 2px; color: var(--bad); }
+.hearts .off { color: var(--line); }
+.shield { padding: 2px 9px; border-radius: 99px; font-weight: 800; font-size: 12px; background: var(--good-bg); color: var(--good); }
+.shield.down { background: var(--bad-bg); color: var(--bad); }
+.bump { animation: bump .5s ease; }
+@keyframes bump { 30% { transform: scale(1.25); } }
+
+.qmeta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tag { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: var(--bg); color: var(--muted); }
+.tag.hard { background: var(--bad-bg); color: var(--bad); }
+.tag.med { background: var(--good-bg); color: var(--good); }
+.qtext { font-size: 17px; line-height: 1.6; margin: 0 0 14px; overflow-wrap: anywhere; }
+.qtext .eq { display: block; text-align: center; margin: 8px 0; font-size: 18px; }
+.fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .9em; margin: 0 2px; }
+.fr > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 3px; }
+.fr > span:last-child { padding: 0 3px; }
+.rad { border-top: 1.5px solid currentColor; padding: 0 2px; margin-left: 1px; }
+.choices { display: grid; gap: 8px; }
+.choice { display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-size: 16px; transition: border-color .15s, background .15s; }
+.choice:hover:not(:disabled) { border-color: var(--accent); }
+.choice .letter { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; font-family: var(--display); font-weight: 600; border: 1.5px solid var(--line); }
+.choice.right { border-color: var(--good); background: var(--good-bg); }
+.choice.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.choice:disabled { cursor: default; }
+.gridin { display: flex; gap: 8px; flex-wrap: wrap; }
+.gridin input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 18px; font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.btn { border: 0; border-radius: 10px; padding: 10px 16px; background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.btn.small { padding: 6px 12px; font-size: 13px; }
+.feedback { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; }
+.feedback.ok { background: var(--good-bg); }
+.feedback.no { background: var(--bad-bg); }
+.feedback strong { font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
+.feedback.ok strong { color: var(--good); } .feedback.no strong { color: var(--bad); }
+.feedback .pun { display: block; margin-top: 6px; font-weight: 800; color: var(--bad); }
+.next-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.cool { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.join h2 { font-size: 22px; margin-bottom: 6px; }
+.join p { margin: 0 0 12px; color: var(--muted); }
+.join label { display: block; font-weight: 800; font-size: 13px; margin: 12px 0 6px; }
+.join input.codein { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 22px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 800; }
+.join input[type=text] { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 16px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, 34px); gap: 8px; }
+.picked { margin-top: 6px; font-size: 13px; color: var(--muted); }
+.waiting { padding: 14px; border-radius: 10px; background: var(--bg); color: var(--muted); }
+.sw { width: 34px; height: 34px; border-radius: 50% 50% 50% 12%; border: 3px solid transparent; padding: 0; }
+.sw[aria-pressed="true"] { border-color: var(--ink); }
+.sw:disabled { opacity: .2; cursor: not-allowed; }
+
+.mapwrap { padding: 14px; }
+.maphead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.maphead h2 { font-size: 20px; margin-right: auto; }
+.brushes { display: inline-flex; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; }
+.brushes button { border: 0; background: transparent; padding: 6px 12px; font-weight: 700; font-size: 13px; display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+.brushes button small { font-weight: 600; color: var(--muted); font-size: 11px; }
+.brushes button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.brushes button[aria-pressed="true"] small { color: inherit; opacity: .85; }
+.stage { position: relative; border-radius: 10px; overflow: hidden; background: #A9CBE8; aspect-ratio: 16 / 10; max-height: 72vh; width: 100%; }
+.stage canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; cursor: crosshair; }
+.stage .nogl { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; color: #18203A; font-weight: 700; }
+.mapnote { font-size: 13px; color: var(--muted); margin-top: 8px; min-height: 20px; }
+.banner { margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bad-bg); font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.banner b { color: var(--bad); }
+.rules { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.rules div b { color: var(--ink); display: block; font-size: 13px; }
+
+.ledger h2, .logp h2 { font-size: 20px; margin-bottom: 10px; }
+.rows { display: grid; gap: 4px; }
+.row { display: grid; grid-template-columns: 22px 16px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; font-size: 14px; }
+.row.me { background: var(--bg); font-weight: 800; }
+.row .rank { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; text-align: right; }
+.row .dotc { width: 14px; height: 14px; border-radius: 50% 50% 50% 20%; }
+.row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .nm small { display: block; font-weight: 600; color: var(--muted); font-size: 11px; }
+.row .land { font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.row .land small { display: block; font-family: var(--body); font-size: 11px; color: var(--bad); letter-spacing: 1px; }
+.empty { color: var(--muted); font-size: 14px; }
+.log { display: grid; gap: 6px; font-size: 13px; }
+.log div { padding-left: 10px; border-left: 3px solid var(--line); }
+.log time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; font-size: 12px; }
+.teacherbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); opacity: 0; transition: .25s; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; max-width: calc(100% - 32px); z-index: 40; pointer-events: none; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%); }
+
+/* Projector board: a fixed single look (sky + dark glass cards) so it reads the same on any classroom screen. */
+.board { position: fixed; inset: 0; z-index: 30; background: #A9CBE8; color: #FFFFFF; font-family: var(--body); }
+.board .stage { position: absolute; inset: 0; aspect-ratio: auto; max-height: none; border-radius: 0; }
+.board .stage canvas { cursor: default; }
+.glass { position: absolute; background: rgba(14, 20, 40, 0.72); border-radius: 16px; padding: 14px 18px; backdrop-filter: blur(6px); }
+.b-title { top: calc(16px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); max-width: min(440px, calc(100% - 32px)); }
+.b-title h1 { font-size: clamp(26px, 3.2vw, 44px); color: #FFFFFF; }
+.b-title p { margin: 4px 0 0; color: #C9D2EA; font-size: clamp(13px, 1.2vw, 17px); }
+.codebox { margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: #FFFFFF; color: #18203A; }
+.codebox .eyebrow { color: #5A6480; }
+.codebox .code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-weight: 800; font-size: clamp(34px, 4.6vw, 64px); letter-spacing: 0.14em; line-height: 1.05; }
+.codebox p { color: #5A6480 !important; margin: 2px 0 0 !important; font-size: 13px !important; }
+.b-title #bUrl { color: #FFFFFF; word-break: break-all; }
+.b-title .round { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 99px; background: #F3B61F; color: #18203A; font-weight: 800; font-size: 14px; }
+.b-board { top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: min(560px, calc(100% - 32px)); max-height: calc(100% - 120px); overflow: auto; }
+.b-board .rows { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 10px; gap: 2px 10px; }
+.b-board .row { padding: 3px 6px; font-size: 14px; grid-template-columns: 18px 12px minmax(0, 1fr) auto; gap: 6px; }
+.b-board .row .dotc { width: 12px; height: 12px; }
+.b-board .row .land small { display: inline; margin-left: 4px; }
+.b-board h2 { font-size: 20px; color: #FFFFFF; margin-bottom: 8px; }
+.b-board .row { color: #FFFFFF; font-size: 15px; }
+.b-board .row .rank, .b-board .row .nm small { color: #AEB8D6; }
+.b-board .row .land small { color: #FF9A8E; }
+.b-board .empty { color: #C9D2EA; }
+.b-feed { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); width: min(520px, calc(100% - 32px)); }
+.b-feed .log { font-size: clamp(13px, 1.15vw, 16px); }
+.b-feed .log div { border-left-color: rgba(255,255,255,.3); }
+.b-feed .log time { color: #AEB8D6; }
+.b-feed .empty { color: #C9D2EA; }
+.b-start { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100% - 32px)); text-align: center; padding: 26px; z-index: 2; }
+.b-start h2 { color: #FFFFFF; font-size: 28px; margin-bottom: 8px; }
+.b-start p { color: #C9D2EA; margin: 0 0 16px; }
+.b-start .btn { background: #F3B61F; color: #18203A; font-size: 17px; padding: 12px 22px; }
+.b-start code { background: rgba(255,255,255,.12); padding: 1px 6px; border-radius: 6px; }
+.b-ctrl { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 32px); padding: 10px; }
+.b-ctrl .btn { background: #FFFFFF; color: #18203A; }
+.b-ctrl .btn.ghost { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,.4); }
+@media (max-width: 760px) { .b-board { top: auto; bottom: 90px; max-height: 32%; } .b-feed { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bump { animation: none; } .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div id="studentView">
+<header class="top">
+  <div class="logo">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3c7 0 15 5 15 14 0 6-4 7-4 11s3 4 3 6c0 3-4 4-7 2s-3-5-7-5-6 6-11 6c-4 0-6-3-5-6s4-4 4-8-5-5-5-10C3 7 12 3 20 3z" fill="#2F45D0"/><path d="M12 22l3-7 4 5 4-6 4 6 3-5v7z" fill="#F3B61F"/></svg>
+    <div><h1>Paint Kingdoms</h1><div class="tagline">Answer SAT math. Load your cannon. Defend your castle.</div></div>
+  </div>
+  <div class="spacer"></div>
+  <span class="pill" id="conn">Connecting to the class map…</span>
+  <span class="pill" id="roundPill">Round 1</span>
+  <span class="pill" id="codePill" hidden></span>
+  
+</header>
+
+<main class="layout">
+  <section class="panel" id="easel" aria-label="Questions">
+    <div class="well">
+      <svg class="drop" viewBox="0 0 44 54" aria-hidden="true"><path id="dropPath" d="M22 2C22 2 4 24 4 35a18 18 0 0 0 36 0C40 24 22 2 22 2z" fill="#2F45D0"/><ellipse cx="15" cy="34" rx="4" ry="7" fill="#fff" opacity=".35"/></svg>
+      <div class="amt" id="paintAmt">0</div>
+      <div class="stats" id="myStats"></div>
+      <div class="lbl">paint loaded in your cannon</div>
+      <div class="castle-status" id="castleStatus"></div>
+    </div>
+    <div id="qArea"></div>
+  </section>
+
+  <div class="right">
+    <section class="panel mapwrap" aria-label="Siege table">
+      <div class="maphead">
+        <h2>Siege Table</h2>
+        <div class="brushes" role="group" aria-label="Paint shot size">
+          <button type="button" data-brush="dot" aria-pressed="false">Drop<small>1 square</small></button>
+          <button type="button" data-brush="splash" aria-pressed="true">Splash<small>5 squares</small></button>
+          <button type="button" data-brush="blob" aria-pressed="false">Blob<small>9 squares</small></button>
+        </div>
+      </div>
+      <div id="banner"></div>
+      <div class="stage" id="studentStage"></div>
+      <div class="mapnote" id="mapNote">Click a square to fire your cannon. Drag to turn the table.</div>
+      <div class="rules">
+        <div><b>Paint: 1 per empty square, 2 per enemy square</b>Your cannon reaches 7 squares from your castle, plus anywhere touching your land.</div>
+        <div><b>Castle shot: 4 paint</b>Click an enemy castle. 1 damage, or 3 if their shield is down. 0 hearts = conquered.</div>
+        <div><b>Correct answer</b>Earns paint and repairs 1 heart on your castle.</div>
+        <div><b>Wrong answer</b>Your shield drops for 45 seconds and 3 of your blobs explode.</div>
+      </div>
+    </section>
+    <div class="subgrid">
+      <section class="panel ledger" aria-label="Leaderboard">
+        <h2>Kingdom Ledger</h2>
+        <div class="rows" id="rows"></div>
+      </section>
+      <section class="panel logp" aria-label="Battle log">
+        <h2>Battle Log</h2>
+        <div class="log" id="log"></div>
+      </section>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="board" id="boardView" hidden>
+  <div class="stage" id="boardStage"></div>
+  <div class="glass b-title">
+    <h1>Paint Kingdoms</h1>
+    <p>Go to <b id="bUrl">this website</b> on your Chromebook, type the class code, and pick your color.</p>
+    <span class="round" id="bRound">Round 1</span>
+    <div class="codebox" id="bCodeBox" hidden><div class="eyebrow">Class code</div><div class="code" id="bCode">·····</div><p id="bJoined"></p></div>
+  </div>
+  <div class="glass b-start" id="bStart" hidden></div>
+  <div class="glass b-board"><h2>Kingdom Ledger</h2><div class="rows" id="bRows"></div></div>
+  <div class="glass b-feed"><div class="eyebrow" style="color:#AEB8D6;margin-bottom:6px">Battle log</div><div class="log" id="bLog"></div></div>
+  <div class="glass b-ctrl">
+    <button class="btn small" type="button" data-act="double" hidden>Turn on double paint</button>
+    <button class="btn small" type="button" data-act="round" hidden>Start a new round</button>
+    <button class="btn small" type="button" data-act="newclass" hidden>New class code</button>
+    <a class="btn small ghost" href="#play">Student view</a>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+/* ======================= Formatting helpers ======================= */
+const F = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+const R = (x) => `√<span class="rad">${x}</span>`;
+const EQ = (s) => `<span class="eq">${s}</span>`;
+const neg = (n) => (n < 0 ? "−" + (-n) : String(n));
+const sgn = (n) => (n < 0 ? `− ${-n}` : `+ ${n}`);
+const xm = (n) => (n === 0 ? "x" : `x ${sgn(-n)}`);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const nz = (a, b) => { let v; do v = ri(a, b); while (v === 0); return v; };
+const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
+function frac(p, q) { if (q < 0) { p = -p; q = -q; } const g = gcd(p, q) || 1; p /= g; q /= g; return { val: p / q, text: q === 1 ? neg(p) : `${neg(p)}/${q}` }; }
+function poly(coefs, v = "x") {
+  let out = ""; const deg = coefs.length - 1;
+  coefs.forEach((c, i) => {
+    if (c === 0) return;
+    const p = deg - i, abs = Math.abs(c);
+    const body = p === 0 ? String(abs) : (abs === 1 ? "" : abs) + v + (p === 2 ? "²" : p === 3 ? "³" : p > 3 ? `<sup>${p}</sup>` : "");
+    out += out ? (c < 0 ? " − " : " + ") + body : (c < 0 ? "−" : "") + body;
+  });
+  return out || "0";
+}
+function shuffleChoices(correct, wrongs) {
+  const all = [correct, ...wrongs].map((t, i) => ({ t, ok: i === 0 }));
+  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  return { ch: all.map((a) => a.t), ans: all.findIndex((a) => a.ok) };
+}
+
+/* ======================= Fixed question bank (original SAT-style items) ======================= */
+const Q = [
+ {id:1, dom:"Advanced Math", topic:"Quadratics", diff:"hard", type:"num", ans:21,
+  q:`The function ${EQ("f(x) = x² − 10x + c")} has a minimum value of −4. What is the value of <i>c</i>?`,
+  ex:`The vertex is at x = 10/2 = 5. f(5) = 25 − 50 + c = −4, so c = 21.`},
+ {id:2, dom:"Advanced Math", topic:"Exponential models", diff:"med", type:"mc", ans:1,
+  q:`A town's population is modeled by ${EQ("P(t) = 1,200(1.08)<sup>t/3</sup>")} where <i>t</i> is years since 2020. Which statement is true?`,
+  ch:["The population increases by 8% each year.","The population increases by 8% every 3 years.","The population increases by 24% each year.","The population increases by 3% every 8 years."],
+  ex:`The exponent t/3 increases by 1 each time t increases by 3, and each time the population is multiplied by 1.08. That is an 8% increase every 3 years.`},
+ {id:3, dom:"Algebra", topic:"Systems of equations", diff:"hard", type:"num", ans:6,
+  q:`${EQ("3x − 5y = 7")}${EQ("kx − 10y = 3")}In the system above, <i>k</i> is a constant. For what value of <i>k</i> does the system have no solution?`,
+  ex:`No solution means parallel lines: same slope, different intercepts. Doubling the first equation gives 6x − 10y = 14, so k = 6 makes the left sides match while 14 ≠ 3.`},
+ {id:4, dom:"Advanced Math", topic:"Discriminant", diff:"med", type:"num", ans:8,
+  q:`The equation ${EQ("2x² − 8x + k = 0")} has exactly one real solution. What is the value of <i>k</i>?`,
+  ex:`Exactly one solution means b² − 4ac = 0: 64 − 8k = 0, so k = 8.`},
+ {id:5, dom:"Advanced Math", topic:"Polynomial factors", diff:"hard", type:"num", ans:5,
+  q:`${EQ("p(x) = 2x³ − 5x² + kx − 6")}If <i>x</i> − 2 is a factor of <i>p</i>(<i>x</i>), what is the value of <i>k</i>?`,
+  ex:`By the factor theorem p(2) = 0: 16 − 20 + 2k − 6 = 0, so 2k = 10 and k = 5.`},
+ {id:6, dom:"Advanced Math", topic:"Rational equations", diff:"hard", type:"mc", ans:2,
+  q:`Which of the following describes the solutions to the equation below? ${EQ(`${F("3","x − 2")} + 1 = ${F("x + 1","x − 2")}`)}`,
+  ch:["It has no solution.","x = 2 is the only solution.","Every real number except 2 is a solution.","x = 1 is the only solution."],
+  ex:`Multiply by (x − 2): 3 + (x − 2) = x + 1, which is x + 1 = x + 1. That is always true, but x = 2 makes the denominators zero, so every real number except 2 works.`},
+ {id:7, dom:"Advanced Math", topic:"Radical equations", diff:"hard", type:"num", ans:9,
+  q:`What is the solution to the equation ${EQ(`${R("x + 7")} = x − 5`)}`,
+  ex:`Square both sides: x + 7 = x² − 10x + 25, so x² − 11x + 18 = 0 and x = 9 or x = 2. Check: x = 2 gives √9 = 3 but 2 − 5 = −3, so it is extraneous. Only x = 9 works.`},
+ {id:8, dom:"Advanced Math", topic:"Exponential equations", diff:"med", type:"num", ans:5,
+  q:`If ${EQ("4<sup>x + 1</sup> = 8<sup>x − 1</sup>")} what is the value of <i>x</i>?`,
+  ex:`Write both as powers of 2: 2<sup>2x + 2</sup> = 2<sup>3x − 3</sup>. So 2x + 2 = 3x − 3 and x = 5.`},
+ {id:9, dom:"Advanced Math", topic:"Exponent rules", diff:"hard", type:"num", ans:225,
+  q:`If 3<sup><i>a</i></sup> = 5, what is the value of 9<sup><i>a</i> + 1</sup>?`,
+  ex:`9<sup>a+1</sup> = 9<sup>a</sup> · 9 = (3<sup>a</sup>)² · 9 = 25 · 9 = 225.`},
+ {id:10, dom:"Advanced Math", topic:"Transformations", diff:"med", type:"mc", ans:3,
+  q:`The graph of the quadratic function <i>f</i> has its vertex at (−1, 4). If <i>g</i>(<i>x</i>) = <i>f</i>(<i>x</i> − 3) + 2, what is the vertex of the graph of <i>g</i>?`,
+  ch:["(−4, 6)","(2, 2)","(−4, 2)","(2, 6)"],
+  ex:`f(x − 3) shifts the graph 3 units right and +2 shifts it 2 units up: (−1 + 3, 4 + 2) = (2, 6).`},
+ {id:11, dom:"Advanced Math", topic:"Quadratics", diff:"hard", type:"num", ans:-18,
+  q:`The graph of ${EQ("y = a(x − 4)(x + 2)")} where <i>a</i> is a constant, passes through the point (0, −16). What is the <i>y</i>-coordinate of the vertex of the graph?`,
+  ex:`At x = 0: a(−4)(2) = −8a = −16, so a = 2. The vertex is halfway between the zeros 4 and −2, at x = 1. y = 2(1 − 4)(1 + 2) = 2(−3)(3) = −18.`},
+ {id:12, dom:"Advanced Math", topic:"Roots of quadratics", diff:"hard", type:"num", ans:-7/3, ansText:"−7/3 (or −2.333)",
+  q:`What is the product of the solutions to ${EQ("3x² − 12x − 7 = 0")}`,
+  ex:`For ax² + bx + c = 0 the product of the solutions is c/a = −7/3 (about −2.333).`},
+ {id:13, dom:"Advanced Math", topic:"Nonlinear systems", diff:"med", type:"mc", ans:1,
+  q:`${EQ("y = x² − 4x + 1")}${EQ("y = 2x − 8")}How many solutions does the system above have?`,
+  ch:["Zero","Exactly one","Exactly two","Infinitely many"],
+  ex:`Set them equal: x² − 4x + 1 = 2x − 8, so x² − 6x + 9 = 0, which is (x − 3)² = 0. One solution, where the line is tangent to the parabola.`},
+ {id:14, dom:"Advanced Math", topic:"Exponential functions", diff:"hard", type:"num", ans:2,
+  q:`The function <i>f</i>(<i>x</i>) = <i>a</i> · <i>b</i><sup><i>x</i></sup>, where <i>a</i> and <i>b</i> are positive constants, satisfies <i>f</i>(1) = 6 and <i>f</i>(3) = 54. What is the value of <i>f</i>(0)?`,
+  ex:`f(3)/f(1) = b² = 9, so b = 3. Then a · 3 = 6 gives a = 2, and f(0) = a = 2.`},
+ {id:15, dom:"Advanced Math", topic:"Exponential models", diff:"hard", type:"mc", ans:1,
+  q:`A car worth $24,000 loses 15% of its value each year. Which expression gives its value, in dollars, after <i>m</i> months?`,
+  ch:["24,000(0.85)<sup>12m</sup>","24,000(0.85)<sup>m/12</sup>","24,000(0.15)<sup>m/12</sup>","24,000(1.15)<sup>m/12</sup>"],
+  ex:`The yearly factor is 0.85 and m months is m/12 years, so the value is 24,000(0.85)<sup>m/12</sup>.`},
+ {id:16, dom:"Advanced Math", topic:"Polynomial zeros", diff:"hard", type:"num", ans:3,
+  q:`The polynomial ${EQ("p(x) = x³ − 4x² − 7x + 10")} has a zero at <i>x</i> = 1. What is the sum of the other two zeros of <i>p</i>?`,
+  ex:`The sum of all three zeros is −(−4)/1 = 4. Taking away the zero at 1 leaves 3. (Factoring gives (x − 1)(x − 5)(x + 2), and 5 + (−2) = 3.)`},
+ {id:17, dom:"Algebra", topic:"Absolute value", diff:"med", type:"num", ans:6,
+  q:`How many integers <i>x</i> satisfy ${EQ("|2x − 7| ≤ 5")}`,
+  ex:`−5 ≤ 2x − 7 ≤ 5 gives 2 ≤ 2x ≤ 12, so 1 ≤ x ≤ 6. That is the 6 integers 1 through 6.`},
+ {id:18, dom:"Advanced Math", topic:"Rational expressions", diff:"med", type:"mc", ans:0,
+  q:`Which expression is equivalent to ${EQ(F("x² − 9","x² + x − 6"))} for <i>x</i> ≠ −3 and <i>x</i> ≠ 2?`,
+  ch:[F("x − 3","x − 2"),F("x + 3","x − 2"),F("x − 3","x + 2"),F("−9","x − 6")],
+  ex:`Factor: (x − 3)(x + 3) over (x + 3)(x − 2). Cancel x + 3 to get (x − 3)/(x − 2).`},
+ {id:19, dom:"Advanced Math", topic:"Rational exponents", diff:"hard", type:"mc", ans:2,
+  q:`For <i>x</i> &gt; 0, which expression is equivalent to ${EQ(`${R("x³")} · <sup>3</sup>${R("x²")}`)}`,
+  ch:["x","x<sup>5/6</sup>","x<sup>13/6</sup>","x<sup>2</sup>"],
+  ex:`√(x³) = x<sup>3/2</sup> and the cube root of x² is x<sup>2/3</sup>. Add exponents: 3/2 + 2/3 = 9/6 + 4/6 = 13/6.`},
+ {id:20, dom:"Advanced Math", topic:"Function composition", diff:"med", type:"num", ans:19,
+  q:`If <i>f</i>(<i>x</i>) = 2<i>x</i> + 3 and <i>g</i>(<i>x</i>) = <i>x</i>² − 1, what is the value of <i>f</i>(<i>g</i>(3))?`,
+  ex:`g(3) = 9 − 1 = 8, then f(8) = 16 + 3 = 19.`},
+ {id:21, dom:"Geometry & Trigonometry", topic:"Circles", diff:"hard", type:"num", ans:6,
+  q:`In the <i>xy</i>-plane, the graph of ${EQ("x² + y² − 6x + 10y = 2")} is a circle. What is the radius of the circle?`,
+  ex:`Complete the square: (x² − 6x + 9) + (y² + 10y + 25) = 2 + 9 + 25, so (x − 3)² + (y + 5)² = 36 and the radius is 6.`},
+ {id:22, dom:"Geometry & Trigonometry", topic:"Right-triangle trig", diff:"med", type:"num", ans:5/13, ansText:"5/13 (or 0.3846)",
+  q:`In right triangle <i>ABC</i>, angle <i>C</i> is the right angle and sin <i>A</i> = ${F("5","13")}. What is the value of cos <i>B</i>?`,
+  ex:`A and B are complementary, and the cosine of an angle equals the sine of its complement. cos B = sin A = 5/13 (about 0.3846).`},
+ {id:23, dom:"Geometry & Trigonometry", topic:"Radians", diff:"med", type:"num", ans:15,
+  q:`In a circle, a central angle of ${F("2π","5")} radians intercepts an arc of length 6π. What is the radius of the circle?`,
+  ex:`Arc length s = rθ, so 6π = r · 2π/5 and r = 6π · 5/(2π) = 15.`},
+ {id:24, dom:"Advanced Math", topic:"Quadratic models", diff:"med", type:"num", ans:69,
+  q:`A ball is thrown upward. Its height, in feet, <i>t</i> seconds later is ${EQ("h(t) = −16t² + 64t + 5")} What is the maximum height of the ball, in feet?`,
+  ex:`The vertex is at t = −64/(2 · −16) = 2. h(2) = −64 + 128 + 5 = 69 feet.`},
+ {id:25, dom:"Advanced Math", topic:"Exponential growth", diff:"med", type:"num", ans:32000,
+  q:`A bacteria sample starts with 500 cells and doubles every 20 minutes. How many cells are in the sample after 2 hours?`,
+  ex:`2 hours = 120 minutes = 6 doubling periods. 500 · 2<sup>6</sup> = 500 · 64 = 32,000.`},
+ {id:26, dom:"Advanced Math", topic:"Equivalent forms", diff:"med", type:"mc", ans:2,
+  q:`Which form of ${EQ("f(x) = x² − 8x + 12")} shows the minimum value of <i>f</i> as a constant or coefficient?`,
+  ch:["f(x) = (x − 2)(x − 6)","f(x) = x(x − 8) + 12","f(x) = (x − 4)² − 4","f(x) = (x − 6)(x − 2)"],
+  ex:`Vertex form a(x − h)² + k shows the minimum k directly. (x − 4)² − 4 expands to x² − 8x + 12, and its minimum is −4.`},
+ {id:27, dom:"Algebra", topic:"Systems of equations", diff:"hard", type:"num", ans:7,
+  q:`${EQ("ax + 3y = 12")}${EQ("4x + by = 16")}In the system above, <i>a</i> and <i>b</i> are constants. If the system has infinitely many solutions, what is the value of <i>a</i> + <i>b</i>?`,
+  ex:`The second equation must be a multiple of the first. 12k = 16 gives k = 4/3. Then a · 4/3 = 4 gives a = 3, and 3 · 4/3 = b gives b = 4. a + b = 7.`},
+ {id:28, dom:"Advanced Math", topic:"Polynomial division", diff:"med", type:"num", ans:3,
+  q:`The expression ${EQ(F("x² + 5x + 9","x + 2"))} is equivalent to ${EQ(`x + 3 + ${F("R","x + 2")}`)} where <i>R</i> is a constant. What is the value of <i>R</i>?`,
+  ex:`(x + 2)(x + 3) = x² + 5x + 6, which is 3 less than x² + 5x + 9. So R = 3.`},
+ {id:29, dom:"Advanced Math", topic:"Exponential models", diff:"hard", type:"num", ans:44,
+  q:`The function ${EQ("f(t) = 500(1.2)<sup>2t</sup>")} models a quantity after <i>t</i> years. By what percent does the quantity increase each year?`,
+  ex:`(1.2)<sup>2t</sup> = (1.44)<sup>t</sup>, so each year the quantity is multiplied by 1.44, a 44% increase.`},
+ {id:30, dom:"Advanced Math", topic:"Discriminant", diff:"med", type:"mc", ans:3,
+  q:`The equation ${EQ("x² + 6x + c = 0")} has no real solutions. Which of the following could be the value of <i>c</i>?`,
+  ch:["5","8","9","10"],
+  ex:`No real solutions means 36 − 4c < 0, so c > 9. Only 10 works.`},
+ {id:31, dom:"Advanced Math", topic:"Nonlinear systems", diff:"hard", type:"num", ans:17,
+  q:`The graphs of <i>y</i> = <i>x</i>² and <i>y</i> = 3<i>x</i> + 4 intersect at two points. What is the sum of the <i>y</i>-coordinates of those points?`,
+  ex:`x² = 3x + 4 gives (x − 4)(x + 1) = 0, so the points are (4, 16) and (−1, 1). 16 + 1 = 17.`},
+ {id:32, dom:"Problem-Solving & Data Analysis", topic:"Percent change", diff:"med", type:"mc", ans:2,
+  q:`A jacket's price is increased by 20%. Later the new price is decreased by 25%. Compared with the original price, the final price is`,
+  ch:["5% lower","the same","10% lower","5% higher"],
+  ex:`1.20 × 0.75 = 0.90, so the final price is 90% of the original, which is 10% lower.`},
+ {id:33, dom:"Advanced Math", topic:"Polynomial identities", diff:"hard", type:"num", ans:8,
+  q:`If ${EQ("(ax + 4)(2x − b) = 6x² − 7x − 20")} for all values of <i>x</i>, where <i>a</i> and <i>b</i> are constants, what is the value of <i>a</i> + <i>b</i>?`,
+  ex:`Match x²: 2a = 6, so a = 3. Match constants: −4b = −20, so b = 5. Check x: −3(5) + 4(2) = −7. ✓ a + b = 8.`},
+ {id:34, dom:"Advanced Math", topic:"Function notation", diff:"hard", type:"num", ans:16,
+  q:`The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = (<i>x</i> + <i>k</i>)², where <i>k</i> is a positive constant. If <i>f</i>(2) = 49, what is the value of <i>f</i>(−1)?`,
+  ex:`(2 + k)² = 49 and k > 0, so 2 + k = 7 and k = 5. f(−1) = (−1 + 5)² = 16.`},
+ {id:35, dom:"Advanced Math", topic:"Exponential graphs", diff:"med", type:"num", ans:2,
+  q:`What is the <i>x</i>-coordinate of the <i>x</i>-intercept of the graph of ${EQ("y = 3 · 2<sup>x</sup> − 12")}`,
+  ex:`Set y = 0: 3 · 2<sup>x</sup> = 12, so 2<sup>x</sup> = 4 and x = 2.`},
+ {id:36, dom:"Problem-Solving & Data Analysis", topic:"Mean and median", diff:"med", type:"mc", ans:0,
+  q:`A data set lists the ages of 9 students, all between 15 and 17. A teacher who is 52 is added to the data set. Which statement must be true?`,
+  ch:["The mean increases more than the median.","The median increases more than the mean.","The mean and median increase by the same amount.","Neither the mean nor the median changes."],
+  ex:`An extreme high value pulls the mean up a lot. The median moves at most a little, because it only depends on the middle values.`},
+ {id:37, dom:"Advanced Math", topic:"Quadratics", diff:"hard", type:"num", ans:-3,
+  q:`The quadratic function <i>g</i> has zeros at <i>x</i> = −7 and <i>x</i> = 1. What is the <i>x</i>-coordinate of the vertex of the graph of <i>g</i>?`,
+  ex:`The vertex lies on the axis of symmetry halfway between the zeros: (−7 + 1)/2 = −3.`},
+ {id:38, dom:"Advanced Math", topic:"Rational equations", diff:"hard", type:"num", ans:4,
+  q:`What is the positive solution to ${EQ(`${F("x + 4","x")} = ${F("x","2")}`)}`,
+  ex:`Cross-multiply: 2(x + 4) = x², so x² − 2x − 8 = 0 and (x − 4)(x + 2) = 0. The positive solution is x = 4. Check: 8/4 = 2 and 4/2 = 2. ✓`},
+ {id:39, dom:"Algebra", topic:"Linear inequalities", diff:"med", type:"mc", ans:1,
+  q:`Tickets cost $12 for students and $18 for adults. A club must sell at least $900 in tickets and can sell at most 60 tickets total. If <i>s</i> is student tickets and <i>a</i> is adult tickets, which system models this?`,
+  ch:["12s + 18a ≤ 900 and s + a ≥ 60","12s + 18a ≥ 900 and s + a ≤ 60","18s + 12a ≥ 900 and s + a ≤ 60","12s + 18a ≥ 60 and s + a ≤ 900"],
+  ex:`Money: 12s + 18a must be at least 900, so ≥ 900. Count: s + a is at most 60, so ≤ 60.`},
+ {id:40, dom:"Advanced Math", topic:"Exponential vs. linear", diff:"med", type:"mc", ans:3,
+  q:`For a function <i>h</i>, each time <i>x</i> increases by 1, <i>h</i>(<i>x</i>) is multiplied by 0.9. Which statement best describes <i>h</i>?`,
+  ch:["Increasing linear","Decreasing linear","Increasing exponential","Decreasing exponential"],
+  ex:`A constant multiplier means exponential, and a multiplier between 0 and 1 means it decreases (by 10% per step).`},
+ {id:41, dom:"Advanced Math", topic:"Polynomial graphs", diff:"hard", type:"mc", ans:0,
+  q:`The function ${EQ("p(x) = −(x − 2)²(x + 3)")} is graphed in the <i>xy</i>-plane. What happens to the graph at <i>x</i> = 2?`,
+  ch:["It touches the x-axis and turns around.","It crosses the x-axis.","It has a vertical asymptote.","It does not reach the x-axis."],
+  ex:`x = 2 is a zero with even multiplicity (squared), so the graph touches the x-axis there and turns back without crossing.`},
+ {id:42, dom:"Advanced Math", topic:"Exponent rules", diff:"hard", type:"num", ans:6,
+  q:`If ${EQ(F("x<sup>a²</sup>","x<sup>b²</sup>") + " = x<sup>36</sup>")} with <i>x</i> &gt; 1 and <i>a</i> + <i>b</i> = 6, what is the value of <i>a</i> − <i>b</i>?`,
+  ex:`a² − b² = 36, and a² − b² = (a + b)(a − b) = 6(a − b). So 6(a − b) = 36 and a − b = 6.`},
+];
+Q.forEach((q) => (q.sig = "f" + q.id));
+
+/* ======================= Question generators: fresh numbers every time ======================= */
+const AM = "Advanced Math", ALG = "Algebra", GT = "Geometry & Trigonometry";
+const GENS = [
+ {key:"vertexC", make(){ const h=ri(2,9), m=nz(-9,9), c=h*h+m;
+   return {dom:AM, topic:"Quadratics", diff:"hard", type:"num", ans:c, sig:`vc${h},${m}`,
+   q:`The function ${EQ(`f(x) = x² − ${2*h}x + c`)} where <i>c</i> is a constant, has a minimum value of ${neg(m)}. What is the value of <i>c</i>?`,
+   ex:`The vertex is at x = ${2*h}/2 = ${h}. f(${h}) = ${h*h} − ${2*h*h} + c = c − ${h*h} = ${neg(m)}, so c = ${neg(c)}.`}; }},
+ {key:"disc1", make(){ const a=pick([1,2,3]), t=ri(1,6), b=2*a*t, k=a*t*t;
+   return {dom:AM, topic:"Discriminant", diff:"med", type:"num", ans:k, sig:`d1${a},${t}`,
+   q:`The equation ${EQ(`${poly([a,-b,0])} + k = 0`)} where <i>k</i> is a constant, has exactly one real solution. What is the value of <i>k</i>?`,
+   ex:`Exactly one solution means the discriminant is 0: (${neg(-b)})² − 4(${a})(k) = ${b*b} − ${4*a}k = 0, so k = ${k}.`}; }},
+ {key:"disc0", make(){ const t=ri(2,6), b=2*t, th=t*t; const c=shuffleChoices(String(th+2), [String(th-3),String(th-1),String(th)]);
+   return {dom:AM, topic:"Discriminant", diff:"hard", type:"mc", ans:c.ans, ch:c.ch, sig:`d0${t}`,
+   q:`The equation ${EQ(`x² + ${b}x + c = 0`)} where <i>c</i> is a constant, has no real solutions. Which of the following could be the value of <i>c</i>?`,
+   ex:`No real solutions means ${b}² − 4c < 0, so ${b*b} < 4c and c > ${th}. Only ${th+2} is greater than ${th}. (c = ${th} gives exactly one solution.)`}; }},
+ {key:"factor", make(){ let r,a,k,d; do { r=pick([-3,-2,-1,1,2,3]); a=ri(-5,5); k=nz(-9,9); d=-(r**3+a*r*r+k*r); } while (d===0);
+   const s=`x³${a? (a<0?" − ":" + ")+(Math.abs(a)===1?"":Math.abs(a))+"x²":""} + kx ${sgn(d)}`;
+   return {dom:AM, topic:"Polynomial factors", diff:"hard", type:"num", ans:k, sig:`fa${r},${a},${k}`,
+   q:`${EQ(`p(x) = ${s}`)}In the polynomial above, <i>k</i> is a constant. If ${xm(r)} is a factor of <i>p</i>(<i>x</i>), what is the value of <i>k</i>?`,
+   ex:`By the factor theorem p(${neg(r)}) = 0: ${neg(r**3)} ${sgn(a*r*r)} ${r===1?"+ k":r===-1?"− k":sgn(r)+"k"} ${sgn(d)} = 0. That gives ${r===1?"":r===-1?"−":neg(r)}k = ${neg(k*r)}, so k = ${neg(k)}.`}; }},
+ {key:"expeq", make(){ const [b1,b2,g]=pick([[4,8,2],[9,27,3]]), p=ri(1,5), q=ri(1,5), x=2*p+3*q;
+   return {dom:AM, topic:"Exponential equations", diff:"med", type:"num", ans:x, sig:`ee${b1},${p},${q}`,
+   q:`If ${EQ(`${b1}<sup>x + ${p}</sup> = ${b2}<sup>x − ${q}</sup>`)} what is the value of <i>x</i>?`,
+   ex:`Write both as powers of ${g}: ${g}<sup>2(x + ${p})</sup> = ${g}<sup>3(x − ${q})</sup>. So 2x + ${2*p} = 3x − ${3*q}, and x = ${x}.`}; }},
+ {key:"exprule", make(){ const b=pick([2,3,5]), n=ri(3,8), ans=n*n*b*b;
+   return {dom:AM, topic:"Exponent rules", diff:"hard", type:"num", ans, sig:`er${b},${n}`,
+   q:`If ${b}<sup><i>a</i></sup> = ${n}, what is the value of ${b*b}<sup><i>a</i> + 1</sup>?`,
+   ex:`${b*b}<sup>a+1</sup> = ${b*b}<sup>a</sup> · ${b*b} = (${b}<sup>a</sup>)² · ${b*b} = ${n*n} · ${b*b} = ${ans}.`}; }},
+ {key:"transform", make(){ const h=ri(-5,5), k=ri(-5,5), p=nz(-4,4), q=nz(-5,5); const P=(a,b)=>`(${neg(a)}, ${neg(b)})`;
+   const c=shuffleChoices(P(h+p,k+q), [P(h-p,k+q),P(h+p,k-q),P(h-p,k-q)]);
+   return {dom:AM, topic:"Transformations", diff:"med", type:"mc", ans:c.ans, ch:c.ch, sig:`tr${h},${k},${p},${q}`,
+   q:`The graph of the quadratic function <i>f</i> has its vertex at ${P(h,k)}. If <i>g</i>(<i>x</i>) = <i>f</i>(${xm(p)}) ${sgn(q)}, what is the vertex of the graph of <i>g</i>?`,
+   ex:`f(${xm(p)}) shifts the graph ${Math.abs(p)} unit${Math.abs(p)>1?"s":""} ${p>0?"right":"left"}, and ${sgn(q)} shifts it ${Math.abs(q)} ${q>0?"up":"down"}. The new vertex is ${P(h+p,k+q)}.`}; }},
+ {key:"vertexY", make(){ let m,d,r1,r2; do { m=ri(-3,4); d=ri(1,5); r1=m+d; r2=m-d; } while (!r1||!r2); const a=pick([1,2,3,-1,-2]), v=a*r1*r2, y=-a*d*d;
+   return {dom:AM, topic:"Quadratics", diff:"hard", type:"num", ans:y, sig:`vy${m},${d},${a}`,
+   q:`The graph of ${EQ(`y = a(${xm(r1)})(${xm(r2)})`)} where <i>a</i> is a constant, passes through the point (0, ${neg(v)}). What is the <i>y</i>-coordinate of the vertex of the graph?`,
+   ex:`At x = 0: a(${neg(-r1)})(${neg(-r2)}) = ${neg(r1*r2)}a = ${neg(v)}, so a = ${neg(a)}. The vertex is halfway between the zeros ${neg(r1)} and ${neg(r2)}, at x = ${neg(m)}. y = ${neg(a)}(${neg(m-r1)})(${neg(m-r2)}) = ${neg(y)}.`}; }},
+ {key:"roots", make(){ let a,b,c; do { a=pick([2,3,4,5]); b=nz(-12,12); c=nz(-12,12); } while (b*b-4*a*c<=0); const prod=Math.random()<0.5;
+   const f=prod?frac(c,a):frac(-b,a);
+   return {dom:AM, topic:"Roots of quadratics", diff:"hard", type:"num", ans:f.val, ansText:f.text, sig:`ro${a},${b},${c},${prod}`,
+   q:`What is the ${prod?"product":"sum"} of the solutions to ${EQ(`${poly([a,b,c])} = 0`)}`,
+   ex: prod?`For ax² + bx + c = 0, the product of the solutions is c/a = ${neg(c)}/${a} = ${f.text}.`:`For ax² + bx + c = 0, the sum of the solutions is −b/a = ${neg(-b)}/${a} = ${f.text}.`}; }},
+ {key:"expmodel", make(){ let r,n; do { r=pick([4,5,6,8,12,15]); n=pick([2,3,4,5]); } while (r===n); const up=Math.random()<0.6, A=pick(["800","1,200","2,500","5,000"]);
+   const fac=up?(1+r/100):(1-r/100); const fs=String(+fac.toFixed(2)); const w=up?"increases":"decreases";
+   const c=shuffleChoices(`It ${w} by ${r}% every ${n} years.`, [`It ${w} by ${r}% each year.`,`It ${w} by ${r*n}% each year.`,`It ${w} by ${n}% every ${r} years.`]);
+   return {dom:AM, topic:"Exponential models", diff:"med", type:"mc", ans:c.ans, ch:c.ch, sig:`em${r},${n},${up}`,
+   q:`The value of an investment is modeled by ${EQ(`V(t) = ${A}(${fs})<sup>t/${n}</sup>`)} where <i>t</i> is the number of years. Which statement is true?`,
+   ex:`Each time t increases by ${n}, the exponent t/${n} increases by 1, so the value is multiplied by ${fs}. That is a ${r}% ${up?"increase":"decrease"} every ${n} years.`}; }},
+ {key:"pct", make(){ const [b,sq]=pick([[1.1,"1.21"],[1.2,"1.44"],[1.3,"1.69"],[1.5,"2.25"],[1.4,"1.96"]]); const pct=Math.round((+sq-1)*100), A=pick([200,500,750,1000]);
+   return {dom:AM, topic:"Exponential models", diff:"hard", type:"num", ans:pct, sig:`pc${b},${A}`,
+   q:`The function ${EQ(`f(t) = ${A}(${b})<sup>2t</sup>`)} models a quantity after <i>t</i> years. By what percent does the quantity increase each year?`,
+   ex:`(${b})<sup>2t</sup> = (${b}²)<sup>t</sup> = (${sq})<sup>t</sup>. Each year the quantity is multiplied by ${sq}, a ${pct}% increase.`}; }},
+ {key:"radical", make(){ const b=ri(1,6), s=b+ri(2,6), a=(s-b)**2-s, s2=2*b+1-s; const inside=a===0?"x":`x ${sgn(a)}`;
+   return {dom:AM, topic:"Radical equations", diff:"hard", type:"num", ans:s, sig:`ra${b},${s}`,
+   q:`What is the solution to the equation ${EQ(`${R(inside)} = x − ${b}`)}`,
+   ex:`Square both sides: ${inside} = x² − ${2*b}x + ${b*b}, so ${poly([1,-(2*b+1),b*b-a])} = 0, which factors as (${xm(s)})(${xm(s2)}) = 0. Check x = ${neg(s2)}: the right side is ${neg(s2-b)}, which is negative, so it is extraneous. Only x = ${s} works.`}; }},
+ {key:"nosol", make(){ const a1=ri(2,6), b1=ri(2,7), c1=ri(1,12), m=ri(2,4); let c2; do c2=m*c1+nz(-9,9); while (c2===m*c1);
+   return {dom:ALG, topic:"Systems of equations", diff:"hard", type:"num", ans:m*a1, sig:`ns${a1},${b1},${m}`,
+   q:`${EQ(`${a1}x − ${b1}y = ${c1}`)}${EQ(`kx − ${m*b1}y = ${neg(c2)}`)}In the system above, <i>k</i> is a constant. For what value of <i>k</i> does the system have no solution?`,
+   ex:`No solution means the lines are parallel. Multiplying the first equation by ${m} gives ${m*a1}x − ${m*b1}y = ${m*c1}. With k = ${m*a1} the left sides match, but ${m*c1} ≠ ${neg(c2)}, so there is no solution.`}; }},
+ {key:"infinite", make(){ const a0=ri(2,7), p=ri(2,6), q=ri(2,9), k=ri(2,4);
+   return {dom:ALG, topic:"Systems of equations", diff:"hard", type:"num", ans:a0+k*p, sig:`in${a0},${p},${q},${k}`,
+   q:`${EQ(`ax + ${p}y = ${q}`)}${EQ(`${k*a0}x + by = ${k*q}`)}In the system above, <i>a</i> and <i>b</i> are constants. If the system has infinitely many solutions, what is the value of <i>a</i> + <i>b</i>?`,
+   ex:`The second equation must be ${k} times the first, since ${k*q} = ${k} · ${q}. So ${k}a = ${k*a0} gives a = ${a0}, and b = ${k} · ${p} = ${k*p}. a + b = ${a0+k*p}.`}; }},
+ {key:"circle", make(){ let h,k; do { h=ri(-6,6); k=ri(-6,6); } while (!h||!k); const r=ri(2,9), D=-2*h, E=-2*k, Fc=r*r-h*h-k*k;
+   return {dom:GT, topic:"Circles", diff:"hard", type:"num", ans:r, sig:`ci${h},${k},${r}`,
+   q:`In the <i>xy</i>-plane, the graph of ${EQ(`x² + y² ${sgn(D)}x ${sgn(E)}y = ${neg(Fc)}`)} is a circle. What is the radius of the circle?`,
+   ex:`Complete the square: (${xm(h)})² + (y ${sgn(-k)})² = ${neg(Fc)} + ${h*h} + ${k*k} = ${r*r}. The radius is √${r*r} = ${r}.`}; }},
+ {key:"compose", make(){ const a=nz(-4,5), b=nz(-9,9), c=nz(-6,6), n=nz(-4,4), g=n*n+c, ans=a*g+b;
+   return {dom:AM, topic:"Function composition", diff:"med", type:"num", ans, sig:`co${a},${b},${c},${n}`,
+   q:`If <i>f</i>(<i>x</i>) = ${poly([a,b])} and <i>g</i>(<i>x</i>) = ${poly([1,0,c])}, what is the value of <i>f</i>(<i>g</i>(${neg(n)}))?`,
+   ex:`g(${neg(n)}) = ${n*n} ${sgn(c)} = ${neg(g)}. Then f(${neg(g)}) = ${neg(a)}(${neg(g)}) ${sgn(b)} = ${neg(ans)}.`}; }},
+ {key:"remainder", make(){ const p=ri(1,6), q=ri(-5,6), Rr=nz(-9,9);
+   return {dom:AM, topic:"Polynomial division", diff:"med", type:"num", ans:Rr, sig:`rm${p},${q},${Rr}`,
+   q:`The expression ${EQ(F(poly([1,p+q,p*q+Rr]),`x + ${p}`))} is equivalent to ${EQ(`${poly([1,q])} + ${F("R",`x + ${p}`)}`)} where <i>R</i> is a constant. What is the value of <i>R</i>?`,
+   ex:`(x + ${p})(${poly([1,q])}) = ${poly([1,p+q,p*q])}. The numerator is ${poly([1,p+q,p*q+Rr])}, which differs by ${neg(Rr)}. So R = ${neg(Rr)}.`}; }},
+ {key:"absval", make(){ const a=pick([2,3,4]); const b=nz(-9,15), c=ri(3,12); let n=0; for (let x=-100;x<=100;x++) if (Math.abs(a*x-b)<=c) n++;
+   const lo=(b-c)/a, hi=(b+c)/a;
+   return {dom:ALG, topic:"Absolute value", diff:"med", type:"num", ans:n, sig:`ab${a},${b},${c}`,
+   q:`How many integers <i>x</i> satisfy ${EQ(`|${a}x ${sgn(-b)}| ≤ ${c}`)}`,
+   ex:`−${c} ≤ ${a}x ${sgn(-b)} ≤ ${c} gives ${neg(b-c)} ≤ ${a}x ≤ ${neg(b+c)}, so ${neg(+lo.toFixed(2))} ≤ x ≤ ${neg(+hi.toFixed(2))}. That interval holds ${n} integers.`}; }},
+ {key:"nonlin", make(){ const kind=pick([0,1,2]); let b=ri(-6,6), m, n=ri(-6,6), c;
+   if (kind===1){ const r=ri(-3,3); m=b+2*r; c=n+r*r; }
+   else if (kind===2){ let r1,r2; do { r1=ri(-4,4); r2=ri(-4,4); } while (r1===r2); m=b+r1+r2; c=n+r1*r2; }
+   else { const r=ri(-3,3), e=ri(1,6); m=b+2*r; c=n+r*r+e; }
+   const B=b-m, C=c-n, disc=B*B-4*C;
+   return {dom:AM, topic:"Nonlinear systems", diff:"hard", type:"mc", ans:kind, ch:["Zero","Exactly one","Exactly two","Infinitely many"], sig:`nl${b},${m},${n},${c}`,
+   q:`${EQ(`y = ${poly([1,b,c])}`)}${EQ(`y = ${poly([m,n])}`)}How many solutions does the system above have?`,
+   ex:`Set the right sides equal: ${poly([1,B,C])} = 0. Its discriminant is (${neg(B)})² − 4(${neg(C)}) = ${neg(disc)}, which is ${disc>0?"positive, so there are two solutions":disc===0?"zero, so there is exactly one solution":"negative, so there are no solutions"}.`}; }},
+ {key:"exppts", make(){ const a=ri(2,6), b=ri(2,4), ask2=Math.random()<0.5, ans=ask2?a*b*b:a;
+   return {dom:AM, topic:"Exponential functions", diff:"hard", type:"num", ans, sig:`xp${a},${b},${ask2}`,
+   q:`The function <i>f</i>(<i>x</i>) = <i>a</i> · <i>b</i><sup><i>x</i></sup>, where <i>a</i> and <i>b</i> are positive constants, satisfies <i>f</i>(1) = ${a*b} and <i>f</i>(3) = ${a*b**3}. What is the value of <i>f</i>(${ask2?2:0})?`,
+   ex:`f(3)/f(1) = b² = ${b*b}, so b = ${b}. Then a · ${b} = ${a*b} gives a = ${a}. f(${ask2?2:0}) = ${a}${ask2?` · ${b}² = ${ans}`:` · ${b}⁰ = ${a}`}.`}; }},
+ {key:"trig", make(){ let [o,ad,h]=pick([[3,4,5],[5,12,13],[8,15,17],[7,24,25],[20,21,29]]); if (Math.random()<0.5) [o,ad]=[ad,o]; const askTan=Math.random()<0.5;
+   const f=askTan?frac(o,ad):frac(o,h);
+   return {dom:GT, topic:"Right-triangle trig", diff:askTan?"hard":"med", type:"num", ans:f.val, ansText:`${f.text} (or ${(+f.val.toFixed(4))})`, sig:`tg${o},${ad},${askTan}`,
+   q:`In right triangle <i>ABC</i>, angle <i>C</i> is the right angle and sin <i>A</i> = ${F(o,h)}. What is the value of ${askTan?"tan <i>A</i>":"cos <i>B</i>"}?`,
+   ex: askTan?`If the side opposite A is ${o} and the hypotenuse is ${h}, the other leg is √(${h}² − ${o}²) = ${ad}. tan A = opposite/adjacent = ${o}/${ad}.`:`Angles A and B are complementary, and the cosine of an angle equals the sine of its complement. cos B = sin A = ${o}/${h}.`}; }},
+ {key:"arc", make(){ const [p,q]=pick([[1,3],[2,5],[3,4],[5,6],[2,3],[1,4]]), m=ri(1,4), r=q*m, L=p*m;
+   return {dom:GT, topic:"Radians", diff:"med", type:"num", ans:r, sig:`ar${p},${q},${m}`,
+   q:`In a circle, a central angle of ${F(`${p===1?"":p}π`,q)} radians intercepts an arc of length ${L===1?"":L}π. What is the radius of the circle?`,
+   ex:`Arc length s = rθ, so ${L===1?"":L}π = r · ${p===1?"":p}π/${q}. Then r = ${L} · ${q}/${p} = ${r}.`}; }},
+ {key:"projectile", make(){ const T=ri(1,4), v=32*T, h0=ri(2,12), mx=16*T*T+h0;
+   return {dom:AM, topic:"Quadratic models", diff:"med", type:"num", ans:mx, sig:`pj${T},${h0}`,
+   q:`A cannon launches a paint blob upward. Its height, in feet, <i>t</i> seconds later is ${EQ(`h(t) = −16t² + ${v}t + ${h0}`)} What is the maximum height of the blob, in feet?`,
+   ex:`The vertex is at t = −${v}/(2 · −16) = ${T}. h(${T}) = −${16*T*T} + ${v*T} + ${h0} = ${mx} feet.`}; }},
+];
+
+/* ======================= Game constants ======================= */
+const W = 36, H = 22;
+const COLORS = [
+  {hex:"#E2412F", name:"Vermilion"}, {hex:"#2F45D0", name:"Cobalt"}, {hex:"#1E9E63", name:"Emerald"}, {hex:"#F3B61F", name:"Saffron"}, {hex:"#C2318F", name:"Magenta"},
+  {hex:"#13A3A8", name:"Teal"}, {hex:"#F07F1A", name:"Tangerine"}, {hex:"#7B4BD6", name:"Violet"}, {hex:"#86B520", name:"Lime"}, {hex:"#3D9BE9", name:"Sky"},
+  {hex:"#F07AA0", name:"Rose"}, {hex:"#8A5A34", name:"Umber"}, {hex:"#A3122A", name:"Crimson"}, {hex:"#1B2A6B", name:"Navy"}, {hex:"#1F5E2E", name:"Forest"},
+  {hex:"#F2E23A", name:"Lemon"}, {hex:"#5E2A6E", name:"Plum"}, {hex:"#47D6C8", name:"Aqua"}, {hex:"#B9A2F0", name:"Lavender"}, {hex:"#9BE3A5", name:"Mint"},
+  {hex:"#3A3F4B", name:"Charcoal"}, {hex:"#A7B0BE", name:"Silver"}, {hex:"#FF4FD8", name:"Hot Pink"}, {hex:"#7A7F1E", name:"Olive"}, {hex:"#4F7A94", name:"Steel"},
+];
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function _unusedHash(code) { let h = 2166136261; const t = "pk-" + String(code).toUpperCase().replace(/[^A-Z0-9]/g, ""); for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function newCode() { let c = ""; const a = new Uint32Array(5); crypto.getRandomValues(a); for (const v of a) c += CODE_CHARS[v % CODE_CHARS.length]; return c; }
+const BRUSH = {
+  dot: [[0,0]],
+  splash: [[0,0],[1,0],[-1,0],[0,1],[0,-1]],
+  blob: [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],
+};
+const COST_EMPTY = 1, COST_ENEMY = 2, COST_CASTLE = 4, CONQUEST_BONUS = 4, REBUILD_COST = 3, START_PAINT = 6;
+const MAX_HP = 6, RANGE = 7, VULN_MS = 45000, EXPLODE_N = 3, WRONG_COOLDOWN = 10;
+
+/* ======================= State ======================= */
+let fdb = null, myId = "local", isTeacher = false, online = false, CLASS = null;
+const S = { round: 1, double: false, owner: null, players: new Map(), cells: new Map(), castles: new Map(), hits: new Map(), claims: new Map() };
+let brush = "splash", route = "play";
+const feed = [];
+const $ = (id) => document.getElementById(id);
+const key = (x, y) => x + "_" + y;
+const local = {
+  get(k, d) { try { const v = localStorage.getItem("pk_" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("pk_" + k, JSON.stringify(v)); } catch {} },
+};
+
+function active(p) { return !!p && p.round === S.round; }
+function me() { const p = S.players.get(myId); return active(p) ? p : null; }
+function cellAt(x, y) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return null;
+  const c = S.cells.get(key(x, y));
+  return c && c.owner && c.round === S.round ? c : null;
+}
+function effCastle(owner) { const c = S.castles.get(owner); return c && c.round === S.round && !c.fallen ? c : null; }
+function castleAt(x, y) { for (const [o, c] of S.castles) if (c.round === S.round && !c.fallen && c.x === x && c.y === y) return { ...c, owner: o }; return null; }
+function hpOf(owner) {
+  const c = effCastle(owner); if (!c) return 0;
+  const ev = [...S.hits.values()].filter((h) => h.round === S.round && h.target === owner && h.t >= c.builtAt)
+    .sort((a, b) => a.t - b.t || (a.id < b.id ? -1 : 1));
+  let hp = MAX_HP;
+  for (const h of ev) hp = Math.max(0, Math.min(MAX_HP, hp - h.dmg));
+  return hp;
+}
+function isVuln(owner) { const c = effCastle(owner); return !!c && (c.vulnUntil || 0) > Date.now(); }
+function colorOf(owner) { const p = S.players.get(owner); return p ? p.color : "#9A9A9A"; }
+function nameOf(owner) { const p = S.players.get(owner); return (p && p.name) || "A kingdom"; }
+function landCount(owner) { let n = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c && c.owner === owner) n++; } return n; }
+function uid() { return (myId || "x").slice(-6).replace(/[^A-Za-z0-9]/g, "") + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+/* ======================= Writes ======================= */
+let writeErrShown = false;
+function handleWriteError(e) {
+  if (writeErrShown) return; writeErrShown = true;
+  const code = String((e && (e.code || e.message)) || "");
+  if (/permission/i.test(code)) toast("That move was refused. Your teacher may have started a new round. Refresh the page and rejoin.");
+  else toast("Your moves aren't saving. Check your internet connection.");
+  setTimeout(() => (writeErrShown = false), 6000);
+}
+const clean = (d) => JSON.parse(JSON.stringify(d));
+const classRef = (path) => fdb.ref(`classes/${CLASS}` + (path ? "/" + path : ""));
+async function dbSet(path, data) { if (!online || !CLASS) return; try { await classRef(path).set(clean(data)); } catch (e) { handleWriteError(e); } }
+async function dbUpdate(path, data) { if (!online || !CLASS) return; try { await classRef(path).update(clean(data)); } catch (e) { handleWriteError(e); } }
+async function dbCells(entries) {
+  if (!online || !CLASS || !entries.length) return;
+  const up = {}; for (const [k, d] of entries) up["cells/" + k] = clean(d);
+  try { await classRef().update(up); } catch (e) { handleWriteError(e); }
+}
+function writeMe(patch) {
+  const next = { ...(S.players.get(myId) || {}), ...patch };
+  S.players.set(myId, next);
+  renderAll();
+  dbSet("players/" + myId, next);
+}
+
+/* ======================= Feed ======================= */
+function log(text, color) {
+  const d = new Date();
+  feed.unshift({ text, color, t: `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")}` });
+  feed.length = Math.min(feed.length, 30);
+  renderLog();
+}
+function renderLog() {
+  for (const [id, n] of [["log", 8], ["bLog", 6]]) {
+    const el = $(id); el.innerHTML = "";
+    if (!feed.length) { const e = document.createElement("p"); e.className = "empty"; e.style.margin = "0"; e.textContent = "Shots, hits and conquests show up here as they happen."; el.appendChild(e); continue; }
+    feed.slice(0, n).forEach((f) => {
+      const row = document.createElement("div"); if (f.color) row.style.borderLeftColor = f.color;
+      const t = document.createElement("time"); t.textContent = f.t;
+      row.append(t, document.createTextNode(f.text)); el.appendChild(row);
+    });
+  }
+}
+
+/* ======================= 3D Arena ======================= */
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function hash(x, y, s) { let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
+const tw = (x) => x - W / 2 + 0.5, tz = (y) => y - H / 2 + 0.5;
+
+class Arena {
+  constructor() {
+    this.ok = false;
+    try { if (!window.THREE) throw new Error("no three"); this.init(); this.ok = true; } catch (e) { this.ok = false; }
+  }
+  init() {
+    const T = THREE; this.T = T;
+    const r = this.renderer = new T.WebGLRenderer({ antialias: true });
+    r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+    r.shadowMap.enabled = true; r.shadowMap.type = T.PCFShadowMap; this.perf = { n: 0, sum: 0, checked: false };
+    const sc = this.scene = new T.Scene();
+    sc.background = new T.Color("#A9CBE8");
+    sc.fog = new T.Fog("#A9CBE8", 60, 120);
+    this.camera = new T.PerspectiveCamera(36, 1.6, 0.1, 250);
+    this.az = 0; this.el = 0.92; this.mode = "student"; this.time = 0;
+    sc.add(new T.HemisphereLight("#EAF2FF", "#5A4A36", 0.75));
+    const sun = new T.DirectionalLight("#FFF4E0", 0.95); sun.position.set(12, 26, 10); sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 18, bottom: -18, near: 1, far: 80 }); sun.shadow.bias = -0.0008;
+    sc.add(sun);
+    const sea = new T.Mesh(new T.PlaneGeometry(260, 260), new T.MeshStandardMaterial({ color: "#3F86C0", roughness: 0.55 }));
+    sea.rotation.x = -Math.PI / 2; sea.position.y = -1.3; sc.add(sea);
+    const frame = new T.Mesh(new T.BoxGeometry(W + 2.2, 1.1, H + 2.2), new T.MeshStandardMaterial({ color: "#7A5A3C", roughness: 0.8 }));
+    frame.position.y = -0.7; frame.receiveShadow = true; sc.add(frame);
+    const slab = new T.Mesh(new T.BoxGeometry(W + 0.6, 1.0, H + 0.6), new T.MeshStandardMaterial({ color: "#EFE8D8", roughness: 0.95 }));
+    slab.position.y = -0.5; slab.receiveShadow = true; sc.add(slab);
+    const pts = [];
+    for (let x = 0; x <= W; x++) pts.push(x - W / 2, 0.004, -H / 2, x - W / 2, 0.004, H / 2);
+    for (let y = 0; y <= H; y++) pts.push(-W / 2, 0.004, y - H / 2, W / 2, 0.004, y - H / 2);
+    const lg = new T.BufferGeometry(); lg.setAttribute("position", new T.Float32BufferAttribute(pts, 3));
+    sc.add(new T.LineSegments(lg, new T.LineBasicMaterial({ color: "#D6CCB4" })));
+    this.paint = new T.InstancedMesh(new T.SphereGeometry(0.5, 16, 10), new T.MeshStandardMaterial({ roughness: 0.28, metalness: 0.02 }), W * H);
+    this.paint.instanceMatrix.setUsage(T.DynamicDrawUsage); this.paint.receiveShadow = true;
+    this.inst = []; this.dummy = new T.Object3D(); this.tmpC = new T.Color();
+    for (let i = 0; i < W * H; i++) { this.inst.push({ s: 0, from: 0, to: 0, t0: -1, owner: null, pending: false }); this.paint.setColorAt(i, this.tmpC.set("#ffffff")); this.applyInst(i); }
+    sc.add(this.paint);
+    this.hl = new T.InstancedMesh(new T.PlaneGeometry(0.9, 0.9).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.6, depthWrite: false }), 30);
+    this.hl.count = 0; this.hl.renderOrder = 2; sc.add(this.hl);
+    this.ring = new T.Mesh(new T.RingGeometry(RANGE - 0.06, RANGE + 0.06, 128).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.7, depthWrite: false }));
+    this.ring.position.y = 0.12; this.ring.visible = false; sc.add(this.ring);
+    this.castles = new Map(); this.proj = []; this.parts = []; this.mats = new Map();
+    this.partGeo = new T.SphereGeometry(0.07, 6, 5); this.ballGeo = new T.SphereGeometry(0.2, 14, 10);
+    this.stoneGeo = { base: new T.BoxGeometry(1.35, 0.16, 1.35), keep: new T.BoxGeometry(0.62, 1.0, 0.62), wall: new T.BoxGeometry(1.0, 0.5, 0.14), tower: new T.CylinderGeometry(0.17, 0.2, 1.05, 10), merlon: new T.BoxGeometry(0.12, 0.12, 0.12), roof: new T.ConeGeometry(0.26, 0.42, 10), gate: new T.BoxGeometry(0.26, 0.32, 0.06), pole: new T.CylinderGeometry(0.018, 0.018, 0.7, 6), wheel: new T.CylinderGeometry(0.12, 0.12, 0.05, 12), carriage: new T.BoxGeometry(0.2, 0.08, 0.32), barrel: new T.CylinderGeometry(0.075, 0.095, 0.55, 14), band: new T.TorusGeometry(0.08, 0.018, 6, 14), flag: new T.PlaneGeometry(0.38, 0.24).translate(0.19, 0, 0), dome: new T.SphereGeometry(1.15, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2) };
+    this.raycaster = new T.Raycaster(); this.plane = new T.Plane(new T.Vector3(0, 1, 0), 0); this.v3 = new T.Vector3();
+    this.clock = new T.Clock();
+    const loop = () => { requestAnimationFrame(loop); this.tick(); };
+    loop();
+  }
+  mount(el) {
+    if (!this.ok) { el.innerHTML = `<div class="nogl">The 3D table needs WebGL, which is turned off in this browser. You can still answer questions, but you can't fire until WebGL is on.</div>`; return; }
+    el.appendChild(this.renderer.domElement); this.host = el;
+    if (!this.ro) this.ro = new ResizeObserver(() => this.resize());
+    this.ro.disconnect(); this.ro.observe(el); this.resize();
+  }
+  resize() {
+    if (!this.host) return;
+    const w = Math.max(50, this.host.clientWidth), h = Math.max(50, this.host.clientHeight);
+    this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
+  }
+  applyInst(i) {
+    const st = this.inst[i], x = i % W, y = Math.floor(i / W), s = Math.max(0.0001, st.s);
+    const j1 = hash(x, y, 1) - 0.5, j2 = hash(x, y, 2) - 0.5, j3 = hash(x, y, 3);
+    this.dummy.position.set(tw(x) + j1 * 0.1, 0.02, tz(y) + j2 * 0.1);
+    this.dummy.rotation.set(0, j3 * Math.PI, 0);
+    this.dummy.scale.set((1.16 + j3 * 0.12) * s, 0.2 * Math.min(1.4, s), (1.1 + hash(x, y, 4) * 0.14) * s);
+    this.dummy.updateMatrix(); this.paint.setMatrixAt(i, this.dummy.matrix); this.paint.instanceMatrix.needsUpdate = true;
+  }
+  setCell(x, y, owner, animate) {
+    if (!this.ok) return;
+    const i = y * W + x, st = this.inst[i];
+    st.pending = false; st.owner = owner;
+    if (owner) { this.paint.setColorAt(i, this.tmpC.set(colorOf(owner))); this.paint.instanceColor.needsUpdate = true; }
+    const to = owner ? 1 : 0;
+    if (animate && !reduceMotion) { st.from = st.s; st.to = to; st.t0 = this.time; }
+    else { st.s = to; st.to = to; st.t0 = -1; this.applyInst(i); }
+  }
+  markPending(x, y) { if (this.ok) this.inst[y * W + x].pending = true; }
+  syncCells() {
+    if (!this.ok) return;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x, st = this.inst[i]; if (st.pending) continue;
+      const c = cellAt(x, y), owner = c ? c.owner : null;
+      if (owner) this.paint.setColorAt(i, this.tmpC.set(colorOf(owner)));
+      if (st.owner !== owner) { st.owner = owner; st.s = owner ? 1 : 0; st.to = st.s; st.t0 = -1; this.applyInst(i); }
+    }
+    this.paint.instanceColor.needsUpdate = true;
+  }
+  mat(color, opts) {
+    const k = color + JSON.stringify(opts || {});
+    if (!this.mats.has(k)) this.mats.set(k, new this.T.MeshStandardMaterial({ color, roughness: 0.6, ...(opts || {}) }));
+    return this.mats.get(k);
+  }
+  buildCastleGeo() {
+    const T = this.T, G = this.stoneGeo, P = 0.52;
+    const merge = (parts) => {
+      const pos = [], nor = [], idx = []; let off = 0;
+      const m = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), one = new T.Vector3(1, 1, 1);
+      for (const [geo, x, y, z, ry, rz] of parts) {
+        const g = geo.clone(); m.compose(new T.Vector3(x, y, z), q.setFromEuler(e.set(0, ry || 0, rz || 0)), one); g.applyMatrix4(m);
+        const pa = g.attributes.position, na = g.attributes.normal;
+        for (let i = 0; i < pa.count; i++) { pos.push(pa.getX(i), pa.getY(i), pa.getZ(i)); nor.push(na.getX(i), na.getY(i), na.getZ(i)); }
+        if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(g.index.getX(i) + off); else for (let i = 0; i < pa.count; i++) idx.push(i + off);
+        off += pa.count;
+      }
+      const out = new T.BufferGeometry(); out.setAttribute("position", new T.Float32BufferAttribute(pos, 3)); out.setAttribute("normal", new T.Float32BufferAttribute(nor, 3)); out.setIndex(idx); return out;
+    };
+    const stone = [[G.base, 0, 0.08, 0], [G.keep, 0, 0.66, 0], [G.wall, 0, 0.41, -P], [G.wall, 0, 0.41, P], [G.wall, -P, 0.41, 0, Math.PI / 2], [G.wall, P, 0.41, 0, Math.PI / 2]];
+    for (const [mx, mz] of [[-0.24,-0.24],[0.24,-0.24],[-0.24,0.24],[0.24,0.24],[0,-0.24],[0,0.24],[-0.24,0],[0.24,0]]) stone.push([G.merlon, mx, 1.22, mz]);
+    const roofs = [];
+    for (const [sx, sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]) { stone.push([G.tower, sx * P, 0.68, sz * P]); roofs.push([G.roof, sx * P, 1.41, sz * P]); }
+    this.castleGeo = {
+      stone: merge(stone), roofs: merge(roofs),
+      trim: merge([[G.gate, 0, 0.32, P + 0.07], [G.pole, 0, 1.5, 0]]),
+      carriage: merge([[G.wheel, -0.13, 0.12, 0, 0, Math.PI / 2], [G.wheel, 0.13, 0.12, 0, 0, Math.PI / 2], [G.carriage, 0, 0.16, 0]]),
+    };
+  }
+  makeCastle(color) {
+    const T = this.T, G = this.stoneGeo;
+    if (!this.castleGeo) this.buildCastleGeo();
+    const CG = this.castleGeo, g = new T.Group();
+    const stone = new T.MeshStandardMaterial({ color: "#DCD6C8", roughness: 0.85 });
+    const add = (geo, m, shadow, parent) => { const o = new T.Mesh(geo, m); o.castShadow = shadow; o.receiveShadow = shadow; (parent || g).add(o); return o; };
+    add(CG.stone, stone, true);
+    add(CG.roofs, this.mat(color), true);
+    add(CG.trim, this.mat("#3B2A1E"), false);
+    const flag = new T.Mesh(G.flag, this.mat(color, { side: T.DoubleSide, roughness: 0.7 }));
+    flag.position.set(0, 1.72, 0); g.add(flag);
+    const shield = new T.Mesh(G.dome, new T.MeshStandardMaterial({ color, transparent: true, opacity: 0.16, emissive: color, emissiveIntensity: 0.25, depthWrite: false, side: T.DoubleSide }));
+    g.add(shield);
+    const cannon = new T.Group();
+    add(CG.carriage, this.mat("#5A3D26"), false, cannon);
+    const pivot = new T.Group(); pivot.position.set(0, 0.24, 0); pivot.rotation.x = -0.6; cannon.add(pivot);
+    const barrel = add(G.barrel, this.mat("#2C2F38", { metalness: 0.6, roughness: 0.35 }), false, pivot); barrel.rotation.x = Math.PI / 2; barrel.position.z = 0.2;
+    g.add(cannon);
+    const cv = document.createElement("canvas"); cv.width = 320; cv.height = 112;
+    const tex = new T.CanvasTexture(cv);
+    const label = new T.Sprite(new T.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    label.scale.set(2.5, 0.875, 1); label.position.set(0, 2.55, 0); label.renderOrder = 5; g.add(label);
+    return { g, stone, flag, shield, cannon, pivot, barrel, label, cv, tex, labelKey: "", shake: 0, rise: 0, crumble: -1, recoil: 0, phase: Math.random() * 6 };
+  }
+  drawLabel(c, name, hp, vuln, isMe) {
+    const k = `${name}|${hp}|${vuln}|${isMe}`; if (c.labelKey === k) return; c.labelKey = k;
+    const x = c.cv.getContext("2d"); x.clearRect(0, 0, 320, 112);
+    x.fillStyle = vuln ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.8)";
+    x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 308, 100, 22); else x.rect(6, 6, 308, 100); x.fill();
+    if (isMe) { x.strokeStyle = "#F3B61F"; x.lineWidth = 5; x.stroke(); }
+    x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.font = "600 30px Fredoka, 'Trebuchet MS', sans-serif";
+    let n = name; while (x.measureText(n).width > 284 && n.length > 3) n = n.slice(0, -1);
+    if (n !== name) n = n.slice(0, -1) + "…";
+    x.fillText(n, 160, 46);
+    x.font = "30px sans-serif"; let hs = "";
+    for (let i = 0; i < MAX_HP; i++) hs += i < hp ? "♥" : "♡";
+    x.fillStyle = vuln ? "#FFD0C8" : "#FF6B5E"; x.fillText(vuln ? hs + "  ⚠" : hs, 160, 90);
+    c.tex.needsUpdate = true;
+  }
+  syncCastles(list) {
+    if (!this.ok) return;
+    const keep = new Set();
+    for (const it of list) {
+      const k = it.owner + ":" + it.builtAt; keep.add(k);
+      let c = this.castles.get(k);
+      if (c && c.color !== it.color) { this.scene.remove(c.g); this.castles.delete(k); c = null; }
+      if (!c) {
+        for (const [k2, oc] of this.castles) if (k2.startsWith(it.owner + ":") && k2 !== k) { this.scene.remove(oc.g); this.castles.delete(k2); }
+        c = this.makeCastle(it.color); c.owner = it.owner; c.color = it.color; c.x = it.x; c.y = it.y;
+        c.g.scale.setScalar(1.55); c.g.position.set(tw(it.x), 0, tz(it.y)); c.rise = it.fresh && !reduceMotion ? 0.001 : 0;
+        const dx = -tw(it.x), dz = -tz(it.y), L = Math.hypot(dx, dz) || 1;
+        c.cannon.position.set((dx / L) * 0.95, 0, (dz / L) * 0.95); c.cannon.rotation.y = Math.atan2(dx, dz);
+        this.scene.add(c.g); this.castles.set(k, c);
+      }
+      c.vuln = it.vuln; c.shield.visible = !it.vuln;
+      this.drawLabel(c, it.name, it.hp, it.vuln, it.isMe);
+    }
+    for (const [k, c] of this.castles) if (!keep.has(k) && c.crumble < 0) { this.scene.remove(c.g); this.castles.delete(k); }
+  }
+  castleOf(owner) { if (!this.ok) return null; for (const c of this.castles.values()) if (c.owner === owner && c.crumble < 0) return c; return null; }
+  fire(owner, tx, ty, color, onLand) {
+    if (!this.ok) { if (onLand) onLand(); return; }
+    const T = this.T, c = this.castleOf(owner);
+    const to = new T.Vector3(tw(tx), 0.12, tz(ty));
+    let from;
+    if (c) {
+      const cp = c.cannon.getWorldPosition(new T.Vector3());
+      c.cannon.rotation.y = Math.atan2(to.x - cp.x, to.z - cp.z);
+      c.g.updateMatrixWorld(true); from = c.barrel.getWorldPosition(new T.Vector3()); c.recoil = 1;
+      this.puff(from, "#EFEFEF", 8, 1.2);
+    } else from = new T.Vector3(to.x, 9, to.z);
+    const d = from.distanceTo(to);
+    const m = new T.Mesh(this.ballGeo, this.mat(color, { roughness: 0.25 })); m.castShadow = true;
+    m.position.copy(from); this.scene.add(m);
+    this.proj.push({ m, from, to, t: 0, dur: reduceMotion ? 0.05 : 0.55 + d * 0.045, h: 1.2 + d * 0.28, color, onLand, trail: 0 });
+  }
+  puff(pos, color, n, speed) {
+    const T = this.T;
+    for (let i = 0; i < n; i++) {
+      if (this.parts.length > 500) break;
+      const m = new T.Mesh(this.partGeo, this.mat(color, { roughness: 0.3 })); m.position.copy(pos);
+      const a = Math.random() * Math.PI * 2, u = Math.random();
+      m.userData = { v: new T.Vector3(Math.cos(a) * speed * u, speed * (0.6 + Math.random()), Math.sin(a) * speed * u), life: 0.7 + Math.random() * 0.6, age: 0, s: 0.7 + Math.random() * 0.9 };
+      m.scale.setScalar(m.userData.s); this.scene.add(m); this.parts.push(m);
+    }
+  }
+  burst(x, y, color, n) { if (this.ok) this.puff(new this.T.Vector3(tw(x), 0.15, tz(y)), color, n || 16, 4.2); }
+  castleHit(owner) {
+    if (!this.ok) return;
+    const c = this.castleOf(owner); if (!c) return;
+    c.shake = 0.45; this.puff(c.g.position.clone().setY(1), "#DCD6C8", 10, 3);
+  }
+  repairFx(owner) {
+    if (!this.ok) return;
+    const c = this.castleOf(owner); if (!c) return;
+    const T = this.T;
+    for (let i = 0; i < 12; i++) { const m = new T.Mesh(this.partGeo, this.mat("#5BE08F", { emissive: "#2FBF6A", emissiveIntensity: 0.8 })); m.position.copy(c.g.position).add(new T.Vector3((Math.random() - 0.5) * 1.2, 0.3, (Math.random() - 0.5) * 1.2)); m.userData = { v: new T.Vector3(0, 1.4 + Math.random(), 0), life: 1.1, age: 0, s: 1.2, nograv: true }; this.scene.add(m); this.parts.push(m); }
+  }
+  crumble(owner) {
+    if (!this.ok) return;
+    for (const c of this.castles.values()) if (c.owner === owner && c.crumble < 0) {
+      c.crumble = 0.0001; this.puff(c.g.position.clone().setY(0.6), "#BDB6A6", 30, 3.5); this.puff(c.g.position.clone().setY(0.8), c.color, 16, 3);
+    }
+  }
+  showRange(owner) {
+    if (!this.ok) return;
+    const c = owner && this.castleOf(owner);
+    this.ring.visible = !!c; if (c) this.ring.position.set(tw(c.x), 0.12, tz(c.y));
+  }
+  highlight(cells, ok) {
+    if (!this.ok) return;
+    this.hl.material.color.set(ok ? "#FFFFFF" : "#FF5A4A");
+    this.hl.count = Math.min(30, cells.length);
+    cells.slice(0, 30).forEach(([x, y], i) => { this.dummy.position.set(tw(x), 0.14, tz(y)); this.dummy.rotation.set(0, 0, 0); this.dummy.scale.set(1, 1, 1); this.dummy.updateMatrix(); this.hl.setMatrixAt(i, this.dummy.matrix); });
+    this.hl.instanceMatrix.needsUpdate = true;
+  }
+  pick(clientX, clientY) {
+    if (!this.ok) return null;
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new this.T.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    if (!this.raycaster.ray.intersectPlane(this.plane, this.v3)) return null;
+    const x = Math.floor(this.v3.x + W / 2), y = Math.floor(this.v3.z + H / 2);
+    return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null;
+  }
+  placeCamera() {
+    const az = this.mode === "board" ? Math.sin(this.time * 0.06) * 0.42 : this.az;
+    const asp = this.camera.aspect, tf = Math.tan((this.camera.fov * Math.PI) / 360);
+    const hw = Math.abs(Math.cos(az)) * (W / 2 + 1.4) + Math.abs(Math.sin(az)) * (H / 2 + 1.4);
+    const hd = Math.abs(Math.sin(az)) * (W / 2 + 1.4) + Math.abs(Math.cos(az)) * (H / 2 + 1.4);
+    const dist = Math.max(hw / (tf * asp), (hd * Math.sin(this.el) + 1.6) / tf) * (this.mode === "board" ? 1.1 : 1.14);
+    this.camera.position.set(Math.sin(az) * Math.cos(this.el) * dist, Math.sin(this.el) * dist, Math.cos(az) * Math.cos(this.el) * dist);
+    this.camera.lookAt(0, 0.3, 0);
+  }
+  tick() {
+    const raw = this.clock.getDelta(), dt = Math.min(0.05, raw); this.time += dt; const t = this.time;
+    if (!this.host) return;
+    // Auto quality: if this device averages under ~25 fps for 3 s, drop shadows.
+    if (!this.perf.checked && document.visibilityState === "visible" && this.time > 2) {
+      this.perf.n++; this.perf.sum += raw;
+      if (this.perf.sum > 3) {
+        this.perf.checked = true;
+        if (this.perf.sum / this.perf.n > 0.04 && this.renderer.shadowMap.enabled) {
+          this.renderer.shadowMap.enabled = false;
+          this.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); });
+        }
+      }
+    }
+    for (let i = 0; i < this.inst.length; i++) {
+      const st = this.inst[i]; if (st.t0 < 0) continue;
+      const u = (t - st.t0) / 0.42;
+      if (u >= 1) { st.s = st.to; st.t0 = -1; }
+      else st.s = st.to ? Math.min(1.25, 0.2 + 0.8 * (1 - Math.pow(1 - u, 3)) + Math.sin(u * Math.PI) * 0.22) : st.from * (1 - u);
+      this.applyInst(i);
+    }
+    for (const [k, c] of this.castles) {
+      c.flag.rotation.y = Math.sin(t * 3 + c.phase) * 0.35;
+      let px = tw(c.x), pz = tz(c.y), py = 0;
+      if (c.rise > 0) { c.rise += dt / 0.8; if (c.rise >= 1) c.rise = 0; else py = -1.6 * Math.pow(1 - c.rise, 2); }
+      if (c.shake > 0) { c.shake -= dt; px += Math.sin(t * 70) * 0.12 * c.shake; pz += Math.cos(t * 63) * 0.1 * c.shake; }
+      if (c.crumble > 0) {
+        c.crumble += dt / 1.6; py = -2.2 * c.crumble * c.crumble; c.g.rotation.z = c.crumble * 0.5; c.g.rotation.x = c.crumble * 0.3;
+        if (c.crumble >= 1) { this.scene.remove(c.g); this.castles.delete(k); continue; }
+      }
+      c.g.position.set(px, py, pz);
+      if (c.recoil > 0) { c.recoil = Math.max(0, c.recoil - dt * 4); c.barrel.position.z = 0.2 - c.recoil * 0.14; }
+      const pulse = c.vuln ? (Math.sin(t * 7) + 1) / 2 : 0;
+      c.stone.emissive.setRGB(0.55 * pulse, 0.05 * pulse, 0.02 * pulse);
+      c.shield.material.opacity = 0.13 + Math.sin(t * 2 + c.phase) * 0.04;
+    }
+    for (let i = this.proj.length - 1; i >= 0; i--) {
+      const p = this.proj[i]; p.t += dt / p.dur; const u = Math.min(1, p.t);
+      p.m.position.lerpVectors(p.from, p.to, u); p.m.position.y += 4 * p.h * u * (1 - u);
+      if ((p.trail += dt) > 0.05 && !reduceMotion) { p.trail = 0; this.puff(p.m.position, p.color, 1, 0.2); }
+      if (p.t >= 1) {
+        this.scene.remove(p.m); this.proj.splice(i, 1);
+        this.puff(p.to, p.color, 18, 3.4);
+        try { if (p.onLand) p.onLand(); } catch (e) {}
+      }
+    }
+    for (let i = this.parts.length - 1; i >= 0; i--) {
+      const m = this.parts[i], d = m.userData; d.age += dt;
+      if (!d.nograv) d.v.y -= 9.8 * dt;
+      m.position.addScaledVector(d.v, dt);
+      if (m.position.y < 0.05 && !d.nograv) { m.position.y = 0.05; d.v.multiplyScalar(0.4); d.v.y = 0; }
+      m.scale.setScalar(d.s * Math.max(0, 1 - d.age / d.life));
+      if (d.age >= d.life) { this.scene.remove(m); this.parts.splice(i, 1); }
+    }
+    this.placeCamera();
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+const arena = new Arena();
+
+/* ======================= Ingest: data → state + animation ======================= */
+function ingestCells(entries, animate) {
+  const groups = new Map();
+  for (const [k, d] of entries) {
+    const prev = S.cells.get(k);
+    const prevOwner = prev && prev.round === S.round ? prev.owner || null : null;
+    if (d) S.cells.set(k, d); else S.cells.delete(k);
+    const newOwner = d && d.round === S.round ? d.owner || null : null;
+    if (prevOwner === newOwner) continue;
+    const [x, y] = k.split("_").map(Number);
+    if (!animate) { arena.setCell(x, y, newOwner, false); continue; }
+    if (newOwner) { if (!groups.has(newOwner)) groups.set(newOwner, []); groups.get(newOwner).push([x, y]); arena.markPending(x, y); }
+    else { arena.setCell(x, y, null, true); arena.burst(x, y, colorOf(prevOwner), 18); }
+  }
+  groups.forEach((list, owner) => {
+    const cx = Math.round(list.reduce((s, c) => s + c[0], 0) / list.length), cy = Math.round(list.reduce((s, c) => s + c[1], 0) / list.length);
+    const target = list.find(([x, y]) => x === cx && y === cy) || list[0];
+    arena.fire(owner, target[0], target[1], colorOf(owner), () => list.forEach(([x, y]) => { const c = cellAt(x, y); arena.setCell(x, y, c ? c.owner : null, true); }));
+  });
+}
+function ingestHits(entries, animate) {
+  for (const [id, d] of entries) {
+    const known = S.hits.has(id);
+    S.hits.set(id, { ...d, id });
+    if (known || !animate || d.round !== S.round) continue;
+    if (d.dmg < 0) { arena.repairFx(d.target); continue; }
+    const c = effCastle(d.target);
+    if (c) arena.fire(d.attacker, c.x, c.y, colorOf(d.attacker), () => arena.castleHit(d.target));
+    log(`${nameOf(d.attacker)} hit ${nameOf(d.target)}'s castle${d.dmg > 1 ? " for triple damage" : ""}.`, colorOf(d.attacker));
+    if (d.target === myId && d.attacker !== myId) toast(`${nameOf(d.attacker)} hit your castle! Answer correctly to repair it.`);
+  }
+  syncCastles();
+}
+function ingestCastles(entries, animate) {
+  for (const [id, d] of entries) {
+    const prev = S.castles.get(id);
+    S.castles.set(id, d);
+    if (!animate || d.round !== S.round) continue;
+    const wasUp = prev && prev.round === S.round && !prev.fallen, isUp = !d.fallen;
+    if (wasUp && !isUp) {
+      setTimeout(() => arena.crumble(id), 900);
+      log(`${nameOf(d.fellBy)} conquered ${nameOf(id)}'s castle!`, colorOf(d.fellBy));
+      if (id === myId && d.fellBy !== myId) toast(`${nameOf(d.fellBy)} conquered your castle! Rebuild it on one of your squares.`);
+    } else if (isUp && (!wasUp || prev.builtAt !== d.builtAt)) {
+      d.fresh = true;
+      log(`${nameOf(id)} built a castle.`, colorOf(id));
+    } else if (isUp && wasUp && (d.vulnUntil || 0) > (prev.vulnUntil || 0) + 1000) {
+      log(`${nameOf(id)} missed a question. Their shield is down!`, "#BF3328");
+    }
+  }
+  syncCastles();
+}
+function syncCastles() {
+  const list = [];
+  for (const [o, c] of S.castles) if (c.round === S.round && !c.fallen)
+    list.push({ owner: o, x: c.x, y: c.y, builtAt: c.builtAt, fresh: c.fresh, color: colorOf(o), name: nameOf(o), hp: hpOf(o), vuln: isVuln(o), isMe: o === myId && route !== "teacher" });
+  for (const c of S.castles.values()) c.fresh = false;
+  arena.syncCastles(list);
+  arena.showRange(route === "play" && effCastle(myId) ? myId : null);
+}
+
+/* ======================= Questions ======================= */
+let progress = { seen: [], sigs: [], n: 0 }, progressRef = null, progressReady = false, lastGen = null;
+let current = null, answered = false, lastResult = null, cooldownUntil = 0, cdTimer = null;
+function saveProgress() {
+  progress.sigs = progress.sigs.slice(-400);
+  local.set("progress_" + myId, progress);
+}
+function pickQuestion() {
+  const unseen = Q.filter((q) => !progress.seen.includes(q.id));
+  let q = null;
+  if (unseen.length && Math.random() < 0.5) q = pick(unseen);
+  else {
+    for (let i = 0; i < 30 && !q; i++) {
+      const g = pick(GENS.filter((g) => g.key !== lastGen));
+      const cand = g.make();
+      if (!progress.sigs.includes(cand.sig)) { q = cand; lastGen = g.key; }
+    }
+    if (!q) q = unseen.length ? pick(unseen) : pick(GENS).make();
+  }
+  current = q; answered = false; lastResult = null;
+  renderQuestion();
+}
+function parseNum(s) {
+  s = String(s).trim().replace(/[−–]/g, "-").replace(/,/g, "").replace(/\s+/g, "").replace(/%$/, "");
+  if (!s) return NaN;
+  if (/^-?\d*\.?\d+\/-?\d*\.?\d+$/.test(s)) { const [a, b] = s.split("/").map(Number); return b === 0 ? NaN : a / b; }
+  if (/^-?\d*\.?\d+$/.test(s)) return Number(s);
+  return NaN;
+}
+function checkNum(input, ans) {
+  const v = parseNum(input); if (Number.isNaN(v)) return null;
+  return Number.isInteger(ans) ? Math.abs(v - ans) < 1e-9 : Math.abs(v - ans) <= 0.001;
+}
+function submitAnswer(choice) {
+  if (answered || !current) return;
+  const p = me(); if (!p) return;
+  let ok, typed = "";
+  if (current.type === "mc") ok = choice === current.ans;
+  else { typed = $("gridIn").value; ok = checkNum(typed, current.ans); if (ok === null) { toast("Enter a number, like 12, -3, 0.75, or 7/2."); return; } }
+  answered = true;
+  if (current.id) { if (!progress.seen.includes(current.id)) progress.seen.push(current.id); }
+  else progress.sigs.push(current.sig);
+  progress.n = (progress.n || 0) + 1; saveProgress();
+  const streak = ok ? (p.streak || 0) + 1 : 0;
+  let reward = 0, exploded = 0, repaired = false;
+  if (ok) {
+    reward = current.diff === "hard" ? 5 : 3;
+    if (streak % 3 === 0) reward += 2;
+    if (S.double) reward *= 2;
+    if (effCastle(myId) && hpOf(myId) < MAX_HP) { repaired = true; addHit(myId, -1); }
+  } else {
+    cooldownUntil = Date.now() + WRONG_COOLDOWN * 1000;
+    exploded = punish();
+  }
+  lastResult = { ok, choice, reward, streak, exploded, repaired, typed };
+  writeMe({ paint: (p.paint || 0) + reward, correct: (p.correct || 0) + (ok ? 1 : 0), answered: (p.answered || 0) + 1, streak });
+  renderQuestion();
+  if (ok) { const a = $("paintAmt"); a.classList.remove("bump"); void a.offsetWidth; a.classList.add("bump"); }
+}
+function punish() {
+  const c = effCastle(myId); if (!c) return 0;
+  const nc = { ...c, vulnUntil: Date.now() + VULN_MS };
+  ingestCastles([[myId, nc]], true); dbUpdate("castles/" + myId, { vulnUntil: nc.vulnUntil });
+  const mine = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const cc = cellAt(x, y); if (cc && cc.owner === myId && !(x === c.x && y === c.y)) mine.push([x, y, Math.hypot(x - c.x, y - c.y) + Math.random() * 1.5]); }
+  mine.sort((a, b) => b[2] - a[2]);
+  const boom = mine.slice(0, EXPLODE_N);
+  const entries = boom.map(([x, y]) => [key(x, y), { owner: null, cap: false, round: S.round, t: Date.now() }]);
+  ingestCells(entries, true);
+  dbCells(entries);
+  if (boom.length) log(`${nameOf(myId)} missed a question. ${boom.length} blob${boom.length > 1 ? "s" : ""} exploded!`, colorOf(myId));
+  return boom.length;
+}
+function addHit(target, dmg) {
+  const id = uid(), hit = { target, attacker: myId, dmg, round: S.round, t: Date.now() };
+  ingestHits([[id, hit]], true); dbSet("hits/" + id, hit);
+}
+function fmtAns(q) { if (q.ansText) return q.ansText; return Number.isInteger(q.ans) ? neg(q.ans) : String(+q.ans.toFixed(4)); }
+
+function renderQuestion() {
+  const area = $("qArea");
+  if (!me()) { renderJoin(); return; }
+  if (!current) { pickQuestion(); return; }
+  const q = current, r = lastResult;
+  const diffTag = q.diff === "hard" ? `<span class="tag hard">Hard · 5 paint</span>` : `<span class="tag med">Medium · 3 paint</span>`;
+  let html = `<div class="qmeta"><span class="tag">${q.dom}</span><span class="tag">${q.topic}</span>${diffTag}</div><p class="qtext">${q.q}</p>`;
+  if (q.type === "mc") {
+    html += `<div class="choices">` + q.ch.map((c, i) => {
+      let cls = "choice"; if (answered) { if (i === q.ans) cls += " right"; else if (r && i === r.choice) cls += " wrong"; }
+      return `<button type="button" class="${cls}" data-i="${i}" ${answered ? "disabled" : ""}><span class="letter">${"ABCD"[i]}</span><span>${c}</span></button>`;
+    }).join("") + `</div>`;
+  } else {
+    html += `<form class="gridin" id="gridForm"><input id="gridIn" inputmode="text" autocomplete="off" aria-label="Your answer" placeholder="Your answer" ${answered ? "disabled" : ""}><button class="btn" ${answered ? "disabled" : ""}>Check</button></form>
+      <div class="hint">Student-produced response. Fractions like 7/2 or decimals like 3.5 both work.</div>`;
+  }
+  if (answered && r) {
+    if (r.ok) {
+      html += `<div class="feedback ok"><strong>Correct! +${r.reward} paint${r.streak % 3 === 0 ? " (streak bonus)" : ""}${S.double ? " · double paint" : ""}${r.repaired ? " · castle repaired" : ""}</strong>${q.ex}</div>
+        <div class="next-row"><button class="btn" id="nextBtn" type="button">Next question</button><span class="cool">Streak: ${r.streak}</span></div>`;
+    } else {
+      const shown = q.type === "mc" ? `The answer is ${"ABCD"[q.ans]}.` : `The answer is ${fmtAns(q)}.`;
+      html += `<div class="feedback no"><strong>Not quite. ${shown}</strong>${q.ex}<span class="pun">Your shield is down for ${VULN_MS / 1000} seconds${r.exploded ? ` and ${r.exploded} of your blobs exploded` : ""}. Enemy shots now do triple damage.</span></div>
+        <div class="next-row"><button class="btn" id="nextBtn" type="button" disabled>Next question</button><span class="cool" id="cdText"></span></div>`;
+    }
+  }
+  area.innerHTML = html;
+  if (q.type === "mc" && !answered) area.querySelectorAll(".choice").forEach((b) => b.addEventListener("click", () => submitAnswer(+b.dataset.i)));
+  if (q.type === "num") { if (answered && r) $("gridIn").value = r.typed; else $("gridForm").addEventListener("submit", (e) => { e.preventDefault(); submitAnswer(); }); }
+  const nb = $("nextBtn"); if (nb) nb.addEventListener("click", pickQuestion);
+  if (answered && r && !r.ok) runCooldown();
+}
+function runCooldown() {
+  clearInterval(cdTimer);
+  const tick = () => {
+    const left = Math.ceil((cooldownUntil - Date.now()) / 1000), nb = $("nextBtn"), t = $("cdText");
+    if (!nb) { clearInterval(cdTimer); return; }
+    if (left <= 0) { nb.disabled = false; if (t) t.textContent = "Read the explanation, then try another."; clearInterval(cdTimer); }
+    else if (t) t.textContent = `Reloading the cannon… next question in ${left}s`;
+  };
+  tick(); cdTimer = setInterval(tick, 250);
+}
+
+/* ======================= Join / found ======================= */
+let joinColor = null, joinSig = "";
+function takenColors() {
+  const s = new Set();
+  S.players.forEach((p, id) => { if (id !== myId && active(p)) s.add(p.color); });
+  S.claims.forEach((d) => { if (d && d.owner && d.owner !== myId && d.round === S.round && COLORS[d.idx]) s.add(COLORS[d.idx].hex); });
+  return s;
+}
+function joinedCount() { let n = 0; S.players.forEach((p) => { if (active(p)) n++; }); return n; }
+function renderJoin() {
+  const area = $("qArea");
+  if (online && !CLASS) {
+    if (area.querySelector("#codeForm")) return;
+    joinSig = "";
+    area.innerHTML = `<div class="join"><h2>Join your class</h2><p>Type the class code shown on the board.</p>
+      <form id="codeForm" autocomplete="off"><label for="kCode">Class code</label>
+      <input type="text" class="codein" id="kCode" maxlength="5" required placeholder="ABC23" spellcheck="false" autocapitalize="characters">
+      <div style="margin-top:16px"><button class="btn" id="codeBtn">Join class</button></div></form></div>`;
+    $("kCode").value = local.get("code", "") || "";
+    $("codeForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const code = $("kCode").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (code.length !== 5) { toast("Class codes are 5 letters and numbers."); return; }
+      const btn = $("codeBtn"); btn.disabled = true; btn.textContent = "Finding your class…";
+      const ok = await connectClass(code);
+      if (!ok) { btn.disabled = false; btn.textContent = "Join class"; toast("No class uses that code. Check the board and try again."); return; }
+      renderAll();
+    });
+    return;
+  }
+  const prev = S.players.get(myId), taken = takenColors();
+  const sig = [CLASS, S.round, [...taken].sort().join(",")].join("|");
+  if (area.querySelector("#joinForm") && sig === joinSig) return;
+  joinSig = sig;
+  const keep = $("kName") ? $("kName").value : "";
+  if (!joinColor || taken.has(joinColor)) joinColor = prev && prev.color && !taken.has(prev.color) ? prev.color : (COLORS.find((c) => !taken.has(c.hex)) || {}).hex || null;
+  const full = taken.size >= COLORS.length;
+  area.innerHTML = `<div class="join">
+    ${online ? `<div class="qmeta"><span class="tag">Class ${CLASS}</span><button type="button" class="tag" id="leaveBtn" style="border:0">Change class</button></div>` : ""}
+    <h2>${prev && prev.round && prev.round !== S.round ? "A new round has begun" : "Build your kingdom"}</h2>
+    <p>You are your own kingdom with your own color. You get a castle, a cannon and ${START_PAINT} paint. Answer questions to load more paint, and protect your castle by getting them right.</p>
+    <form id="joinForm" autocomplete="off">
+      <label for="kName">Kingdom name</label>
+      <input type="text" id="kName" maxlength="24" required placeholder="e.g. The Quadratic Empire">
+      <label>Your color <span style="font-weight:600;color:var(--muted)">(${COLORS.length - taken.size} of ${COLORS.length} still open)</span></label>
+      <div class="swatches" id="swatches">${COLORS.map((c) => `<button type="button" class="sw" style="background:${c.hex}" data-c="${c.hex}" title="${c.name}" aria-label="${c.name}${taken.has(c.hex) ? " (taken)" : ""}" aria-pressed="${c.hex === joinColor}" ${taken.has(c.hex) ? "disabled" : ""}></button>`).join("")}</div>
+      <div class="picked" id="pickedName">${joinColor ? "Selected: " + COLORS.find((c) => c.hex === joinColor).name : ""}</div>
+      <div style="margin-top:16px"><button class="btn" type="submit" id="joinBtn" ${full ? "disabled" : ""}>${full ? "All 25 colors are taken" : "Build my castle"}</button></div>
+    </form></div>`;
+  $("kName").value = keep || (prev && prev.name) || "";
+  if ($("leaveBtn")) $("leaveBtn").addEventListener("click", leaveClass);
+  $("swatches").querySelectorAll(".sw").forEach((b) => b.addEventListener("click", () => {
+    joinColor = b.dataset.c; $("swatches").querySelectorAll(".sw").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    $("pickedName").textContent = "Selected: " + COLORS.find((c) => c.hex === joinColor).name;
+  }));
+  $("joinForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("kName").value.trim().slice(0, 24);
+    if (!name) { toast("Give your kingdom a name first."); return; }
+    if (!joinColor) { toast("Pick a color first."); return; }
+    const btn = $("joinBtn"); btn.disabled = true; btn.textContent = "Claiming your color…";
+    const idx = COLORS.findIndex((c) => c.hex === joinColor);
+    const ok = await claimColor(idx);
+    if (!ok) { toast(`Someone just took ${COLORS[idx].name}. Pick another color.`); joinColor = null; joinSig = ""; renderJoin(); return; }
+    current = null;
+    writeMe({ name, color: joinColor, round: S.round, paint: START_PAINT, correct: 0, answered: 0, streak: 0, conquests: 0 });
+    found(); renderAll();
+  });
+}
+async function claimColor(idx) {
+  if (!online) return true;
+  try {
+    const res = await classRef("colors/c" + idx).transaction((cur) => {
+      if (cur && cur.owner && cur.owner !== myId && cur.round === S.round) return;
+      return { owner: myId, idx, round: S.round, t: Date.now() };
+    });
+    return !!res.committed;
+  } catch (e) { handleWriteError(e); return false; }
+}
+function found() {
+  const open = [], loose = [];
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    if (cellAt(x, y) || castleAt(x, y)) continue;
+    loose.push([x, y]);
+    let clear = true;
+    for (let dy = -3; dy <= 3 && clear; dy++) for (let dx = -3; dx <= 3; dx++) if (cellAt(x + dx, y + dy)) { clear = false; break; }
+    if (clear) open.push([x, y]);
+  }
+  const list = open.length ? open : loose;
+  if (!list.length) { toast("The map is full. Ask your teacher to start a new round."); return; }
+  const [x, y] = pick(list);
+  buildCastle(x, y);
+  const entries = [[x, y], ...BRUSH.splash.slice(1).map(([dx, dy]) => [x + dx, y + dy])].filter(([a, b]) => a >= 0 && b >= 0 && a < W && b < H && !cellAt(a, b))
+    .map(([a, b]) => [key(a, b), { owner: myId, cap: false, round: S.round, t: Date.now() }]);
+  ingestCells(entries, true); dbCells(entries);
+  toast("Your castle is up. Earn paint, then click the table to fire.");
+}
+function buildCastle(x, y) {
+  const c = { owner: myId, x, y, round: S.round, builtAt: Date.now(), fallen: false, vulnUntil: 0 };
+  ingestCastles([[myId, c]], true); dbSet("castles/" + myId, c);
+}
+
+/* ======================= Firing ======================= */
+function myCells() { const out = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c && c.owner === myId) out.push([x, y]); } return out; }
+function reachable(x, y) {
+  const c = effCastle(myId);
+  if (c && Math.hypot(x - c.x, y - c.y) <= RANGE) return true;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const cc = cellAt(x + dx, y + dy); if (cc && cc.owner === myId) return true; }
+  return false;
+}
+function plan(x, y) {
+  const p = me();
+  if (!p) return { msg: "Build your castle first." };
+  const mineN = myCells().length, castle = effCastle(myId), target = cellAt(x, y), tc = castleAt(x, y);
+  if (!castle) {
+    if (!mineN) return { msg: "Your kingdom was wiped out. Use “Rebuild” above to start again." };
+    if (target && target.owner === myId && !tc) return { kind: "rebuild", cost: REBUILD_COST, cells: [[x, y]], msg: `Rebuild your castle here for ${REBUILD_COST} paint.` };
+    return { msg: "Your castle fell. Click one of your own squares to rebuild it." };
+  }
+  if (!reachable(x, y)) return { blocked: true, cells: [[x, y]], msg: `Out of range. Your cannon reaches ${RANGE} squares from your castle, or any square touching your land.` };
+  if (tc && tc.owner !== myId) {
+    const v = isVuln(tc.owner), dmg = v ? 3 : 1, hp = hpOf(tc.owner);
+    return { kind: "siege", cost: COST_CASTLE, cells: [[x, y]], victim: tc.owner, dmg, msg: `Fire at ${nameOf(tc.owner)}'s castle (${hp}/${MAX_HP} hearts${v ? ", shield down" : ""}) for ${COST_CASTLE} paint. ${dmg} damage${hp <= dmg ? ". This shot conquers it!" : "."}` };
+  }
+  if (tc && tc.owner === myId) return { blocked: true, cells: [[x, y]], msg: "That's your own castle." };
+  const area = []; let cost = 0;
+  for (const [dx, dy] of BRUSH[brush]) {
+    const nx = x + dx, ny = y + dy;
+    if (nx < 0 || ny < 0 || nx >= W || ny >= H || castleAt(nx, ny)) continue;
+    const c = cellAt(nx, ny); if (c && c.owner === myId) continue;
+    area.push([nx, ny]); cost += c ? COST_ENEMY : COST_EMPTY;
+  }
+  if (!area.length) return { blocked: true, cells: [[x, y]], msg: "Nothing to paint here. Those squares are already yours." };
+  const enemy = area.filter(([a, b]) => cellAt(a, b)).length;
+  return { kind: "paint", cost, cells: area, msg: `${area.length} square${area.length > 1 ? "s" : ""}${enemy ? ` (${enemy} enemy)` : ""} for ${cost} paint.` };
+}
+function act(x, y) {
+  const p = me();
+  if (!p) { toast("Build your castle first."); return; }
+  const pl = plan(x, y);
+  if (!pl.kind) { toast(pl.msg); return; }
+  if (pl.cost > (p.paint || 0)) { toast(`That costs ${pl.cost} paint and you have ${p.paint || 0}. Answer questions to earn more.`); return; }
+  const now = Date.now();
+  if (pl.kind === "rebuild") {
+    buildCastle(x, y); writeMe({ paint: p.paint - pl.cost }); toast("Castle rebuilt. Your shield is up.");
+  } else if (pl.kind === "siege") {
+    let paint = p.paint - pl.cost;
+    const vc = effCastle(pl.victim);
+    addHit(pl.victim, pl.dmg);
+    if (hpOf(pl.victim) <= 0) {
+      const flips = [];
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const c = cellAt(vc.x + dx, vc.y + dy); if (c && c.owner === pl.victim) flips.push([key(vc.x + dx, vc.y + dy), { owner: myId, cap: false, round: S.round, t: now }]); }
+      const fallen = { ...vc, fallen: true, fellBy: myId, fellAt: now };
+      ingestCastles([[pl.victim, fallen]], true); dbUpdate("castles/" + pl.victim, { fallen: true, fellBy: myId, fellAt: now });
+      setTimeout(() => { ingestCells(flips, true); dbCells(flips); renderAll(); }, 900);
+      paint += CONQUEST_BONUS;
+      writeMe({ paint, conquests: (p.conquests || 0) + 1 });
+      toast(`You conquered ${nameOf(pl.victim)}'s castle! +${CONQUEST_BONUS} paint in plunder.`);
+    } else writeMe({ paint });
+  } else {
+    const entries = pl.cells.map(([a, b]) => [key(a, b), { owner: myId, cap: false, round: S.round, t: now }]);
+    ingestCells(entries, true); dbCells(entries);
+    writeMe({ paint: p.paint - pl.cost });
+  }
+  touchArmed = null; refreshHover();
+}
+
+let hover = null, touchArmed = null, down = null;
+function refreshHover() {
+  const n = $("mapNote");
+  if (!hover || route !== "play") { arena.highlight([], true); n.textContent = me() ? "Click a square to fire your cannon. Drag to turn the table. On a phone, tap once to aim and again to fire." : "Build your castle to start firing."; return; }
+  const pl = plan(hover[0], hover[1]);
+  const affordable = pl.kind && pl.cost <= ((me() || {}).paint || 0);
+  arena.highlight(pl.cells || [hover], !!affordable);
+  const c = cellAt(hover[0], hover[1]), tc = castleAt(hover[0], hover[1]);
+  n.textContent = (c && !tc ? `${nameOf(c.owner)}'s land. ` : "") + pl.msg + (touchArmed && pl.kind ? " Tap again to fire." : "");
+}
+const stageEl = $("studentStage");
+stageEl.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, az: arena.az, drag: false, id: e.pointerId }; });
+stageEl.addEventListener("pointermove", (e) => {
+  if (down && e.pointerId === down.id) {
+    const dx = e.clientX - down.x;
+    if (Math.abs(dx) > 8) down.drag = true;
+    if (down.drag) { arena.az = down.az - dx * 0.008; return; }
+  }
+  if (e.pointerType === "touch") return;
+  const c = arena.pick(e.clientX, e.clientY);
+  if (String(c) !== String(hover)) { hover = c; refreshHover(); }
+});
+stageEl.addEventListener("pointerup", (e) => {
+  const wasDrag = down && down.drag; down = null;
+  if (wasDrag) return;
+  const c = arena.pick(e.clientX, e.clientY); if (!c) return;
+  if (e.pointerType === "touch") {
+    if (touchArmed && touchArmed[0] === c[0] && touchArmed[1] === c[1]) act(c[0], c[1]);
+    else { touchArmed = c; hover = c; refreshHover(); }
+    return;
+  }
+  act(c[0], c[1]);
+});
+stageEl.addEventListener("pointerleave", () => { down = null; if (!touchArmed) { hover = null; refreshHover(); } });
+document.querySelectorAll("[data-brush]").forEach((b) => b.addEventListener("click", () => {
+  brush = b.dataset.brush; document.querySelectorAll("[data-brush]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); refreshHover();
+}));
+
+/* ======================= Panels ======================= */
+function hearts(hp) { let s = ""; for (let i = 0; i < MAX_HP; i++) s += i < hp ? "♥" : `<span class="off">♥</span>`; return s; }
+function renderWell() {
+  const p = me();
+  $("paintAmt").textContent = p ? p.paint || 0 : 0;
+  $("dropPath").setAttribute("fill", p ? p.color : "#8A93AB");
+  const acc = p && p.answered ? Math.round((100 * p.correct) / p.answered) : null;
+  $("myStats").innerHTML = p ? `<b>${landCount(myId)}</b> squares<br><b>${p.correct || 0}</b>/${p.answered || 0} correct${acc != null ? ` · ${acc}%` : ""}` : "";
+  const cs = $("castleStatus");
+  if (!p) { cs.innerHTML = ""; return; }
+  const c = effCastle(myId);
+  if (!c) { cs.innerHTML = `<span class="shield down">No castle</span>`; return; }
+  const v = isVuln(myId), left = Math.ceil(((c.vulnUntil || 0) - Date.now()) / 1000);
+  cs.innerHTML = `<span class="hearts" aria-label="${hpOf(myId)} of ${MAX_HP} hearts">${hearts(hpOf(myId))}</span><span class="shield ${v ? "down" : ""}">${v ? `Shield down · ${left}s` : "Shield up"}</span>`;
+}
+function renderBanner() {
+  const b = $("banner"), p = me(); b.innerHTML = "";
+  if (!p) return;
+  if (!effCastle(myId)) {
+    if (!myCells().length) {
+      b.innerHTML = `<div class="banner"><span><b>Your kingdom was wiped off the map.</b> Build a new castle somewhere open. You keep your paint.</span><button class="btn small" id="refound" type="button">Rebuild</button></div>`;
+      $("refound").addEventListener("click", () => { found(); renderAll(); });
+    } else b.innerHTML = `<div class="banner"><span><b>Your castle fell!</b> Click one of your own squares to rebuild it for ${REBUILD_COST} paint. You can't fire until you do.</span></div>`;
+  }
+}
+function renderRows(el, compact) {
+  const counts = new Map();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = cellAt(x, y); if (c) counts.set(c.owner, (counts.get(c.owner) || 0) + 1); }
+  const list = [];
+  S.players.forEach((p, id) => { if (active(p)) list.push({ id, p, land: counts.get(id) || 0 }); });
+  list.sort((a, b) => b.land - a.land || (b.p.correct || 0) - (a.p.correct || 0));
+  el.innerHTML = "";
+  if (!list.length) { el.innerHTML = `<p class="empty" style="margin:0">No kingdoms yet. Students join with the class code and build the first castle.</p>`; return; }
+  list.slice(0, 40).forEach((r, i) => {
+    const row = document.createElement("div"); row.className = "row" + (r.id === myId && !compact ? " me" : "");
+    const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = i + 1;
+    const dot = document.createElement("span"); dot.className = "dotc"; dot.style.background = r.p.color;
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.p.name || "Unnamed";
+    if (!compact) { const sm = document.createElement("small"); sm.textContent = `${r.p.correct || 0} correct · ${r.p.conquests || 0} conquest${r.p.conquests === 1 ? "" : "s"}`; nm.appendChild(sm); }
+    const land = document.createElement("span"); land.className = "land"; land.textContent = r.land; land.title = "Squares of land";
+    const st = document.createElement("small");
+    st.textContent = effCastle(r.id) ? "♥".repeat(hpOf(r.id)) + (isVuln(r.id) ? " ⚠" : "") : "no castle";
+    land.appendChild(st);
+    row.append(rank, dot, nm, land); el.appendChild(row);
+  });
+}
+function renderTeacher() {
+  isTeacher = online ? !!CLASS && S.owner === myId : true;
+  document.querySelectorAll("[data-act]").forEach((b) => {
+    b.hidden = !isTeacher;
+    if (b.dataset.act === "double") b.textContent = S.double ? "Turn off double paint" : "Turn on double paint";
+  });
+  $("codePill").hidden = !CLASS; $("codePill").textContent = CLASS ? `Class ${CLASS}` : "";
+  $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = CLASS || "";
+  $("bJoined").textContent = `${joinedCount()} of ${COLORS.length} players joined`;
+  $("bUrl").textContent = location.host ? location.host + location.pathname.replace(/index\.html$/, "") : "this website";
+  const st = $("bStart");
+  if (route === "teacher" && !isTeacher) {
+    st.hidden = false;
+    if (!online) st.innerHTML = `<h2>Game server not connected</h2><p>${setupMsg}</p>`;
+    else if (!st.querySelector("#mkClass")) {
+      st.innerHTML = `<h2>Start a class</h2><p>Create a class code, then put this screen on the projector. Students go to the website and type the code.</p><button class="btn" type="button" id="mkClass">Create class code</button>`;
+      $("mkClass").addEventListener("click", createClass);
+    }
+  } else st.hidden = true;
+  const rt = `Round ${S.round}${S.double ? " · Double paint!" : ""}`;
+  $("roundPill").textContent = rt; $("bRound").textContent = rt;
+  $("roundPill").classList.toggle("hot", S.double);
+}
+function renderAll() {
+  renderWell(); renderBanner(); renderRows($("rows"), false); renderRows($("bRows"), true); renderTeacher();
+  const area = $("qArea");
+  if (!me()) renderJoin();
+  else if (!current || area.querySelector("#joinForm") || area.querySelector(".loadingq")) {
+    if (progressReady) { current = null; pickQuestion(); } else area.innerHTML = `<p class="empty loadingq">Loading your question set…</p>`;
+  }
+  syncCastles(); refreshHover();
+}
+setInterval(() => { renderWell(); syncCastles(); }, 1000);
+
+let armReset = 0;
+document.querySelectorAll('[data-act="round"]').forEach((btn) => btn.addEventListener("click", async () => {
+  if (Date.now() - armReset > 4000) { armReset = Date.now(); btn.textContent = "Click again to wipe the map"; setTimeout(() => (btn.textContent = "Start a new round"), 4000); return; }
+  armReset = 0; btn.textContent = "Start a new round";
+  if (!online) { S.round++; current = null; arena.syncCells(); renderAll(); log(`Round ${S.round} has begun. The map is clear.`); return; }
+  try {
+    await classRef("meta").update({ round: (S.round || 1) + 1, double: false });
+    toast("New round started. The map is clear. Same class code.");
+    setTimeout(() => classRef().update({ cells: null, hits: null, castles: null, colors: null }).catch(() => {}), 2500);
+  } catch { toast("Couldn't start a new round. Only the teacher who made this class can."); }
+}));
+document.querySelectorAll('[data-act="double"]').forEach((btn) => btn.addEventListener("click", async () => {
+  if (!online) { S.double = !S.double; renderAll(); return; }
+  try { await classRef("meta").update({ double: !S.double }); }
+  catch { toast("Couldn't change double paint. Only the teacher who made this class can."); }
+}));
+let armClass = 0;
+document.querySelectorAll('[data-act="newclass"]').forEach((btn) => btn.addEventListener("click", () => {
+  if (Date.now() - armClass > 4000) { armClass = Date.now(); btn.textContent = "Click again: new code + fresh map"; setTimeout(() => (btn.textContent = "New class code"), 4000); return; }
+  armClass = 0; btn.textContent = "New class code";
+  const old = CLASS;
+  createClass().then((ok) => { if (ok && old && old !== CLASS) fdb.ref("classes/" + old).remove().catch(() => {}); });
+}));
+async function createClass() {
+  if (!online) return false;
+  for (let i = 0; i < 6; i++) {
+    const code = newCode();
+    try {
+      const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, created: Date.now() }));
+      if (res.committed) { local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
+    } catch (e) { toast("Couldn't create a class. Check that the game server is set up (see the README)."); return false; }
+  }
+  return false;
+}
+
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3600); }
+
+/* ======================= Routing ======================= */
+function applyRoute() {
+  route = location.hash === "#teacher" || location.hash === "#board" ? "teacher" : "play";
+  $("boardView").hidden = route !== "teacher"; $("studentView").hidden = route === "teacher";
+  arena.mode = route === "teacher" ? "board" : "student";
+  arena.mount(route === "teacher" ? $("boardStage") : $("studentStage"));
+  if (route === "teacher") { hover = null; arena.highlight([], true); }
+  syncCastles(); refreshHover(); renderTeacher();
+}
+window.addEventListener("hashchange", applyRoute);
+
+/* ======================= Boot ======================= */
+const setupMsg = "This copy of the game isn't connected to a Firebase database yet, so it runs in practice mode. Follow the setup steps in the README.";
+let subs = [], renderQueued = false;
+function scheduleRender() { if (renderQueued) return; renderQueued = true; setTimeout(() => { renderQueued = false; renderAll(); }, 60); }
+function listen(ref, ev, fn) { ref.on(ev, fn, () => {}); subs.push(() => ref.off(ev, fn)); }
+function batcher(fn) { let q = []; return (item) => { q.push(item); if (q.length === 1) setTimeout(() => { const b = q; q = []; fn(b); scheduleRender(); }, 40); }; }
+function resetState() {
+  S.players = new Map(); S.cells = new Map(); S.castles = new Map(); S.hits = new Map(); S.claims = new Map();
+  S.round = 1; S.double = false; S.owner = null; current = null;
+  arena.syncCells(); syncCastles();
+}
+function leaveClass() {
+  subs.forEach((f) => f()); subs = []; CLASS = null; local.set("code", ""); resetState(); renderAll();
+}
+async function connectClass(code) {
+  let meta;
+  try { meta = await fdb.ref(`classes/${code}/meta`).once("value"); } catch { return false; }
+  if (!meta.exists()) return false;
+  subs.forEach((f) => f()); subs = [];
+  resetState();
+  CLASS = code;
+  if (route !== "teacher") local.set("code", code);
+  const m = meta.val(); S.round = m.round || 1; S.double = !!m.double; S.owner = m.owner;
+  const b = fdb.ref("classes/" + code);
+  const [pl, co, ce, ca, hi] = await Promise.all(["players", "colors", "cells", "castles", "hits"].map((k) => b.child(k).once("value").catch(() => null)));
+  S.players = new Map(Object.entries((pl && pl.val()) || {}));
+  S.claims = new Map(Object.entries((co && co.val()) || {}));
+  ingestCastles(Object.entries((ca && ca.val()) || {}), false);
+  ingestCells(Object.entries((ce && ce.val()) || {}), false);
+  ingestHits(Object.entries((hi && hi.val()) || {}), false);
+  listen(b.child("meta"), "value", (s) => {
+    const d = s.val(); if (!d) { toast("Your teacher closed this class."); leaveClass(); return; }
+    const changed = (d.round || 1) !== S.round;
+    S.round = d.round || 1; S.double = !!d.double; S.owner = d.owner;
+    if (changed) { current = null; arena.syncCells(); log(`Round ${S.round} has begun. The map is clear.`); }
+    scheduleRender();
+  });
+  listen(b.child("players"), "value", (s) => { S.players = new Map(Object.entries(s.val() || {})); arena.syncCells(); scheduleRender(); });
+  listen(b.child("colors"), "value", (s) => { S.claims = new Map(Object.entries(s.val() || {})); scheduleRender(); });
+  const cellQ = batcher((items) => ingestCells(items, true));
+  listen(b.child("cells"), "child_added", (s) => cellQ([s.key, s.val()]));
+  listen(b.child("cells"), "child_changed", (s) => cellQ([s.key, s.val()]));
+  listen(b.child("cells"), "child_removed", (s) => cellQ([s.key, null]));
+  const castleQ = batcher((items) => ingestCastles(items, true));
+  listen(b.child("castles"), "child_added", (s) => castleQ([s.key, s.val()]));
+  listen(b.child("castles"), "child_changed", (s) => castleQ([s.key, s.val()]));
+  listen(b.child("castles"), "child_removed", (s) => { S.castles.delete(s.key); syncCastles(); scheduleRender(); });
+  const hitQ = batcher((items) => ingestHits(items, true));
+  listen(b.child("hits"), "child_added", (s) => hitQ([s.key, s.val()]));
+  listen(b.child("hits"), "child_removed", (s) => { S.hits.delete(s.key); });
+  renderAll();
+  return true;
+}
+function loadProgress() {
+  progress = { seen: [], sigs: [], n: 0, ...local.get("progress_" + myId, {}) };
+  progressReady = true; renderAll();
+}
+async function boot() {
+  renderLog(); applyRoute(); renderAll();
+  const cfg = window.FIREBASE_CONFIG;
+  const configured = window.firebase && cfg && cfg.apiKey && !/PASTE/.test(cfg.apiKey) && cfg.databaseURL && !/PASTE/.test(cfg.databaseURL);
+  if (!configured) {
+    online = false; myId = "local";
+    $("conn").textContent = "Practice mode · game server not set up";
+    loadProgress(); return;
+  }
+  try {
+    firebase.initializeApp(cfg);
+    fdb = firebase.database();
+    const cred = await firebase.auth().signInAnonymously();
+    myId = cred.user.uid;
+  } catch (e) {
+    online = false; myId = "local";
+    $("conn").textContent = "Practice mode · couldn't reach the game server";
+    toast("Couldn't reach the game server. You can still practice on your own.");
+    loadProgress(); return;
+  }
+  online = true;
+  fdb.ref(".info/connected").on("value", (s) => {
+    const up = !!s.val();
+    $("conn").textContent = up ? "Live" : "Reconnecting…"; $("conn").classList.toggle("live", up);
+  });
+  loadProgress();
+  const saved = route === "teacher" ? local.get("teacherCode", "") : local.get("code", "");
+  if (saved) { const ok = await connectClass(saved); if (!ok) local.set(route === "teacher" ? "teacherCode" : "code", ""); }
+  renderAll();
+}
+boot();
+</script>
+</body>
+</html>
