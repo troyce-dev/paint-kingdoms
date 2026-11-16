@@ -59,7 +59,7 @@ Open the student page. The pill at the top should say **Live**, not "Practice mo
 3. Teacher buttons on the projector:
    - **Turn on double money**: every correct answer pays double.
    - **Start a new round**: wipes the map. Students keep the code and rejoin.
-   - **Hide class code**: hides the code on the projector once everyone has joined. Click again to show it.
+   - **Hide join box**: hides the whole top-left box (title, web address and class code) once everyone has joined, so the full battlefield shows. Click **Show join box** to bring it back.
    - **New class code**: a fresh code and map for the next period. The old class is deleted.
 
 Teacher control is tied to the browser that created the class. If you change computers or clear your browser data, create a new class code.

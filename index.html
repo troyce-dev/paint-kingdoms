@@ -340,7 +340,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <button class="btn small" type="button" data-act="double" hidden>Turn on double money</button>
     <button class="btn small" type="button" data-act="round" hidden>Start a new round</button>
     <button class="btn small" type="button" data-act="newclass" hidden>New class code</button>
-    <button class="btn small ghost" type="button" data-act="hidecode" hidden>Hide class code</button>
+    <button class="btn small ghost" type="button" data-act="hidecode" hidden>Hide join box</button>
     <button class="btn small ghost" type="button" data-mute>Sound: on</button>
     <a class="btn small ghost" href="#play">Student view</a>
   </div>
@@ -1940,9 +1940,9 @@ function renderTeacher() {
   isTeacher = online ? !!CLASS && S.owner === myId : true;
   document.querySelectorAll("[data-act]").forEach((b) => { b.hidden = !isTeacher; if (b.dataset.act === "double") b.textContent = S.double ? "Turn off double money" : "Turn on double money"; });
   $("codePill").hidden = !CLASS; $("codePill").textContent = CLASS ? `Class ${CLASS}` : "";
-  $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = hideCode ? "Hidden" : CLASS || "";
-  $("bCode").style.opacity = hideCode ? 0.35 : 1;
-  document.querySelectorAll('[data-act="hidecode"]').forEach((b) => (b.textContent = hideCode ? "Show class code" : "Hide class code"));
+  $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = CLASS || "";
+  document.querySelector(".b-title").hidden = hideCode && isTeacher && !!CLASS;
+  document.querySelectorAll('[data-act="hidecode"]').forEach((b) => (b.textContent = hideCode ? "Show join box" : "Hide join box"));
   if (route === "teacher") { $("codePill").hidden = true; }
   $("bJoined").textContent = `${joinedCount()} of ${COLORS.length} players joined`;
   $("bUrl").textContent = location.host ? location.host + location.pathname.replace(/index\.html$/, "") : "this website";
