@@ -312,7 +312,7 @@ a.btn { text-decoration: none; display: inline-block; }
       <div class="rules">
         <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a wall, extra health, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
-        <div><b>Knock down castles</b>It takes 15 Small, 7 Medium, 4 Large or 2 Mega hits to destroy a castle. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. A wall makes a castle harder to hit and stops seeping paint.</div>
+        <div><b>Knock down castles</b>It takes 15 Small, 7 Medium, 4 Large or 2 Mega hits to destroy a castle. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. A wall makes a castle harder to hit and stops seeping paint, until enough paint knocks it down.</div>
         <div><b>Wrong answers hurt</b>A wrong answer damages your own castle like a Medium hit. Lost your castle? All your paint goes with it. Save $500, buy a new one, and pick an open plot.</div>
       </div>
     </section>
@@ -952,7 +952,7 @@ const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
 const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
 const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 40;
-const WALL_MS = 90000, WALL_AIM = 0.5, HEAL = 105, MISS_DMG = 60;
+const WALL_HP = 240, WALL_AIM = 0.5, HEAL = 105, MISS_DMG = 60;
 const PRICE = { paint: 40, shield: 100, wall: 100, life: 75, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 420;
 function dmgOf(r) { return r <= 1.0 ? 28 : r <= 1.4 ? 60 : r <= 1.9 ? 105 : 210; }
 function dp(h) { return Math.min(100, Math.round((h / HITS_TO_FALL) * 100)); }
@@ -1084,6 +1084,7 @@ function destroy(c, ev, by) {
   const conq = { key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by };
   Wd.conquests.push(conq); return conq;
 }
+function hitWall(c, dmg) { c.wall = Math.max(0, c.wall - dmg); return { owner: c.owner, blocked: true, wallDown: c.wall <= 0, wallPct: Math.round((c.wall / WALL_HP) * 100) }; }
 function strike(c, by, ev, dmg) {
   c.hits += dmg; const h = { owner: c.owner, hits: c.hits };
   if (c.hits >= HITS_TO_FALL) h.conq = destroy(c, ev, by);
@@ -1093,9 +1094,9 @@ function checkHits(ev, po) {
   for (const c of [...Wd.castles.values()]) {
     if (c.owner === ev.by) continue;
     const d = Math.hypot(c.x - ev.x, c.z - ev.z);
-    const walled = c.wall > ev.t;
+    const walled = c.wall > 0;
     if (d <= hitRadius(ev.r) * (walled ? WALL_AIM : 1)) ev._hits.push(strike(c, ev.by, ev, dmgOf(ev.r)));
-    else if (walled && d <= hitRadius(ev.r)) ev._hits.push({ owner: c.owner, blocked: true });
+    else if (walled && d <= hitRadius(ev.r)) ev._hits.push(hitWall(c, dmgOf(ev.r)));
     else if (po.grow && d <= SEEP_PAD + ev.r * GROW) {
       // the blob will spread into this castle later: schedule a seep hit
       const g = (d - SEEP_PAD) / ev.r;
@@ -1112,7 +1113,7 @@ function advance(t) {
     const q = P.splice(bi, 1)[0], c = Wd.castles.get(q.target);
     if (q.po._dead || !c || c.t !== q.built || !Wd.castles.has(q.by)) continue;
     const pev = { id: q.id + ":s", t: q.t, by: q.by, seed: q.po.seed, _fell: [], _pos: [], _real: false };
-    if (c.wall > q.t) { out.push({ owner: c.owner, blocked: true, by: q.by, pev }); continue; }
+    if (c.wall > 0) { const w = hitWall(c, dmgOf(q.po.r)); w.by = q.by; w.pev = pev; out.push(w); continue; }
     const h = strike(c, q.by, pev, dmgOf(q.po.r)); h.by = q.by; h.pev = pev; out.push(h);
   }
   if (t > Wd.clock) Wd.clock = t;
@@ -1150,10 +1151,10 @@ function applyEvent(ev) {
     } else ev._sea = true;
   } else if (ev.k === "wall") {
     if (!c) { ev._skip = true; return; }
-    c.wall = ev.t + WALL_MS;
+    c.wall = WALL_HP;
   } else if (ev.k === "heal") {
-    if (!c || c.hits <= -HITS_TO_FALL) { ev._skip = true; return; }
-    c.hits = Math.max(-HITS_TO_FALL, c.hits - HEAL);
+    if (!c || c.hits <= 0) { ev._skip = true; return; }
+    c.hits = Math.max(0, c.hits - HEAL);
   } else if (ev.k === "miss") {
     if (!c) { ev._skip = true; return; }
     c.hits += MISS_DMG; ev._dmg = c.hits;
@@ -1202,7 +1203,7 @@ function seepFx(list) {
   computeWinner();
   for (const h of list) {
     arena.castleHit(h.owner, h.blocked); Sfx.play(h.blocked ? "block" : "hit", 0.8);
-    if (h.blocked) log(`${nameOf(h.owner)}'s wall stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner));
+    if (h.blocked) { log(h.wallDown ? `${nameOf(h.by)}'s spreading paint knocked down ${nameOf(h.owner)}'s wall!` : `${nameOf(h.owner)}'s wall stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner)); if (h.wallDown && h.owner === myId) toast("Your wall was knocked down! Buy a new one in the shop."); }
     else {
       log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (health ${100 - dp(h.hits)}%).`, colorOf(h.by));
       if (h.hits < HITS_TO_FALL) {
@@ -1247,9 +1248,9 @@ function animateEvent(ev) {
       for (const h of ev._hits) {
         arena.castleHit(h.owner, h.blocked);
         if (h.blocked) {
-          log(`${nameOf(h.owner)}'s wall deflected a shot from ${nameOf(ev.by)}.`, colorOf(h.owner));
-          if (h.owner === myId) toast("Your wall deflected a shot!");
-          else if (ev.by === myId) toast(`Deflected! ${nameOf(h.owner)} has a wall up, so you need to land closer to the middle.`);
+          log(h.wallDown ? `${nameOf(ev.by)} knocked down ${nameOf(h.owner)}'s wall!` : `${nameOf(h.owner)}'s wall deflected a shot from ${nameOf(ev.by)}.`, colorOf(h.owner));
+          if (h.owner === myId) toast(h.wallDown ? "Your wall was knocked down! Buy a new one in the shop." : `Your wall deflected a shot! Wall strength: ${h.wallPct}%.`);
+          else if (ev.by === myId) toast(h.wallDown ? `You knocked down ${nameOf(h.owner)}'s wall!` : `Deflected! ${nameOf(h.owner)}'s wall is at ${h.wallPct}% strength.`);
         } else {
           log(`${nameOf(ev.by)} hit ${nameOf(h.owner)}'s castle (health ${100 - dp(h.hits)}%).`, colorOf(ev.by));
           if (h.hits < HITS_TO_FALL) {
@@ -1597,7 +1598,7 @@ class Arena {
       const bw = it.wall ? 170 : 260, left = Math.max(0, Math.min(1, 1 - it.hits / HITS_TO_FALL));
       x.fillStyle = "rgba(255,255,255,0.22)"; x.fillRect(30, 82, bw, 16);
       x.fillStyle = left > 0.5 ? "#5BE08F" : left > 0.25 ? "#F3B61F" : "#FF6B5E"; x.fillRect(30, 82, bw * left, 16);
-      x.strokeStyle = it.hits < 0 ? "#F3B61F" : "#FFFFFF"; x.lineWidth = it.hits < 0 ? 4 : 2; x.strokeRect(30, 82, bw, 16);
+      x.strokeStyle = "#FFFFFF"; x.lineWidth = 2; x.strokeRect(30, 82, bw, 16);
       if (it.wall) { x.fillStyle = "#9FD8FF"; x.font = "700 20px 'Nunito Sans', sans-serif"; x.textAlign = "left"; x.fillText("Wall up", 212, 98); }
     }
     c.tex.needsUpdate = true;
@@ -1766,7 +1767,7 @@ function syncCastles() {
   for (const ev of Wd.order) if (ev._inFlight && ev._fell) for (const c of ev._fell) if (!Wd.castles.has(c.owner)) all.push({ ...c, hits: HITS_TO_FALL - 1 });
   for (const c of all) {
     const p = S.players.get(c.owner) || {};
-    list.push({ owner: c.owner, x: c.x, z: c.z, fresh: now() - c.t < 4000, color: colorOf(c.owner), name: nameOf(c.owner), kos: Wd.kos.get(c.owner) || 0, conquered: false, bankrupt: false, hits: c.hits, wall: c.wall > now(), cannon: p.cannon || 1, isMe: c.owner === myId && route !== "teacher" });
+    list.push({ owner: c.owner, x: c.x, z: c.z, fresh: now() - c.t < 4000, color: colorOf(c.owner), name: nameOf(c.owner), kos: Wd.kos.get(c.owner) || 0, conquered: false, bankrupt: false, hits: c.hits, wall: c.wall > 0, cannon: p.cannon || 1, isMe: c.owner === myId && route !== "teacher" });
   }
   arena.syncCastles(list);
 }
@@ -1988,11 +1989,11 @@ function buy(item) {
   if (!c) return;
   if (item === "paint") { if (need(PRICE.paint)) return; writeMe({ money: money - PRICE.paint, paint: (p.paint || 0) + PAINT_PACK }); toast(`Bought ${PAINT_PACK} paint.`); }
   else if (item === "shield") {
-    if (c.wall > now()) { toast("Your wall is still up."); return; }
+    if (c.wall > 0) { toast("Your wall is still up."); return; }
     if (need(PRICE.wall)) return;
-    writeMe({ money: money - PRICE.wall }); pushEvent({ k: "wall" }); toast(`Wall up for ${WALL_MS / 1000} seconds! You're harder to hit, and spreading paint can't seep in.`);
+    writeMe({ money: money - PRICE.wall }); pushEvent({ k: "wall" }); toast("Wall up! You're harder to hit and spreading paint can't seep in, until enough paint knocks the wall down.");
   } else if (item === "life") {
-    if (c.hits <= -HITS_TO_FALL) { toast("Your castle is already at maximum health."); return; }
+    if (c.hits <= 0) { toast("Your castle is already at full health."); return; }
     if (need(PRICE.life)) return;
     writeMe({ money: money - PRICE.life }); pushEvent({ k: "heal" }); toast("Castle health +25%.");
   } else if (item === "cannon") {
@@ -2022,9 +2023,9 @@ function renderShop() {
   const set = (k, title, price, note, dis, hide) => { const b = box.querySelector(`[data-buy="${k}"]`); b.hidden = !!hide; b.querySelector("b").textContent = title; b.querySelector(".price").textContent = price; b.querySelector("small").textContent = note; b.disabled = dis; };
   set("castle", "New castle", "$" + PRICE.castle, placing ? "now click an open plot on the map" : money >= PRICE.castle ? "buy it, then pick an open plot on the map" : `save ${money$(PRICE.castle - money)} more to get back in the game`, over || placing || money < PRICE.castle, !!c);
   set("paint", `Paint ×${PAINT_PACK}`, "$" + PRICE.paint, `you have ${p.paint || 0}`, over || money < PRICE.paint, !c);
-  const wallLeft = c ? Math.ceil((c.wall - now()) / 1000) : 0;
-  set("shield", "Wall", wallLeft > 0 ? `Up · ${wallLeft}s` : "$" + PRICE.wall, wallLeft > 0 ? "harder to hit, no seeping" : `${WALL_MS / 1000}s: harder to hit, no seeping`, over || !c || wallLeft > 0 || money < PRICE.wall, !c);
-  set("life", "Health +25%", "$" + PRICE.life, c ? `castle health ${100 - dp(c.hits)}%` : "", over || !c || money < PRICE.life || c.hits <= -HITS_TO_FALL, !c);
+  const wallLeft = c && c.wall > 0 ? Math.round((c.wall / WALL_HP) * 100) : 0;
+  set("shield", "Wall", wallLeft > 0 ? `Up · ${wallLeft}%` : "$" + PRICE.wall, wallLeft > 0 ? "stands until paint knocks it down" : "harder to hit, no seeping", over || !c || wallLeft > 0 || money < PRICE.wall, !c);
+  set("life", "Health +25%", "$" + PRICE.life, c ? `castle health ${100 - dp(c.hits)}%` : "", over || !c || money < PRICE.life || c.hits <= 0, !c);
   set("cannon", lvl >= 3 ? "Cannon maxed" : `Cannon level ${lvl + 1}`, lvl >= 3 ? "Level 3" : "$" + PRICE.cannon[lvl - 1], lvl >= 3 ? "biggest blobs" : lvl === 1 ? "unlocks Large loads" : "unlocks Mega loads", over || lvl >= 3 || money < PRICE.cannon[lvl - 1], !c);
   document.querySelectorAll("[data-size]").forEach((b) => { const sz = SIZES[b.dataset.size]; b.disabled = lvl < sz.lvl; b.querySelector("small").textContent = lvl < sz.lvl ? `cannon level ${sz.lvl}` : `${sz.cost} paint`; });
   if (lvl < SIZES[paintSize].lvl) document.querySelector('[data-size="medium"]').click();
@@ -2109,7 +2110,7 @@ function renderWell() {
   if (!p) { cs.innerHTML = ""; mt.hidden = true; renderShop(); return; }
   if (!c) cs.innerHTML = `<span class="shield down">No castle</span>`;
   else {
-    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span>Castle health: <b>${100 - dp(c.hits)}%</b></span>${c.wall > now() ? `<span class="shield">Wall up · ${Math.ceil((c.wall - now()) / 1000)}s</span>` : ""}`;
+    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span>Castle health: <b>${100 - dp(c.hits)}%</b></span>${c.wall > 0 ? `<span class="shield">Wall strength ${Math.round((c.wall / WALL_HP) * 100)}%</span>` : ""}`;
   }
   if (m < 0) {
     mt.hidden = false;

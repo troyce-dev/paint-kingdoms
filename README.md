@@ -71,8 +71,8 @@ Teacher control is tied to the browser that created the class. If you change com
 - **Start:** everyone starts with $50 and no paint.
 - **Shop:**
   - Paint ×5 for $40.
-  - Wall for $100. For 90 seconds the castle is harder to hit (shots must land near the middle) and spreading paint can't seep in.
-  - Health +25% for $75. Health can be built up to 200%.
+  - Wall for $100. While it stands, the castle is harder to hit (shots must land near the middle) and spreading paint can't seep in. Every blob the wall stops weakens it: 9 Small, 4 Medium, 3 Large or 2 Mega blobs knock it down.
+  - Health +25% for $75, up to 100%.
   - Bigger cannon: level 2 for $150 (Large loads) and level 3 for $300 (Mega loads).
 - **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. A dot on the aim line shows where the blob will land. Every cannon can reach the whole map. Loads use 1 to 4 paint. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
 - **Spreading paint:** a blob that lands on your own paint spreads for 30 seconds, growing to 1.7 times its size. If it seeps into a rival castle, that counts as a hit. Blobs that land on bare board or on someone else's paint don't spread, so you reach a rival by building a trail of your own paint toward them.
