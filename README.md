@@ -1,6 +1,6 @@
 # Paint Kingdoms
 
-A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn money, buy paint, shields and bigger cannons, and knock down each other's castles until one empire rules the map. No student sign-in: students go to the website and type a class code.
+A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn money, buy paint, shields and bigger cannons, and knock down each other's castles until one is left standing. No student sign-in: students go to the website and type a class code.
 
 - **Student page:** `https://troyce-dev.github.io/paint-kingdoms/`
 - **Teacher / projector page:** `https://troyce-dev.github.io/paint-kingdoms/#teacher`
@@ -30,7 +30,7 @@ Until step 4 is done, the site runs in **practice mode**: everything works for o
 
 These rules make sure:
 - students can only change their own kingdom,
-- only the teacher who created a class can start new rounds, turn on double paint, or close the class,
+- only the teacher who created a class can start new rounds, turn on double money, or close the class,
 - nobody can browse the list of classes; you need the code.
 
 ### 4. Connect the website to your project
@@ -64,13 +64,14 @@ Open the student page. The pill at the top should say **Live**, not "Practice mo
 Teacher control is tied to the browser that created the class. If you change computers or clear your browser data, create a new class code.
 
 ## How the game works
-- **Goal:** conquer every kingdom. The game is won when one empire owns every castle on the map.
+- **Goal:** be the last castle standing. The teacher's screen also shows a live Top 3 leaderboard, ranked by castles destroyed.
 - **Money:** every correct answer pays cash: $50 for Medium, $100 for Hard, $150 for Challenge questions, plus a $25 bonus for every 3 in a row. Every wrong answer costs $50 and locks the next question for 10 seconds. Everyone starts with $100 and 4 paint.
 - **Shop:** Paint ×5 for $40. A shield for $100 that blocks the next 2 direct hits. A bigger cannon: level 2 for $150 (more range, Large loads) and level 3 for $300 (longest range, Mega loads).
 - **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. A dot on the aim line shows where the blob will land. Loads use 1 to 4 paint. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
-- **3 direct hits:** a castle that takes 3 direct hits crumbles and joins the kingdom that landed the last hit. Knock down a kingdom's *home* castle and its whole empire joins you. The player who lands the final hit gets $100 in plunder.
-- **Conquered players keep playing.** They still earn money, their shots count for the empire that took them, and they win if it wins.
-- **Debt and bankruptcy:** students can go into debt, but owing more than $150 makes their castle go bankrupt and crumble. A bankrupt player can't fire or shop, and a single hit lets a rival claim the ruins. Getting back to $0 rebuilds the castle.
+- **3 direct hits:** a castle that takes 3 direct hits crumbles to the ground and disappears, leaving a splat of the attacker's paint. The player who lands the final hit gets $100 in plunder.
+- **Debt and bankruptcy:** students can go into debt, but owing more than $150 makes their castle go bankrupt and crumble. Bankruptcy wipes the debt back to $0.
+- **Getting back in:** a student without a castle can't fire or shop, but keeps answering questions. A new castle costs $500. After buying it, the student clicks an open plot on the map (away from other castles and the edge) to build it. Cannon upgrades and paint carry over.
+- **Sound:** cannons, splats, hits, shields, crumbling castles, and right and wrong answers all have sound effects. Each screen has a *Sound: on/off* button.
 - **Questions:** 80 written SAT-style math items plus 35 question types that generate new numbers every time, chosen at random. Each Chromebook remembers which questions it has seen, so students don't get repeats.
 - **Teacher buttons:** *Double money* doubles every correct answer's payout.
 
