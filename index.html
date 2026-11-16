@@ -311,8 +311,8 @@ a.btn { text-decoration: none; display: inline-block; }
       <div class="rules">
         <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
-        <div><b>3 hits</b>Paint keeps spreading for 30 seconds after it lands. A direct hit, or paint that seeps into a castle, counts as a hit. 3 hits and the castle crumbles. A shield blocks 2.</div>
-        <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $750, buy a new one, and pick an open plot.</div>
+        <div><b>3 hits</b>A direct hit counts as a hit. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. 3 hits and the castle crumbles. A shield blocks 2.</div>
+        <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $500, buy a new one, and pick an open plot.</div>
       </div>
     </section>
     <div class="subgrid">
@@ -899,8 +899,8 @@ const SIZES = { small: { r: 0.95, cost: 1, name: "Small", lvl: 1 }, medium: { r:
 const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
 const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
-const START_MONEY = 100, START_PAINT = 4, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
-const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 750 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
+const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
+const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
 function money$(n) { return (n < 0 ? "−$" : "$") + Math.abs(n); }
 
@@ -1012,7 +1012,7 @@ function coverage(c) {
   return { emp: best, pct: z.length ? n / z.length : 0 };
 }
 function hitRadius(r) { return 0.55 + r * 0.5; }
-function growth(po, t) { return 1 + (GROW - 1) * Math.max(0, Math.min(1, (t - po.t) / SPREAD_MS)); }
+function growth(po, t) { if (!po.grow) return 1; return 1 + (GROW - 1) * Math.max(0, Math.min(1, (t - po.t) / SPREAD_MS)); }
 function addPaint(po) {
   po._dead = false; po._gd = 0; Wd.paintList.push(po);
   if (!Wd.paint.has(po.owner)) Wd.paint.set(po.owner, []);
@@ -1025,8 +1025,6 @@ function destroy(c, ev, by) {
   for (const o of Wd.paint.get(c.owner) || []) o._dead = true;
   Wd.paint.delete(c.owner);
   if (!by) return null;
-  const seed = (((ev.seed || 1) ^ Math.imul(ev._fell.length, 2654435761)) >>> 0) || 7;
-  ev._pos.push(addPaint({ k: "splat", owner: by, _x: c.x, _z: c.z, r: FALL_SPLAT_R, seed, t: ev.t, ev: ev._real ? ev : null }));
   Wd.kos.set(by, (Wd.kos.get(by) || 0) + 1);
   const conq = { key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by };
   Wd.conquests.push(conq); return conq;
@@ -1042,7 +1040,7 @@ function checkHits(ev, po) {
     if (c.owner === ev.by) continue;
     const d = Math.hypot(c.x - ev.x, c.z - ev.z);
     if (d <= hitRadius(ev.r)) ev._hits.push(strike(c, ev.by, ev));
-    else if (d <= SEEP_PAD + ev.r * GROW) {
+    else if (po.grow && d <= SEEP_PAD + ev.r * GROW) {
       // the blob will spread into this castle later: schedule a seep hit
       const g = (d - SEEP_PAD) / ev.r;
       Wd.pending.push({ t: ev.t + Math.round(SPREAD_MS * Math.max(0.1, (g - 1) / (GROW - 1))), target: c.owner, built: c.t, by: ev.by, po, id: ev.id });
@@ -1088,7 +1086,9 @@ function applyEvent(ev) {
     if (!c || !(ev.r > 0)) { ev._skip = true; return; }
     ev._emp = ev.by; ev._from = [c.x, c.z]; ev._x = ev.x; ev._z = ev.z;
     if (onBoard(ev.x, ev.z)) {
-      const po = addPaint({ k: "shot", owner: ev.by, _x: ev.x, _z: ev.z, r: ev.r, seed: ev.seed, t: ev.t, _from: [c.x, c.z], ev });
+      // paint only spreads when the shot lands on the shooter's own paint
+      const grow = (Wd.paint.get(ev.by) || []).some((o) => !o._dead && Math.hypot(o._x - ev.x, o._z - ev.z) <= o.r * growth(o, ev.t));
+      const po = addPaint({ k: "shot", owner: ev.by, _x: ev.x, _z: ev.z, r: ev.r, seed: ev.seed, t: ev.t, _from: [c.x, c.z], ev, grow });
       ev._pos.push(po); checkHits(ev, po);
     } else ev._sea = true;
   } else if (ev.k === "shield") {
@@ -1823,7 +1823,7 @@ function renderJoin() {
   area.innerHTML = `<div class="join">
     ${online ? `<div class="qmeta"><span class="tag">Class ${CLASS}</span><button type="button" class="tag" id="leaveBtn" style="border:0">Change class</button></div>` : ""}
     <h2>${prev && prev.round && prev.round !== S.round ? "A new round has begun" : "Build your kingdom"}</h2>
-    <p>You start as your own kingdom with your own color, a castle, a cannon, $${START_MONEY} and ${START_PAINT} paint. Answer questions to earn money, buy paint and upgrades, and land 3 direct hits on a castle to destroy it. The last castle standing wins.</p>
+    <p>You start as your own kingdom with your own color, a castle, a cannon and $${START_MONEY}, but no paint. Answer questions to earn money, buy paint and upgrades, and land 3 direct hits on a castle to destroy it. The last castle standing wins.</p>
     <form id="joinForm" autocomplete="off">
       <label for="kName">Kingdom name</label>
       <input type="text" id="kName" maxlength="24" required placeholder="e.g. The Quadratic Empire">
@@ -1968,9 +1968,10 @@ function fireShot(power) {
   const x = c.x + Math.cos(aimYaw) * d, z = c.z + Math.sin(aimYaw) * d;
   const p = me();
   writeMe({ paint: p.paint - size.cost, shots: (p.shots || 0) + 1 });
-  pushEvent({ k: "shot", x: +x.toFixed(2), z: +z.toFixed(2), r: size.r, seed: (Math.random() * 4294967295) >>> 0 });
+  const id = pushEvent({ k: "shot", x: +x.toFixed(2), z: +z.toFixed(2), r: size.r, seed: (Math.random() * 4294967295) >>> 0 });
   arena.markLanding(x, z); lastPower = power;
-  $("mapNote").textContent = onBoard(x, z) ? `Last shot landed ${d.toFixed(1)} away. Adjust your power to hit closer or farther.` : `Splash! That one landed in the sea, ${d.toFixed(1)} away. Use less power.`;
+  const mine = S.events.get(id), spreads = !!(mine && mine._pos && mine._pos[0] && mine._pos[0].grow);
+  $("mapNote").textContent = !onBoard(x, z) ? `Splash! That one landed in the sea, ${d.toFixed(1)} away. Use less power.` : spreads ? `Landed ${d.toFixed(1)} away, on your own paint, so this blob will spread for 30 seconds.` : `Landed ${d.toFixed(1)} away. Land a shot on your own paint to make it spread.`;
 }
 function aimTick() {
   const c = myCastle();
