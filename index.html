@@ -899,7 +899,7 @@ const SIZES = { small: { r: 0.95, cost: 1, name: "Small", lvl: 1 }, medium: { r:
 const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
 const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
-const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
+const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 40;
 const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
 function money$(n) { return (n < 0 ? "−$" : "$") + Math.abs(n); }
