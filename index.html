@@ -181,16 +181,16 @@ a.btn { text-decoration: none; display: inline-block; }
 .codebox p { color: #5A6480 !important; margin: 2px 0 0 !important; font-size: 13px !important; }
 .b-title #bUrl { color: #FFFFFF; word-break: break-all; }
 .b-title .round { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 99px; background: #F3B61F; color: #18203A; font-weight: 800; font-size: 14px; }
-.b-board { top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: min(400px, calc(100% - 32px)); }
-.b-board .rows { gap: 6px; }
-.b-board .row { padding: 8px 10px; grid-template-columns: 30px 18px minmax(0, 1fr) auto; gap: 10px; background: rgba(255,255,255,.07); border-radius: 10px; }
-.b-board .row .rank { font-family: var(--display); font-size: 22px; color: #F3B61F !important; text-align: center; }
-.b-board .row .dotc { width: 18px; height: 18px; }
-.b-board .row .nm { font-size: 18px; font-weight: 800; }
-.b-board .row .nm small { font-size: 12px; }
-.b-board .row .land { font-size: 20px; }
-.b-board .row .land small { display: block; }
-.b-board h2 { font-size: 20px; color: #FFFFFF; margin-bottom: 8px; }
+.b-board { top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: min(310px, calc(100% - 32px)); padding: 10px 12px; }
+.b-board .rows { gap: 4px; }
+.b-board .row { padding: 5px 8px; grid-template-columns: 22px 14px minmax(0, 1fr) auto; gap: 8px; background: rgba(255,255,255,.07); border-radius: 8px; }
+.b-board .row .rank { font-family: var(--display); font-size: 17px; color: #F3B61F !important; text-align: center; }
+.b-board .row .dotc { width: 14px; height: 14px; }
+.b-board .row .nm { font-size: 15px; font-weight: 800; }
+.b-board .row .nm small { font-size: 11px; }
+.b-board .row .land { font-size: 17px; }
+.b-board .row .land small { display: block; font-size: 10px; }
+.b-board h2 { font-size: 16px; color: #FFFFFF; margin-bottom: 6px; }
 .b-board .row { color: #FFFFFF; }
 .b-board .row .rank, .b-board .row .nm small { color: #AEB8D6; }
 .b-board .row .land small { color: #9BE3A5 !important; }
@@ -237,6 +237,10 @@ a.btn { text-decoration: none; display: inline-block; }
 .shopbtn.wide { grid-column: 1 / -1; }
 .stage.placing canvas { cursor: cell; }
 .row.out { opacity: .55; }
+.lvl { display: inline-flex; align-items: center; gap: 4px; color: #FFFFFF; font-weight: 800; font-size: 13px; padding-left: 4px; }
+.lvl button { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,.4); background: transparent; color: #FFFFFF; font-weight: 800; }
+.lvl button[aria-pressed="true"] { background: #F3B61F; color: #18203A; border-color: #F3B61F; }
+.tag.easy { background: var(--bg); color: var(--ink); }
 .tag.exp { background: var(--accent); color: var(--accent-ink); }
 .shop { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .shopgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
@@ -305,9 +309,9 @@ a.btn { text-decoration: none; display: inline-block; }
       </div>
       <div class="mapnote" id="mapNote">Point at the table to aim. Hold the mouse button (or Space) to charge, then let go to fire.</div>
       <div class="rules">
-        <div><b>Earn and spend</b>Correct answers pay $50, $100 or $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
+        <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
-        <div><b>3 direct hits</b>A castle that takes 3 direct hits crumbles to the ground and is gone. A shield blocks 2 hits. The last castle standing wins.</div>
+        <div><b>3 hits</b>Paint keeps spreading for 30 seconds after it lands. A direct hit, or paint that seeps into a castle, counts as a hit. 3 hits and the castle crumbles. A shield blocks 2.</div>
         <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $750, buy a new one, and pick an open plot.</div>
       </div>
     </section>
@@ -334,13 +338,15 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="codebox" id="bCodeBox" hidden><div class="eyebrow">Class code</div><div class="code" id="bCode">·····</div><p id="bJoined"></p></div>
   </div>
   <div class="glass b-start" id="bStart" hidden></div>
-  <div class="glass b-board"><h2>Top 3 kingdoms</h2><div class="rows" id="bRows"></div></div>
+  <div class="glass b-board"><h2>Top 3 by area painted</h2><div class="rows" id="bRows"></div></div>
   <div class="glass b-feed"><div class="eyebrow" style="color:#AEB8D6;margin-bottom:6px">Battle log</div><div class="log" id="bLog"></div></div>
   <div class="glass b-ctrl">
     <button class="btn small" type="button" data-act="double" hidden>Turn on double money</button>
     <button class="btn small" type="button" data-act="round" hidden>Start a new round</button>
     <button class="btn small" type="button" data-act="newclass" hidden>New class code</button>
+    <span class="lvl" data-act="levels" hidden>Level <button type="button" data-level="1" aria-pressed="false">1</button><button type="button" data-level="2" aria-pressed="true">2</button><button type="button" data-level="3" aria-pressed="false">3</button></span>
     <button class="btn small ghost" type="button" data-act="hidecode" hidden>Hide join box</button>
+    <button class="btn small ghost" type="button" data-act="hidelog" hidden>Hide battle log</button>
     <button class="btn small ghost" type="button" data-mute>Sound: on</button>
     <a class="btn small ghost" href="#play">Student view</a>
   </div>
@@ -642,6 +648,36 @@ const Q = [
  {id:80, dom:"Algebra", topic:"Linear functions", diff:"med", type:"num", ans:31,
   q:`For the linear function <i>f</i>, <i>f</i>(2) = 7 and <i>f</i>(5) = 16. What is the value of <i>f</i>(10)?`,
   ex:`The slope is (16 − 7)/(5 − 2) = 3. From f(5) = 16, going 5 more units adds 15: f(10) = 31.`},
+ {id:81, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:5, q:`If ${EQ("3x + 7 = 22")} what is the value of <i>x</i>?`, ex:`Subtract 7: 3x = 15. Divide by 3: x = 5.`},
+ {id:82, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:26, q:`If 5<i>x</i> = 30, what is the value of 5<i>x</i> − 4?`, ex:`You don't need x. Since 5x = 30, 5x − 4 = 30 − 4 = 26.`},
+ {id:83, dom:"Algebra", topic:"Linear functions", diff:"easy", type:"num", ans:11, q:`For the line <i>y</i> = 2<i>x</i> + 3, what is the value of <i>y</i> when <i>x</i> = 4?`, ex:`y = 2(4) + 3 = 11.`},
+ {id:84, dom:"Problem-Solving & Data Analysis", topic:"Percents", diff:"easy", type:"num", ans:16, q:`What is 20% of 80?`, ex:`0.20 × 80 = 16.`},
+ {id:85, dom:"Algebra", topic:"Slope", diff:"easy", type:"num", ans:3, q:`What is the slope of the line that passes through the points (0, 2) and (3, 11)?`, ex:`Slope = (11 − 2)/(3 − 0) = 9/3 = 3.`},
+ {id:86, dom:"Advanced Math", topic:"Function notation", diff:"easy", type:"num", ans:10, q:`If <i>f</i>(<i>x</i>) = <i>x</i>² + 1, what is the value of <i>f</i>(3)?`, ex:`f(3) = 3² + 1 = 10.`},
+ {id:87, dom:"Geometry & Trigonometry", topic:"Area", diff:"easy", type:"num", ans:40, q:`A rectangle has a length of 8 and a width of 5. What is its area?`, ex:`Area = length × width = 8 × 5 = 40.`},
+ {id:88, dom:"Problem-Solving & Data Analysis", topic:"Mean", diff:"easy", type:"num", ans:9, q:`What is the mean of 4, 8, 10 and 14?`, ex:`The sum is 36, and 36 ÷ 4 = 9.`},
+ {id:89, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:8, q:`If ${EQ("2(x − 3) = 10")} what is the value of <i>x</i>?`, ex:`Divide by 2: x − 3 = 5. Add 3: x = 8.`},
+ {id:90, dom:"Algebra", topic:"Equivalent expressions", diff:"easy", type:"mc", ans:1, q:`Which expression is equivalent to ${EQ("3(x + 4) − 2x")}`, ch:["5x + 12","x + 12","x + 4","5x + 4"], ex:`Distribute: 3x + 12 − 2x = x + 12.`},
+ {id:91, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:28, q:`If ${EQ(`${F("x","4")} = 7`)} what is the value of <i>x</i>?`, ex:`Multiply both sides by 4: x = 28.`},
+ {id:92, dom:"Algebra", topic:"Linear models", diff:"easy", type:"num", ans:50, q:`A phone plan costs $20 per month plus $5 for each gigabyte of data. What is the cost, in dollars, for a month with 6 gigabytes of data?`, ex:`20 + 5(6) = 50.`},
+ {id:93, dom:"Algebra", topic:"Linear functions", diff:"easy", type:"num", ans:8, q:`What is the <i>y</i>-intercept of the line <i>y</i> = −3<i>x</i> + 8?`, ex:`In y = mx + b, the y-intercept is b, which is 8.`},
+ {id:94, dom:"Geometry & Trigonometry", topic:"Triangles", diff:"easy", type:"num", ans:70, q:`Two angles of a triangle measure 50° and 60°. What is the measure, in degrees, of the third angle?`, ex:`The angles of a triangle add to 180°: 180 − 50 − 60 = 70.`},
+ {id:95, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:7, q:`If ${EQ("4x − 5 = 2x + 9")} what is the value of <i>x</i>?`, ex:`Subtract 2x: 2x − 5 = 9. Add 5: 2x = 14, so x = 7.`},
+ {id:96, dom:"Advanced Math", topic:"Quadratics", diff:"easy", type:"num", ans:7, q:`If <i>x</i>² = 49 and <i>x</i> &gt; 0, what is the value of <i>x</i>?`, ex:`x = 7 or x = −7. Since x > 0, x = 7.`},
+ {id:97, dom:"Algebra", topic:"Systems of equations", diff:"easy", type:"mc", ans:2, q:`${EQ("x + y = 10")}${EQ("x − y = 2")}Which ordered pair (<i>x</i>, <i>y</i>) is the solution to the system above?`, ch:["(4, 6)","(8, 2)","(6, 4)","(5, 5)"], ex:`Add the equations: 2x = 12, so x = 6. Then y = 4.`},
+ {id:98, dom:"Problem-Solving & Data Analysis", topic:"Ratios", diff:"easy", type:"num", ans:15, q:`In a class, the ratio of boys to girls is 2 to 3. If there are 10 boys, how many girls are there?`, ex:`10 boys is 5 groups of 2, so there are 5 groups of 3 girls: 15.`},
+ {id:99, dom:"Geometry & Trigonometry", topic:"Area", diff:"easy", type:"num", ans:81, q:`The perimeter of a square is 36. What is the area of the square?`, ex:`Each side is 36 ÷ 4 = 9, so the area is 9² = 81.`},
+ {id:100, dom:"Advanced Math", topic:"Exponent rules", diff:"easy", type:"num", ans:5, q:`If ${EQ("3² · 3³ = 3<sup>k</sup>")} what is the value of <i>k</i>?`, ex:`When you multiply powers with the same base, add the exponents: 2 + 3 = 5.`},
+ {id:101, dom:"Advanced Math", topic:"Equivalent expressions", diff:"easy", type:"mc", ans:0, q:`Which expression is equivalent to ${EQ("(x + 2)(x + 5)")}`, ch:["x² + 7x + 10","x² + 10x + 7","x² + 7x + 7","x² + 10"], ex:`Multiply out: x² + 5x + 2x + 10 = x² + 7x + 10.`},
+ {id:102, dom:"Geometry & Trigonometry", topic:"Circles", diff:"easy", type:"num", ans:16, q:`A circle has a radius of 4. Its area is <i>k</i>π. What is the value of <i>k</i>?`, ex:`Area = πr² = π(4²) = 16π, so k = 16.`},
+ {id:103, dom:"Problem-Solving & Data Analysis", topic:"Percents", diff:"easy", type:"num", ans:30, q:`A shirt that costs $40 is on sale for 25% off. What is the sale price, in dollars?`, ex:`25% of 40 is 10, and 40 − 10 = 30.`},
+ {id:104, dom:"Geometry & Trigonometry", topic:"Right triangles", diff:"easy", type:"num", ans:10, q:`A right triangle has legs of length 6 and 8. What is the length of its hypotenuse?`, ex:`6² + 8² = 36 + 64 = 100, and √100 = 10.`},
+ {id:105, dom:"Problem-Solving & Data Analysis", topic:"Median", diff:"easy", type:"num", ans:5, q:`What is the median of 3, 9, 4, 7 and 5?`, ex:`In order: 3, 4, 5, 7, 9. The middle value is 5.`},
+ {id:106, dom:"Algebra", topic:"Linear functions", diff:"easy", type:"num", ans:4, q:`The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = 5<i>x</i> − 2. For what value of <i>x</i> does <i>f</i>(<i>x</i>) = 18?`, ex:`5x − 2 = 18, so 5x = 20 and x = 4.`},
+ {id:107, dom:"Algebra", topic:"Inequalities", diff:"easy", type:"num", ans:3, q:`What is the greatest integer <i>x</i> that satisfies ${EQ("2x + 1 < 9")}`, ex:`2x < 8, so x < 4. The greatest integer less than 4 is 3.`},
+ {id:108, dom:"Problem-Solving & Data Analysis", topic:"Rates", diff:"easy", type:"num", ans:250, q:`A car travels 150 miles in 3 hours. At that rate, how many miles does it travel in 5 hours?`, ex:`The rate is 150 ÷ 3 = 50 miles per hour, and 50 × 5 = 250.`},
+ {id:109, dom:"Advanced Math", topic:"Factoring", diff:"easy", type:"mc", ans:3, q:`Which expression is equivalent to ${EQ("x² − 9")}`, ch:["(x − 3)²","(x − 9)(x + 1)","(x + 3)²","(x − 3)(x + 3)"], ex:`x² − 9 is a difference of squares: (x − 3)(x + 3).`},
+ {id:110, dom:"Algebra", topic:"Systems of equations", diff:"easy", type:"num", ans:3, q:`${EQ("y = 3x")}${EQ("x + y = 12")}If (<i>x</i>, <i>y</i>) is the solution to the system above, what is the value of <i>x</i>?`, ex:`Substitute y = 3x: x + 3x = 12, so 4x = 12 and x = 3.`},
 ];
 Q.forEach((q) => (q.sig = "f" + q.id));
 
@@ -799,6 +835,52 @@ const GENS = [
    return {dom:AM, topic:"Remainder theorem", diff:"hard", type:"num", ans:val, sig:`rt${a},${b},${c},${r}`,
    q:`What is the remainder when ${EQ(`p(x) = ${poly([a,b,0,c])}`)} is divided by ${xm(r)}?`,
    ex:`By the remainder theorem, the remainder is p(${neg(r)}) = ${neg(a*r**3)} ${sgn(b*r*r)} ${sgn(c)} = ${neg(val)}.`}; }},
+ {key:"e_lin", d:"easy", make(){ const a=ri(2,9), x=ri(2,12), b=ri(1,20), plus=Math.random()<0.5, c=plus?a*x+b:a*x-b;
+   return {dom:ALG, topic:"Linear equations", diff:"easy", type:"num", ans:x, sig:`el${a},${x},${b},${plus}`,
+   q:`If ${EQ(`${a}x ${plus?"+":"−"} ${b} = ${neg(c)}`)} what is the value of <i>x</i>?`,
+   ex:`${plus?"Subtract":"Add"} ${b}: ${a}x = ${a*x}. Divide by ${a}: x = ${x}.`}; }},
+ {key:"e_eval", d:"easy", make(){ const a=ri(2,9), b=nz(-9,9), n=ri(2,9);
+   return {dom:ALG, topic:"Function notation", diff:"easy", type:"num", ans:a*n+b, sig:`ee${a},${b},${n}`,
+   q:`The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = ${poly([a,b])}. What is the value of <i>f</i>(${n})?`,
+   ex:`f(${n}) = ${a}(${n}) ${sgn(b)} = ${a*n+b}.`}; }},
+ {key:"e_pct", d:"easy", make(){ const pc=pick([10,20,25,30,40,50,60,75]), n=pick([20,40,60,80,120,160,200,240]);
+   return {dom:"Problem-Solving & Data Analysis", topic:"Percents", diff:"easy", type:"num", ans:pc*n/100, sig:`ep${pc},${n}`,
+   q:`What is ${pc}% of ${n}?`, ex:`${pc}% is ${pc/100}, and ${pc/100} × ${n} = ${pc*n/100}.`}; }},
+ {key:"e_slope", d:"easy", make(){ const m=nz(-5,6), x1=ri(0,4), dx=ri(1,5), y1=ri(-6,9), x2=x1+dx, y2=y1+m*dx; const par=(n)=>n<0?`(${neg(n)})`:String(n);
+   return {dom:ALG, topic:"Slope", diff:"easy", type:"num", ans:m, sig:`es${m},${x1},${dx},${y1}`,
+   q:`What is the slope of the line that passes through the points (${x1}, ${neg(y1)}) and (${x2}, ${neg(y2)})?`,
+   ex:`Slope = (${neg(y2)} − ${par(y1)}) / (${x2} − ${x1}) = ${neg(m*dx)}/${dx} = ${neg(m)}.`}; }},
+ {key:"e_mean", d:"easy", make(){ const n=pick([4,5]), mean=ri(6,20); let v; do { v=[]; for(let i=0;i<n-1;i++) v.push(mean+ri(-5,5)); v.push(n*mean-v.reduce((a,b)=>a+b,0)); } while (v[n-1]<1);
+   return {dom:"Problem-Solving & Data Analysis", topic:"Mean", diff:"easy", type:"num", ans:mean, sig:`em${v.join(".")}`,
+   q:`What is the mean of ${v.slice(0,-1).join(", ")} and ${v[n-1]}?`, ex:`The sum is ${n*mean}, and ${n*mean} ÷ ${n} = ${mean}.`}; }},
+ {key:"e_dist", d:"easy", make(){ const a=ri(2,6), x=ri(1,12), b=ri(1,9), plus=Math.random()<0.5, inner=plus?x+b:x-b;
+   return {dom:ALG, topic:"Linear equations", diff:"easy", type:"num", ans:x, sig:`ed${a},${x},${b},${plus}`,
+   q:`If ${EQ(`${a}(x ${plus?"+":"−"} ${b}) = ${neg(a*inner)}`)} what is the value of <i>x</i>?`,
+   ex:`Divide by ${a}: x ${plus?"+":"−"} ${b} = ${neg(inner)}. ${plus?"Subtract":"Add"} ${b}: x = ${x}.`}; }},
+ {key:"e_exp", d:"easy", make(){ const b=pick([2,3,5,7]), m=ri(2,6), n=ri(2,6), div=Math.random()<0.4 && m>n;
+   return {dom:AM, topic:"Exponent rules", diff:"easy", type:"num", ans:div?m-n:m+n, sig:`ex${b},${m},${n},${div}`,
+   q:`If ${EQ(div?`${F(`${b}<sup>${m}</sup>`,`${b}<sup>${n}</sup>`)} = ${b}<sup>k</sup>`:`${b}<sup>${m}</sup> · ${b}<sup>${n}</sup> = ${b}<sup>k</sup>`)} what is the value of <i>k</i>?`,
+   ex: div?`When you divide powers with the same base, subtract the exponents: ${m} − ${n} = ${m-n}.`:`When you multiply powers with the same base, add the exponents: ${m} + ${n} = ${m+n}.`}; }},
+ {key:"e_pyth", d:"easy", make(){ const [a,b,c]=pick([[3,4,5],[5,12,13],[8,15,17],[7,24,25]]), k=ri(1,4), leg=Math.random()<0.4;
+   return {dom:GT, topic:"Right triangles", diff:"easy", type:"num", ans:leg?b*k:c*k, sig:`eq${a},${k},${leg}`,
+   q: leg?`A right triangle has a hypotenuse of length ${c*k} and one leg of length ${a*k}. What is the length of the other leg?`:`A right triangle has legs of length ${a*k} and ${b*k}. What is the length of its hypotenuse?`,
+   ex: leg?`${c*k}² − ${a*k}² = ${c*c*k*k} − ${a*a*k*k} = ${b*b*k*k}, and √${b*b*k*k} = ${b*k}.`:`${a*k}² + ${b*k}² = ${a*a*k*k} + ${b*b*k*k} = ${c*c*k*k}, and √${c*c*k*k} = ${c*k}.`}; }},
+ {key:"e_fee", d:"easy", make(){ const fee=pick([10,15,20,25,30]), rate=ri(2,9), n=ri(3,12), [thing,unit]=pick([["A gym","visit"],["A bike rental","hour"],["A streaming plan","movie"],["A taxi ride","mile"]]);
+   return {dom:ALG, topic:"Linear models", diff:"easy", type:"num", ans:fee+rate*n, sig:`ef${fee},${rate},${n}`,
+   q:`${thing} costs a flat fee of $${fee} plus $${rate} per ${unit}. What is the total cost, in dollars, for ${n} ${unit}s?`,
+   ex:`${fee} + ${rate}(${n}) = ${fee+rate*n}.`}; }},
+ {key:"e_rate", d:"easy", make(){ const r=pick([12,15,20,25,30,40,45,50,60]), t1=ri(2,4), t2=t1+ri(1,4);
+   return {dom:"Problem-Solving & Data Analysis", topic:"Rates", diff:"easy", type:"num", ans:r*t2, sig:`er${r},${t1},${t2}`,
+   q:`A train travels ${r*t1} miles in ${t1} hours. At that rate, how many miles does it travel in ${t2} hours?`,
+   ex:`The rate is ${r*t1} ÷ ${t1} = ${r} miles per hour, and ${r} × ${t2} = ${r*t2}.`}; }},
+ {key:"e_sub", d:"easy", make(){ const k=ri(2,5), x=ri(2,9), ask=Math.random()<0.5;
+   return {dom:ALG, topic:"Systems of equations", diff:"easy", type:"num", ans:ask?k*x:x, sig:`eb${k},${x},${ask}`,
+   q:`${EQ(`y = ${k}x`)}${EQ(`x + y = ${x+k*x}`)}If (<i>x</i>, <i>y</i>) is the solution to the system above, what is the value of <i>${ask?"y":"x"}</i>?`,
+   ex:`Substitute y = ${k}x: x + ${k}x = ${x+k*x}, so ${k+1}x = ${x+k*x} and x = ${x}. Then y = ${k*x}.`}; }},
+ {key:"e_area", d:"easy", make(){ const w=ri(3,12), l=w+ri(1,8), per=Math.random()<0.5;
+   return {dom:GT, topic:"Area and perimeter", diff:"easy", type:"num", ans:per?l*w:2*(l+w), sig:`ea${w},${l},${per}`,
+   q: per?`A rectangle has a perimeter of ${2*(l+w)} and a width of ${w}. What is its area?`:`A rectangle has an area of ${l*w} and a width of ${w}. What is its perimeter?`,
+   ex: per?`Half the perimeter is ${l+w}, so the length is ${l+w} − ${w} = ${l}. Area = ${l} × ${w} = ${l*w}.`:`The length is ${l*w} ÷ ${w} = ${l}. Perimeter = 2(${l} + ${w}) = ${2*(l+w)}.`}; }},
 ];
 
 /* ======================= Game constants ======================= */
@@ -814,15 +896,17 @@ const COLORS = [
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 function newCode() { let c = ""; const a = new Uint32Array(5); crypto.getRandomValues(a); for (const v of a) c += CODE_CHARS[v % CODE_CHARS.length]; return c; }
 const SIZES = { small: { r: 0.95, cost: 1, name: "Small", lvl: 1 }, medium: { r: 1.35, cost: 2, name: "Medium", lvl: 1 }, large: { r: 1.85, cost: 3, name: "Large", lvl: 2 }, mega: { r: 2.4, cost: 4, name: "Mega", lvl: 3 } };
-const RANGES = [13, 17, 21], MAX_RANGE = 21, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
-const START_MONEY = 100, START_PAINT = 4, VALUE = { med: 50, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
+const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
+const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
+const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
+const START_MONEY = 100, START_PAINT = 4, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
 const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 750 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
 function money$(n) { return (n < 0 ? "−$" : "$") + Math.abs(n); }
 
 /* ======================= State ======================= */
 let fdb = null, myId = "local", isTeacher = false, online = false, CLASS = null;
-const S = { round: 1, double: false, owner: null, offset: 0, players: new Map(), claims: new Map(), events: new Map() };
+const S = { round: 1, double: false, level: 2, owner: null, offset: 0, players: new Map(), claims: new Map(), events: new Map() };
 let paintSize = "medium", route = "play";
 const feed = [];
 const $ = (id) => document.getElementById(id);
@@ -898,7 +982,7 @@ function shapeOf(seed) {
 }
 function radiusAt(sh, ang) { let m = 1; for (const h of sh.k) m += h.a * Math.sin(h.f * ang + h.p); return m; }
 
-const Wd = { order: [], grid: new Int16Array(GW * GH).fill(-1), ids: [], idx: new Map(), castles: new Map(), vuln: new Map(), conquests: [], winner: null, zones: new Map(), fallen: new Map(), kos: new Map(), paint: new Map() };
+const Wd = { order: [], grid: new Int16Array(GW * GH).fill(-1), ids: [], idx: new Map(), castles: new Map(), vuln: new Map(), conquests: [], winner: null, zones: new Map(), fallen: new Map(), kos: new Map(), paint: new Map(), paintList: [], pending: [], clock: 0, area: new Map() };
 function idIndex(id) { if (!Wd.idx.has(id)) { Wd.idx.set(id, Wd.ids.length); Wd.ids.push(id); } return Wd.idx.get(id); }
 function headOf(id) { return id; }
 const cmpEv = (a, b) => a.t - b.t || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -928,49 +1012,85 @@ function coverage(c) {
   return { emp: best, pct: z.length ? n / z.length : 0 };
 }
 function hitRadius(r) { return 0.55 + r * 0.5; }
+function growth(po, t) { return 1 + (GROW - 1) * Math.max(0, Math.min(1, (t - po.t) / SPREAD_MS)); }
+function addPaint(po) {
+  po._dead = false; po._gd = 0; Wd.paintList.push(po);
+  if (!Wd.paint.has(po.owner)) Wd.paint.set(po.owner, []);
+  Wd.paint.get(po.owner).push(po); return po;
+}
 function destroy(c, ev, by) {
   Wd.castles.delete(c.owner); Wd.fallen.set(c.owner, { t: ev.t, by });
   ev._fell.push({ ...c });
   // the fallen kingdom's paint goes with its castle
   for (const o of Wd.paint.get(c.owner) || []) o._dead = true;
   Wd.paint.delete(c.owner);
-  const gone = Wd.idx.get(c.owner);
-  if (gone != null) for (let i = 0; i < Wd.grid.length; i++) if (Wd.grid[i] === gone) Wd.grid[i] = -1;
-  if (!by) return;
+  if (!by) return null;
   const seed = (((ev.seed || 1) ^ Math.imul(ev._fell.length, 2654435761)) >>> 0) || 7;
-  stamp(idIndex(by), c.x, c.z, FALL_SPLAT_R, seed);
-  const sp = { k: "splat", _x: c.x, _z: c.z, r: FALL_SPLAT_R, seed, _emp: by };
-  ev._splats.push(sp); ownPaint(by, sp);
+  ev._pos.push(addPaint({ k: "splat", owner: by, _x: c.x, _z: c.z, r: FALL_SPLAT_R, seed, t: ev.t, ev: ev._real ? ev : null }));
   Wd.kos.set(by, (Wd.kos.get(by) || 0) + 1);
-  Wd.conquests.push({ key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by });
+  const conq = { key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by };
+  Wd.conquests.push(conq); return conq;
 }
-function ownPaint(owner, o) { if (!Wd.paint.has(owner)) Wd.paint.set(owner, []); Wd.paint.get(owner).push(o); }
-function checkHits(ev) {
+function strike(c, by, ev) {
+  if (c.shield > 0) { c.shield--; return { owner: c.owner, blocked: true, left: c.shield }; }
+  c.hits++; const h = { owner: c.owner, hits: c.hits };
+  if (c.hits >= HITS_TO_FALL) h.conq = destroy(c, ev, by);
+  return h;
+}
+function checkHits(ev, po) {
   for (const c of [...Wd.castles.values()]) {
     if (c.owner === ev.by) continue;
-    if (Math.hypot(c.x - ev.x, c.z - ev.z) > hitRadius(ev.r)) continue;
-    if (c.shield > 0) { c.shield--; ev._hits.push({ owner: c.owner, blocked: true, left: c.shield }); continue; }
-    c.hits++; ev._hits.push({ owner: c.owner, hits: c.hits });
-    if (c.hits >= HITS_TO_FALL) destroy(c, ev, ev.by);
+    const d = Math.hypot(c.x - ev.x, c.z - ev.z);
+    if (d <= hitRadius(ev.r)) ev._hits.push(strike(c, ev.by, ev));
+    else if (d <= SEEP_PAD + ev.r * GROW) {
+      // the blob will spread into this castle later: schedule a seep hit
+      const g = (d - SEEP_PAD) / ev.r;
+      Wd.pending.push({ t: ev.t + Math.round(SPREAD_MS * Math.max(0.1, (g - 1) / (GROW - 1))), target: c.owner, built: c.t, by: ev.by, po, id: ev.id });
+    }
   }
 }
+function advance(t) {
+  const out = [], P = Wd.pending;
+  for (;;) {
+    let bi = -1;
+    for (let i = 0; i < P.length; i++) if (P[i].t <= t && (bi < 0 || P[i].t < P[bi].t || (P[i].t === P[bi].t && P[i].id + P[i].target < P[bi].id + P[bi].target))) bi = i;
+    if (bi < 0) break;
+    const q = P.splice(bi, 1)[0], c = Wd.castles.get(q.target);
+    if (q.po._dead || !c || c.t !== q.built || !Wd.castles.has(q.by)) continue;
+    const pev = { id: q.id + ":s", t: q.t, by: q.by, seed: q.po.seed, _fell: [], _pos: [], _real: false };
+    const h = strike(c, q.by, pev); h.by = q.by; h.pev = pev; out.push(h);
+  }
+  if (t > Wd.clock) Wd.clock = t;
+  return out;
+}
+function rebuildGrid() {
+  const t = now(); Wd.grid.fill(-1);
+  for (const po of Wd.paintList) if (!po._dead) stamp(idIndex(po.owner), po._x, po._z, po.r * growth(po, t), po.seed);
+  const n = new Map(); for (let i = 0; i < Wd.grid.length; i++) { const o = Wd.grid[i]; if (o >= 0) n.set(o, (n.get(o) || 0) + 1); }
+  Wd.area = new Map(); n.forEach((v, k) => Wd.area.set(Wd.ids[k], v / Wd.grid.length));
+}
+let gridT = null;
+function gridSoon() { if (gridT) return; gridT = setTimeout(() => { gridT = null; rebuildGrid(); renderRows($("rows"), false); renderRows($("bRows"), true); }, 250); }
 function plotOk(x, z) {
   if (!(Math.abs(x) <= W / 2 - EDGE && Math.abs(z) <= H / 2 - EDGE)) return false;
   for (const k of Wd.castles.values()) if (Math.hypot(k.x - x, k.z - z) < MIN_GAP) return false;
   return true;
 }
 function applyEvent(ev) {
-  ev._skip = false; ev._sea = false; ev._dead = false; ev._splats = []; ev._hits = []; ev._fell = [];
+  ev._skip = false; ev._sea = false; ev._pos = []; ev._hits = []; ev._fell = []; ev._real = true;
   const c = Wd.castles.get(ev.by);
   if (ev.k === "join") {
     if (c || !plotOk(ev.x, ev.z)) { ev._skip = true; return; }
     Wd.castles.set(ev.by, { owner: ev.by, x: ev.x, z: ev.z, empire: ev.by, t: ev.t, hits: 0, shield: 0, bankrupt: false });
     ev._emp = ev.by; ev._x = ev.x; ev._z = ev.z;
-    stamp(idIndex(ev.by), ev.x, ev.z, JOIN_R, ev.seed); ownPaint(ev.by, ev);
+    ev._pos.push(addPaint({ k: "join", owner: ev.by, _x: ev.x, _z: ev.z, r: JOIN_R, seed: ev.seed, t: ev.t, ev }));
   } else if (ev.k === "shot") {
     if (!c || !(ev.r > 0)) { ev._skip = true; return; }
     ev._emp = ev.by; ev._from = [c.x, c.z]; ev._x = ev.x; ev._z = ev.z;
-    if (onBoard(ev.x, ev.z)) { stamp(idIndex(ev.by), ev.x, ev.z, ev.r, ev.seed); ownPaint(ev.by, ev); checkHits(ev); } else ev._sea = true;
+    if (onBoard(ev.x, ev.z)) {
+      const po = addPaint({ k: "shot", owner: ev.by, _x: ev.x, _z: ev.z, r: ev.r, seed: ev.seed, t: ev.t, _from: [c.x, c.z], ev });
+      ev._pos.push(po); checkHits(ev, po);
+    } else ev._sea = true;
   } else if (ev.k === "shield") {
     if (!c) { ev._skip = true; return; }
     c.shield = SHIELD_HITS;
@@ -983,10 +1103,13 @@ function computeWinner() {
   Wd.winner = Wd.castles.size === 1 && Wd.fallen.size >= 1 ? [...Wd.castles.keys()][0] : null;
 }
 function fullReplay() {
+  const upTo = Wd.clock;
   Wd.grid.fill(-1); Wd.castles.clear(); Wd.vuln.clear(); Wd.conquests = []; Wd.fallen.clear(); Wd.kos.clear(); Wd.paint.clear();
+  Wd.paintList = []; Wd.pending = []; Wd.clock = 0;
   Wd.order = [...S.events.values()].filter((e) => e.round === S.round).sort(cmpEv);
-  for (const e of Wd.order) applyEvent(e);
-  computeWinner();
+  for (const e of Wd.order) { advance(e.t); applyEvent(e); }
+  if (Wd.order.length && upTo) advance(upTo);
+  computeWinner(); gridSoon();
 }
 const announced = new Set();
 function ingestEvents(entries, animate) {
@@ -997,16 +1120,40 @@ function ingestEvents(entries, animate) {
     const ev = { ...d, id }; S.events.set(id, ev);
     if (ev.round !== S.round) continue;
     fresh.push(ev);
-    if (last && cmpEv(ev, last) < 0) outOfOrder = true;
+    if ((last && cmpEv(ev, last) < 0) || ev.t < Wd.clock) outOfOrder = true;
   }
   if (!fresh.length) return;
   fresh.sort(cmpEv);
+  let seeps = [];
   if (outOfOrder) fullReplay();
-  else { for (const ev of fresh) { Wd.order.push(ev); applyEvent(ev); } computeWinner(); }
-  if (!animate) { for (const c of Wd.conquests) announced.add(c.key); for (const ev of fresh) arena.drawEvent(ev, false); if (outOfOrder) arena.paintLater(); return; }
+  else { for (const ev of fresh) { seeps.push(...advance(ev.t)); Wd.order.push(ev); applyEvent(ev); } computeWinner(); }
+  gridSoon();
+  if (!animate) { advance(now() - SEEP_LAG); computeWinner(); for (const c of Wd.conquests) announced.add(c.key); arena.paintAll(); return; }
+  seepFx(seeps);
   for (const ev of fresh) animateEvent(ev);
   if (outOfOrder) arena.paintLater(3000);
 }
+function seepFx(list) {
+  if (!list.length) return;
+  computeWinner();
+  for (const h of list) {
+    arena.castleHit(h.owner, h.blocked); Sfx.play(h.blocked ? "block" : "hit", 0.8);
+    if (h.blocked) log(`${nameOf(h.owner)}'s shield stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner));
+    else {
+      log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (${h.hits} of ${HITS_TO_FALL}).`, colorOf(h.by));
+      if (h.hits < HITS_TO_FALL) {
+        if (h.owner === myId) toast(`${nameOf(h.by)}'s paint seeped into your castle! That's ${h.hits} of ${HITS_TO_FALL}.`);
+        else if (h.by === myId) toast(`Your paint seeped into ${nameOf(h.owner)}'s castle! That's ${h.hits} of ${HITS_TO_FALL}.`);
+      }
+    }
+    for (const po of h.pev._pos) arena.drawPaint(po);
+    if (h.conq && !announced.has(h.conq.key)) { announced.add(h.conq.key); announce([h.conq]); }
+  }
+  gridSoon(); renderAll();
+}
+setInterval(() => { if (Wd.pending.length) seepFx(advance(now() - SEEP_LAG)); }, 500);
+setInterval(() => { const t = now(); for (const po of Wd.paintList) if (!po._dead && po._gd > 0 && po._gd < GROW && growth(po, t) - po._gd >= 0.115) arena.drawPaint(po); }, 1500);
+setInterval(() => { if (Wd.paintList.length) gridSoon(); }, 4000);
 function newConquests(ev) {
   const out = [];
   for (const c of Wd.conquests) if (!announced.has(c.key) && (!ev || c.key.startsWith(ev.id + ":"))) { announced.add(c.key); out.push(c); }
@@ -1132,7 +1279,7 @@ class PaintLayer {
     this.dirty = true;
   }
   paths(ev, from) {
-    const sh = shapeOf(ev.seed), x = (ev._x + W / 2) * PX, y = (ev._z + H / 2) * PX, rr = evRadius(ev) * PX;
+    const sh = shapeOf(ev.seed), x = (ev._x + W / 2) * PX, y = (ev._z + H / 2) * PX, rr = ev.r * (ev._gd || 1) * PX;
     const body = new Path2D();
     for (let i = 0; i <= 72; i++) { const a = (i / 72) * Math.PI * 2, rad = rr * radiusAt(sh, a); const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad; i ? body.lineTo(px, py) : body.moveTo(px, py); }
     body.closePath();
@@ -1214,7 +1361,7 @@ class Arena {
     this.aimLine = new T.Line(lineGeo, new T.LineDashedMaterial({ color: "#18203A", dashSize: 0.022, gapSize: 0.016, transparent: true, opacity: 0.7 }));
     this.aimLine.computeLineDistances(); this.aimLine.position.y = 0.05; this.aim.add(this.aimLine);
     this.ticks = [];
-    for (let d = 3; d <= MAX_RANGE; d += 3) {
+    for (let d = 5; d <= 40; d += 5) {
       const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; const x = cv.getContext("2d");
       x.fillStyle = "rgba(24,32,58,0.85)"; x.beginPath(); x.arc(32, 32, 26, 0, Math.PI * 2); x.fill();
       x.fillStyle = "#FFFFFF"; x.font = "bold 30px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(String(d), 32, 34);
@@ -1248,13 +1395,13 @@ class Arena {
   resize() { if (!this.host) return; const w = Math.max(50, this.host.clientWidth), h = Math.max(50, this.host.clientHeight); this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
   /* paint */
   colorFor(ev) { return colorOf(headOf(ev._emp)); }
-  drawEvent(ev, live) {
-    if (!this.ok || ev._skip) return;
-    if ((ev.k === "join" || ev.k === "shot") && !ev._sea && !ev._dead) this.layer.draw(ev, this.colorFor(ev));
-    for (const sp of ev._splats || []) if (!sp._dead) this.layer.draw(sp, colorOf(headOf(sp._emp)));
+  drawPaint(po) {
+    if (!this.ok || po._dead || (po.ev && po.ev._inFlight)) return;
+    po._gd = growth(po, now()); this.layer.draw(po, colorOf(po.owner));
   }
+  drawEvent(ev, live) { if (!this.ok || ev._skip) return; for (const po of ev._pos || []) this.drawPaint(po); }
   castleHit(owner, blocked) { const c = this.castleOf(owner); if (!c) return; c.shake = 0.5; this.puff(new this.T.Vector3(c.x, 1.2, c.z), blocked ? "#FFFFFF" : "#DCD6C8", 14, 3.2); }
-  paintAll() { if (!this.ok) return; clearTimeout(this.pl); this.layer.clear(); for (const ev of Wd.order) if (!ev._inFlight) this.drawEvent(ev, false); }
+  paintAll() { if (!this.ok) return; clearTimeout(this.pl); this.layer.clear(); for (const po of Wd.paintList) this.drawPaint(po); }
   paintLater(ms) { clearTimeout(this.pl); this.pl = setTimeout(() => this.paintAll(), ms || 0); }
   /* castles */
   mat(color, opts) { const k = color + JSON.stringify(opts || {}); if (!this.mats.has(k)) this.mats.set(k, new this.T.MeshStandardMaterial({ color, roughness: 0.6, ...(opts || {}) })); return this.mats.get(k); }
@@ -1430,7 +1577,7 @@ class Arena {
     if (!c || yaw == null) { this.aim.visible = false; this.rangeRing.visible = false; return; }
     this.aim.visible = true; this.aim.position.set(c.x, 0, c.z); this.aim.rotation.y = -yaw;
     this.aimLine.scale.x = range; for (const t of this.ticks) t.visible = t.userData.d <= range;
-    this.rangeRing.visible = true; this.rangeRing.position.set(c.x, 0.04, c.z); this.rangeRing.scale.setScalar(range);
+    this.rangeRing.visible = false;
     c.cannon.rotation.y = Math.atan2(Math.cos(yaw), Math.sin(yaw));
     if (power == null) this.powerDot.visible = false;
     else { this.powerDot.visible = true; this.powerDot.position.x = MIN_RANGE + power * (range - MIN_RANGE); }
@@ -1556,14 +1703,15 @@ let progress = { seen: [], sigs: [], n: 0 }, progressReady = false, lastGen = nu
 let current = null, answered = false, lastResult = null, cooldownUntil = 0, cdTimer = null;
 function saveProgress() { progress.sigs = progress.sigs.slice(-400); local.set("progress_" + myId, progress); }
 function pickQuestion() {
-  const unseen = Q.filter((q) => !progress.seen.includes(q.id));
+  const allow = LEVELS[S.level] || LEVELS[2];
+  const unseen = Q.filter((q) => allow.includes(q.diff) && !progress.seen.includes(q.id));
+  const gens = GENS.filter((g) => (S.level === 1) === (g.d === "easy"));
+  const gen = () => { for (let i = 0; i < 80; i++) { const g = pick(gens.filter((g) => g.key !== lastGen)); const cand = g.make(); if (allow.includes(cand.diff) && !progress.sigs.includes(cand.sig)) { lastGen = g.key; return cand; } } return null; };
   let q = null;
   if (unseen.length && Math.random() < 0.5) q = pick(unseen);
-  else {
-    for (let i = 0; i < 30 && !q; i++) { const g = pick(GENS.filter((g) => g.key !== lastGen)); const cand = g.make(); if (!progress.sigs.includes(cand.sig)) { q = cand; lastGen = g.key; } }
-    if (!q) q = unseen.length ? pick(unseen) : pick(GENS).make();
-  }
-  current = q; answered = false; lastResult = null; renderQuestion();
+  else q = gen() || (unseen.length ? pick(unseen) : null);
+  if (!q) { for (let i = 0; i < 200 && !q; i++) { const cand = pick(gens).make(); if (allow.includes(cand.diff)) q = cand; } }
+  current = q || pick(Q.filter((x) => allow.includes(x.diff))); answered = false; lastResult = null; renderQuestion();
 }
 function parseNum(s) {
   s = String(s).trim().replace(/[−–]/g, "-").replace(/,/g, "").replace(/\s+/g, "").replace(/%$/, "");
@@ -1603,7 +1751,7 @@ function renderQuestion() {
   if (!me()) { renderJoin(); return; }
   if (!current) { pickQuestion(); return; }
   const q = current, r = lastResult;
-  const diffTag = q.diff === "expert" ? `<span class="tag exp">Challenge · $${VALUE.expert}</span>` : q.diff === "hard" ? `<span class="tag hard">Hard · $${VALUE.hard}</span>` : `<span class="tag med">Medium · $${VALUE.med}</span>`;
+  const diffTag = q.diff === "easy" ? `<span class="tag easy">Level 1 · $${VALUE.easy}</span>` : q.diff === "expert" ? `<span class="tag exp">Challenge · $${VALUE.expert}</span>` : q.diff === "hard" ? `<span class="tag hard">Hard · $${VALUE.hard}</span>` : `<span class="tag med">Medium · $${VALUE.med}</span>`;
   let html = `<div class="qmeta"><span class="tag">${q.dom}</span><span class="tag">${q.topic}</span>${diffTag}</div><p class="qtext">${q.q}</p>`;
   if (q.type === "mc") {
     html += `<div class="choices">` + q.ch.map((c, i) => { let cls = "choice"; if (answered) { if (i === q.ans) cls += " right"; else if (r && i === r.choice) cls += " wrong"; } return `<button type="button" class="${cls}" data-i="${i}" ${answered ? "disabled" : ""}><span class="letter">${"ABCD"[i]}</span><span>${c}</span></button>`; }).join("") + `</div>`;
@@ -1740,11 +1888,11 @@ function addPracticeTargets() {
 
 /* ======================= Aiming & firing ======================= */
 let aimYaw = null, charging = null, lastPower = 0;
-const PERIOD = 1.25;
+const PERIOD = 2.2;
 function powerAt(ms) { const ph = (ms / 1000 / PERIOD) % 2; return ph < 1 ? ph : 2 - ph; }
 function myCastle() { return Wd.castles.get(myId) || null; }
 function cannonLevel() { return Math.max(1, Math.min(3, (me() || {}).cannon || 1)); }
-function rangeNow() { return RANGES[cannonLevel() - 1]; }
+function rangeNow() { const c = myCastle(); if (!c) return MAX_RANGE; let m = 0; for (const sx of [-1, 1]) for (const sz of [-1, 1]) m = Math.max(m, Math.hypot(sx * W / 2 - c.x, sz * H / 2 - c.z)); return m; }
 function canFire() {
   const p = me(), c = myCastle();
   if (!p) return "Join the game first.";
@@ -1772,7 +1920,7 @@ function buy(item) {
   } else if (item === "cannon") {
     const lvl = cannonLevel(); if (lvl >= 3) return;
     const cost = PRICE.cannon[lvl - 1]; if (need(cost)) return;
-    writeMe({ money: money - cost, cannon: lvl + 1 }); toast(lvl === 1 ? "Cannon upgraded! More range, and Large loads unlocked." : "Cannon maxed! Longest range, and Mega loads unlocked.");
+    writeMe({ money: money - cost, cannon: lvl + 1 }); toast(lvl === 1 ? "Cannon upgraded! Large loads unlocked." : "Cannon maxed! Mega loads unlocked.");
   }
   Sfx.play("buy"); renderAll();
 }
@@ -1797,7 +1945,7 @@ function renderShop() {
   set("castle", "New castle", "$" + PRICE.castle, placing ? "now click an open plot on the map" : money >= PRICE.castle ? "buy it, then pick an open plot on the map" : `save ${money$(PRICE.castle - money)} more to get back in the game`, over || placing || money < PRICE.castle, !!c);
   set("paint", `Paint ×${PAINT_PACK}`, "$" + PRICE.paint, `you have ${p.paint || 0}`, over || money < PRICE.paint, !c);
   set("shield", "Shield", c && c.shield > 0 ? "Active" : "$" + PRICE.shield, c && c.shield > 0 ? `blocks ${c.shield} more hit${c.shield > 1 ? "s" : ""}` : `blocks ${SHIELD_HITS} direct hits`, over || !c || c.shield > 0 || money < PRICE.shield, !c);
-  set("cannon", lvl >= 3 ? "Cannon maxed" : `Cannon level ${lvl + 1}`, lvl >= 3 ? "Level 3" : "$" + PRICE.cannon[lvl - 1], lvl >= 3 ? "longest range" : lvl === 1 ? "more range, Large loads" : "max range, Mega loads", over || lvl >= 3 || money < PRICE.cannon[lvl - 1], !c);
+  set("cannon", lvl >= 3 ? "Cannon maxed" : `Cannon level ${lvl + 1}`, lvl >= 3 ? "Level 3" : "$" + PRICE.cannon[lvl - 1], lvl >= 3 ? "biggest blobs" : lvl === 1 ? "unlocks Large loads" : "unlocks Mega loads", over || lvl >= 3 || money < PRICE.cannon[lvl - 1], !c);
   document.querySelectorAll("[data-size]").forEach((b) => { const sz = SIZES[b.dataset.size]; b.disabled = lvl < sz.lvl; b.querySelector("small").textContent = lvl < sz.lvl ? `cannon level ${sz.lvl}` : `${sz.cost} paint`; });
   if (lvl < SIZES[paintSize].lvl) document.querySelector('[data-size="medium"]').click();
 }
@@ -1905,10 +2053,11 @@ function renderBanner() {
 }
 function ranking() {
   const list = [];
-  S.players.forEach((p, id) => { if (active(p)) list.push({ id, p, kos: Wd.kos.get(id) || 0, up: Wd.castles.has(id) ? 1 : 0, money: p.money || 0 }); });
-  list.sort((a, b) => b.kos - a.kos || b.up - a.up || b.money - a.money);
+  S.players.forEach((p, id) => { if (active(p)) list.push({ id, p, area: Wd.area.get(id) || 0, kos: Wd.kos.get(id) || 0, up: Wd.castles.has(id) ? 1 : 0, money: p.money || 0 }); });
+  list.sort((a, b) => b.area - a.area || b.up - a.up || b.kos - a.kos || b.money - a.money);
   return list;
 }
+function pct(a) { const v = a * 100; return (v >= 10 || v === 0 ? Math.round(v) : v.toFixed(1)) + "%"; }
 function renderRows(el, compact) {
   const list = ranking(); el.innerHTML = "";
   if (!list.length) { el.innerHTML = `<p class="empty" style="margin:0">No kingdoms yet. Students join with the class code and build the first castle.</p>`; return; }
@@ -1917,9 +2066,9 @@ function renderRows(el, compact) {
     const rank = document.createElement("span"); rank.className = "rank"; rank.textContent = i + 1;
     const dot = document.createElement("span"); dot.className = "dotc"; dot.style.background = e.p.color;
     const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = e.p.name || "Unnamed";
-    const sm = document.createElement("small"); sm.textContent = (e.up ? "Castle standing" : "No castle") + ` · ${money$(e.money)}`; nm.appendChild(sm);
-    const land = document.createElement("span"); land.className = "land"; land.textContent = e.kos;
-    const st = document.createElement("small"); st.className = "ok"; st.textContent = "destroyed"; land.appendChild(st);
+    const sm = document.createElement("small"); sm.textContent = (e.up ? "" : "No castle · ") + `${e.kos} destroyed` + (compact ? "" : ` · ${money$(e.money)}`); nm.appendChild(sm);
+    const land = document.createElement("span"); land.className = "land"; land.textContent = pct(e.area);
+    const st = document.createElement("small"); st.className = "ok"; st.textContent = "of the map"; land.appendChild(st);
     row.append(rank, dot, nm, land); el.appendChild(row);
   });
 }
@@ -1952,7 +2101,10 @@ function renderTeacher() {
     if (!online) st.innerHTML = `<h2>Game server not connected</h2><p>${setupMsg}</p>`;
     else if (!st.querySelector("#mkClass")) { st.innerHTML = `<h2>Start a class</h2><p>Create a class code, then put this screen on the projector. Students go to the website and type the code.</p><button class="btn" type="button" id="mkClass">Create class code</button>`; $("mkClass").addEventListener("click", createClass); }
   } else st.hidden = true;
-  const rt = `Round ${S.round}${S.double ? " · Double money!" : ""}`;
+  document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.level === S.level)));
+  document.querySelector(".b-feed").hidden = hideLog;
+  document.querySelectorAll('[data-act="hidelog"]').forEach((b) => (b.textContent = hideLog ? "Show battle log" : "Hide battle log"));
+  const rt = `Round ${S.round} · Level ${S.level}${S.double ? " · Double money!" : ""}`;
   $("roundPill").textContent = rt; $("bRound").textContent = rt; $("roundPill").classList.toggle("hot", S.double);
 }
 function renderAll() {
@@ -1976,6 +2128,14 @@ async function startNewRound() {
 }
 let hideCode = !!local.get("hideCode", false);
 document.querySelectorAll('[data-act="hidecode"]').forEach((btn) => btn.addEventListener("click", () => { hideCode = !hideCode; local.set("hideCode", hideCode); if (hideCode) { const t = $("toast"); t.textContent = ""; t.classList.remove("show"); } renderTeacher(); }));
+let hideLog = !!local.get("hideLog", false);
+document.querySelectorAll('[data-act="hidelog"]').forEach((btn) => btn.addEventListener("click", () => { hideLog = !hideLog; local.set("hideLog", hideLog); renderTeacher(); }));
+document.querySelectorAll("[data-level]").forEach((btn) => btn.addEventListener("click", async () => {
+  const lv = +btn.dataset.level;
+  if (!online) { S.level = lv; current = null; renderAll(); return; }
+  try { await classRef("meta").update({ level: lv }); toast(`Level ${lv}: ${lv === 1 ? "easier questions" : lv === 2 ? "medium and hard questions" : "hard and challenge questions"}. Students get it on their next question.`); }
+  catch { toast("Couldn't change the level. Only the teacher who made this class can."); }
+}));
 let armReset = 0;
 document.querySelectorAll('[data-act="round"]').forEach((btn) => btn.addEventListener("click", () => {
   if (Date.now() - armReset > 4000) { armReset = Date.now(); btn.textContent = "Click again to wipe the map"; setTimeout(() => (btn.textContent = "Start a new round"), 4000); return; }
@@ -1998,7 +2158,7 @@ async function createClass() {
   for (let i = 0; i < 6; i++) {
     const code = newCode();
     try {
-      const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, created: Date.now() }));
+      const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, level: S.level || 2, created: Date.now() }));
       if (res.committed) { hideCode = false; local.set("hideCode", false); local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
     } catch (e) {
       const why = String((e && (e.code || e.message)) || "unknown error"), st = $("bStart");
@@ -2037,7 +2197,7 @@ async function connectClass(code) {
   if (!meta.exists()) return false;
   subs.forEach((f) => f()); subs = [];
   CLASS = code; if (route !== "teacher") local.set("code", code);
-  const m = meta.val(); S.round = m.round || 1; S.double = !!m.double; S.owner = m.owner; current = null;
+  const m = meta.val(); S.round = m.round || 1; S.double = !!m.double; S.level = m.level || 2; S.owner = m.owner; current = null;
   const b = fdb.ref("classes/" + code);
   const [pl, co, ev] = await Promise.all(["players", "colors", "events"].map((k) => b.child(k).once("value").catch(() => null)));
   S.players = new Map(Object.entries((pl && pl.val()) || {}));
@@ -2047,7 +2207,7 @@ async function connectClass(code) {
   listen(b.child("meta"), "value", (s) => {
     const d = s.val(); if (!d) { toast("Your teacher closed this class."); leaveClass(); return; }
     const changed = (d.round || 1) !== S.round;
-    S.round = d.round || 1; S.double = !!d.double; S.owner = d.owner;
+    S.round = d.round || 1; S.double = !!d.double; S.level = d.level || 2; S.owner = d.owner;
     if (changed) { current = null; resetWorld(); log(`Round ${S.round} has begun. The map is clean.`); }
     scheduleRender();
   });
