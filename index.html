@@ -311,7 +311,7 @@ a.btn { text-decoration: none; display: inline-block; }
       <div class="rules">
         <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
-        <div><b>3 hits</b>A direct hit counts as a hit. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. 3 hits and the castle crumbles. A shield blocks 2.</div>
+        <div><b>Knock down castles</b>It takes 15 Small, 7 Medium, 4 Large or 2 Mega hits to destroy a castle. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. A shield blocks 2 hits.</div>
         <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $500, buy a new one, and pick an open plot.</div>
       </div>
     </section>
@@ -900,7 +900,9 @@ const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
 const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
 const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 40;
-const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
+const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 420;
+function dmgOf(r) { return r <= 1.0 ? 28 : r <= 1.4 ? 60 : r <= 1.9 ? 105 : 210; }
+function dp(h) { return Math.min(100, Math.round((h / HITS_TO_FALL) * 100)); }
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
 function money$(n) { return (n < 0 ? "−$" : "$") + Math.abs(n); }
 
@@ -1029,9 +1031,9 @@ function destroy(c, ev, by) {
   const conq = { key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by };
   Wd.conquests.push(conq); return conq;
 }
-function strike(c, by, ev) {
+function strike(c, by, ev, dmg) {
   if (c.shield > 0) { c.shield--; return { owner: c.owner, blocked: true, left: c.shield }; }
-  c.hits++; const h = { owner: c.owner, hits: c.hits };
+  c.hits += dmg; const h = { owner: c.owner, hits: c.hits };
   if (c.hits >= HITS_TO_FALL) h.conq = destroy(c, ev, by);
   return h;
 }
@@ -1039,7 +1041,7 @@ function checkHits(ev, po) {
   for (const c of [...Wd.castles.values()]) {
     if (c.owner === ev.by) continue;
     const d = Math.hypot(c.x - ev.x, c.z - ev.z);
-    if (d <= hitRadius(ev.r)) ev._hits.push(strike(c, ev.by, ev));
+    if (d <= hitRadius(ev.r)) ev._hits.push(strike(c, ev.by, ev, dmgOf(ev.r)));
     else if (po.grow && d <= SEEP_PAD + ev.r * GROW) {
       // the blob will spread into this castle later: schedule a seep hit
       const g = (d - SEEP_PAD) / ev.r;
@@ -1056,7 +1058,7 @@ function advance(t) {
     const q = P.splice(bi, 1)[0], c = Wd.castles.get(q.target);
     if (q.po._dead || !c || c.t !== q.built || !Wd.castles.has(q.by)) continue;
     const pev = { id: q.id + ":s", t: q.t, by: q.by, seed: q.po.seed, _fell: [], _pos: [], _real: false };
-    const h = strike(c, q.by, pev); h.by = q.by; h.pev = pev; out.push(h);
+    const h = strike(c, q.by, pev, dmgOf(q.po.r)); h.by = q.by; h.pev = pev; out.push(h);
   }
   if (t > Wd.clock) Wd.clock = t;
   return out;
@@ -1140,10 +1142,10 @@ function seepFx(list) {
     arena.castleHit(h.owner, h.blocked); Sfx.play(h.blocked ? "block" : "hit", 0.8);
     if (h.blocked) log(`${nameOf(h.owner)}'s shield stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner));
     else {
-      log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (${h.hits} of ${HITS_TO_FALL}).`, colorOf(h.by));
+      log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (${dp(h.hits)}% damaged).`, colorOf(h.by));
       if (h.hits < HITS_TO_FALL) {
-        if (h.owner === myId) toast(`${nameOf(h.by)}'s paint seeped into your castle! That's ${h.hits} of ${HITS_TO_FALL}.`);
-        else if (h.by === myId) toast(`Your paint seeped into ${nameOf(h.owner)}'s castle! That's ${h.hits} of ${HITS_TO_FALL}.`);
+        if (h.owner === myId) toast(`${nameOf(h.by)}'s paint seeped into your castle! It's ${dp(h.hits)}% damaged.`);
+        else if (h.by === myId) toast(`Your paint seeped into ${nameOf(h.owner)}'s castle! It's ${dp(h.hits)}% damaged.`);
       }
     }
     for (const po of h.pev._pos) arena.drawPaint(po);
@@ -1187,10 +1189,10 @@ function animateEvent(ev) {
           if (h.owner === myId) toast(h.left ? `Your shield blocked a hit! It can block ${h.left} more.` : "Your shield blocked a hit, and now it's used up.");
           else if (ev.by === myId) toast(`Blocked! ${nameOf(h.owner)} has a shield.`);
         } else {
-          log(`${nameOf(ev.by)} hit ${nameOf(h.owner)}'s castle (${h.hits} of ${HITS_TO_FALL}).`, colorOf(ev.by));
+          log(`${nameOf(ev.by)} hit ${nameOf(h.owner)}'s castle (${dp(h.hits)}% damaged).`, colorOf(ev.by));
           if (h.hits < HITS_TO_FALL) {
-            if (h.owner === myId) toast(`Direct hit on your castle! That's ${h.hits} of ${HITS_TO_FALL}. A shield blocks the next ones.`);
-            else if (ev.by === myId) toast(`Direct hit! ${nameOf(h.owner)} has taken ${h.hits} of ${HITS_TO_FALL}.`);
+            if (h.owner === myId) toast(`Direct hit on your castle! It's ${dp(h.hits)}% damaged. A shield blocks the next 2 hits.`);
+            else if (ev.by === myId) toast(`Direct hit! ${nameOf(h.owner)} is ${dp(h.hits)}% damaged.`);
           }
         }
       }
@@ -1510,7 +1512,7 @@ class Arena {
   drawLabel(c, it) {
     const k = [it.name, it.kos, it.hits, it.shield, it.bankrupt, it.isMe, it.color].join("|"); if (c.labelKey === k) return; c.labelKey = k;
     const x = c.cv.getContext("2d"); x.clearRect(0, 0, 320, 120);
-    x.fillStyle = it.bankrupt ? "rgba(70,68,64,0.9)" : it.hits >= HITS_TO_FALL - 1 ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.82)";
+    x.fillStyle = it.bankrupt ? "rgba(70,68,64,0.9)" : it.hits >= HITS_TO_FALL * 0.7 ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.82)";
     x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 308, 108, 22); else x.rect(6, 6, 308, 108); x.fill();
     if (it.isMe) { x.strokeStyle = "#F3B61F"; x.lineWidth = 5; x.stroke(); }
     x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.font = "600 28px Fredoka, 'Trebuchet MS', sans-serif";
@@ -1519,13 +1521,11 @@ class Arena {
     x.font = "600 19px 'Nunito Sans', sans-serif"; x.fillStyle = "#C9D2EA";
     x.fillText(it.kos ? it.kos + (it.kos === 1 ? " castle destroyed" : " castles destroyed") : "Kingdom", 160, 66);
     if (!it.bankrupt) {
-      const x0 = it.shield > 0 ? 82 : 132;
-      for (let i = 0; i < HITS_TO_FALL; i++) {
-        x.beginPath(); x.arc(x0 + i * 28, 91, 10, 0, Math.PI * 2);
-        if (i < it.hits) { x.fillStyle = "#FF6B5E"; x.fill(); }
-        x.strokeStyle = "#FFFFFF"; x.lineWidth = 3; x.stroke();
-      }
-      if (it.shield > 0) { x.fillStyle = "#9FD8FF"; x.font = "700 20px 'Nunito Sans', sans-serif"; x.textAlign = "left"; x.fillText("Shield ×" + it.shield, 166, 98); }
+      const bw = it.shield > 0 ? 150 : 260, left = 1 - Math.min(1, it.hits / HITS_TO_FALL);
+      x.fillStyle = "rgba(255,255,255,0.22)"; x.fillRect(30, 82, bw, 16);
+      x.fillStyle = left > 0.5 ? "#5BE08F" : left > 0.25 ? "#F3B61F" : "#FF6B5E"; x.fillRect(30, 82, bw * left, 16);
+      x.strokeStyle = "#FFFFFF"; x.lineWidth = 2; x.strokeRect(30, 82, bw, 16);
+      if (it.shield > 0) { x.fillStyle = "#9FD8FF"; x.font = "700 20px 'Nunito Sans', sans-serif"; x.textAlign = "left"; x.fillText("Shield ×" + it.shield, 192, 98); }
     }
     c.tex.needsUpdate = true;
   }
@@ -1554,7 +1554,7 @@ class Arena {
         else if (ruin) { c.shake = 0.7; this.puff(new this.T.Vector3(c.x, 0.8, c.z), "#BDB6A6", 30, 3.5); if (!it.bankrupt) this.puff(new this.T.Vector3(c.x, 0.8, c.z), it.color, 20, 3.5); }
       }
       c.ruinTarget = ruin ? 1 : 0; c.flag.visible = !it.bankrupt;
-      c.vuln = !it.bankrupt && it.hits >= HITS_TO_FALL - 1; c.shield.visible = it.shield > 0;
+      c.vuln = !it.bankrupt && it.hits >= HITS_TO_FALL * 0.7; c.shield.visible = it.shield > 0;
       c.cannon.scale.setScalar(1.55 * (1 + (it.cannon - 1) * 0.28));
       this.drawLabel(c, it);
     }
@@ -1823,7 +1823,7 @@ function renderJoin() {
   area.innerHTML = `<div class="join">
     ${online ? `<div class="qmeta"><span class="tag">Class ${CLASS}</span><button type="button" class="tag" id="leaveBtn" style="border:0">Change class</button></div>` : ""}
     <h2>${prev && prev.round && prev.round !== S.round ? "A new round has begun" : "Build your kingdom"}</h2>
-    <p>You start as your own kingdom with your own color, a castle, a cannon and $${START_MONEY}, but no paint. Answer questions to earn money, buy paint and upgrades, and land 3 direct hits on a castle to destroy it. The last castle standing wins.</p>
+    <p>You start as your own kingdom with your own color, a castle, a cannon and $${START_MONEY}, but no paint. Answer questions to earn money, buy paint and upgrades, and hit rival castles with paint until they crumble. The last castle standing wins.</p>
     <form id="joinForm" autocomplete="off">
       <label for="kName">Kingdom name</label>
       <input type="text" id="kName" maxlength="24" required placeholder="e.g. The Quadratic Empire">
@@ -1876,7 +1876,7 @@ function found() {
   const [x, z] = findSpot();
   if (!plotOk(+x.toFixed(2), +z.toFixed(2))) { toast("The map is full right now. Try again in a moment."); return; }
   pushEvent({ k: "join", x: +x.toFixed(2), z: +z.toFixed(2), seed: (Math.random() * 4294967295) >>> 0 });
-  toast("Your castle is up. Land 3 direct hits on a rival castle to destroy it!");
+  toast("Your castle is up. Buy paint, then hit rival castles until they crumble!");
 }
 function addPracticeTargets() {
   [["bot1", "Practice Fort", "#7B4BD6"], ["bot2", "Training Keep", "#13A3A8"]].forEach(([id, name, color]) => {
@@ -2029,8 +2029,7 @@ function renderWell() {
   if (!p) { cs.innerHTML = ""; mt.hidden = true; renderShop(); return; }
   if (!c) cs.innerHTML = `<span class="shield down">No castle</span>`;
   else {
-    let pips = ""; for (let i = 0; i < HITS_TO_FALL; i++) pips += `<i class="${i < c.hits ? "on" : ""}"></i>`;
-    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span><span class="pips" aria-hidden="true">${pips}</span>${c.hits} of ${HITS_TO_FALL} hits taken</span>${c.shield > 0 ? `<span class="shield">Shield ×${c.shield}</span>` : ""}`;
+    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span>Castle health: <b>${100 - dp(c.hits)}%</b></span>${c.shield > 0 ? `<span class="shield">Shield ×${c.shield}</span>` : ""}`;
   }
   if (m < 0) {
     mt.hidden = false;
