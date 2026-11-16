@@ -67,15 +67,19 @@ Teacher control is tied to the browser that created the class. If you change com
 ## How the game works
 - **Goal:** be the last castle standing. The teacher's screen shows a live Top 3, ranked by the percentage of the map each kingdom has painted.
 - **Levels:** the teacher picks Level 1, 2 or 3 on the projector screen, and can change it any time. Level 1 uses easier questions ($50 each). Level 2 uses Medium ($75) and Hard ($100). Level 3 uses Hard ($100) and Challenge ($150).
-- **Money:** correct answers pay cash, plus a $25 bonus for every 3 in a row. Every wrong answer costs $50 and locks the next question for 10 seconds. Everyone starts with $50 and no paint.
-- **Shop:** Paint ×5 for $40. A shield for $100 that blocks the next 2 hits. A bigger cannon: level 2 for $150 (Large loads) and level 3 for $300 (Mega loads).
+- **Right and wrong answers:** correct answers pay cash, plus a $25 bonus for every 3 in a row. A wrong answer costs no money, but it damages the student's own castle like a Medium hit and locks the next question for 10 seconds. Seven wrong answers in a row would destroy a full-health castle.
+- **Start:** everyone starts with $50 and no paint.
+- **Shop:**
+  - Paint ×5 for $40.
+  - Wall for $100. For 90 seconds the castle is harder to hit (shots must land near the middle) and spreading paint can't seep in.
+  - Health +25% for $75. Health can be built up to 200%.
+  - Bigger cannon: level 2 for $150 (Large loads) and level 3 for $300 (Mega loads).
 - **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. A dot on the aim line shows where the blob will land. Every cannon can reach the whole map. Loads use 1 to 4 paint. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
 - **Spreading paint:** a blob that lands on your own paint spreads for 30 seconds, growing to 1.7 times its size. If it seeps into a rival castle, that counts as a hit. Blobs that land on bare board or on someone else's paint don't spread, so you reach a rival by building a trail of your own paint toward them.
 - **Destroying a castle:** it takes 15 Small, 7 Medium, 4 Large or 2 Mega hits (direct or seeped), or any mix that adds up to the same damage. Each castle shows a health bar. A destroyed castle crumbles to the ground and disappears, and all the paint that kingdom laid down disappears with it. The player who lands the final hit gets $40 in plunder.
-- **Debt and bankruptcy:** students can go into debt, but owing more than $150 makes their castle go bankrupt and crumble. Bankruptcy wipes the debt back to $0.
 - **Getting back in:** a student without a castle can't fire or shop, but keeps answering questions. A new castle costs $500. After buying it, the student clicks an open plot on the map (away from other castles and the edge) to build it. Cannon upgrades and paint carry over.
-- **Sound:** cannons, splats, hits, shields, crumbling castles, and right and wrong answers all have sound effects. Each screen has a *Sound: on/off* button.
-- **Questions:** 110 written SAT-style math items (30 easy, 39 medium, 35 hard, 6 challenge) plus 47 question types that generate new numbers every time, chosen at random. Each Chromebook remembers which questions it has seen, so students don't get repeats.
+- **Sound:** cannons, splats, hits, crumbling castles, and right and wrong answers all have sound effects. Each screen has a *Sound: on/off* button.
+- **Questions:** 140 written SAT-style math items (42 easy, 46 medium, 40 hard, 12 challenge) plus 53 question types that generate new numbers every time, chosen at random. Each Chromebook keeps a history of every question it has shown, so a student doesn't see the same question twice on that Chromebook, even after rejoining or starting a new class code.
 - **Teacher buttons:** *Double money*, *Level 1/2/3*, *Hide join box*, *Hide battle log*, *Start a new round*, *New class code*.
 
 ## School network notes

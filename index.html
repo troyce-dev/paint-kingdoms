@@ -243,7 +243,7 @@ a.btn { text-decoration: none; display: inline-block; }
 .tag.easy { background: var(--bg); color: var(--ink); }
 .tag.exp { background: var(--accent); color: var(--accent-ink); }
 .shop { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-.shopgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.shopgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
 .shopbtn { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); text-align: left; font-size: 13px; line-height: 1.25; min-width: 0; }
 .shopbtn .price { font-family: var(--display); font-weight: 600; color: var(--good); font-size: 15px; }
 .shopbtn small { color: var(--muted); font-size: 11px; }
@@ -283,7 +283,8 @@ a.btn { text-decoration: none; display: inline-block; }
       <div class="eyebrow">Shop</div>
       <div class="shopgrid">
         <button type="button" class="shopbtn" data-buy="paint"><b>Paint</b><span class="price"></span><small></small></button>
-        <button type="button" class="shopbtn" data-buy="shield"><b>Shield</b><span class="price"></span><small></small></button>
+        <button type="button" class="shopbtn" data-buy="shield"><b>Wall</b><span class="price"></span><small></small></button>
+        <button type="button" class="shopbtn" data-buy="life"><b>Health</b><span class="price"></span><small></small></button>
         <button type="button" class="shopbtn" data-buy="cannon"><b>Cannon</b><span class="price"></span><small></small></button>
         <button type="button" class="shopbtn wide" data-buy="castle" hidden><b>New castle</b><span class="price"></span><small></small></button>
       </div>
@@ -309,10 +310,10 @@ a.btn { text-decoration: none; display: inline-block; }
       </div>
       <div class="mapnote" id="mapNote">Point at the table to aim. Hold the mouse button (or Space) to charge, then let go to fire.</div>
       <div class="rules">
-        <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
+        <div><b>Earn and spend</b>Correct answers pay $50 to $150 by difficulty. Spend it in the shop on paint, a wall, extra health, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
-        <div><b>Knock down castles</b>It takes 15 Small, 7 Medium, 4 Large or 2 Mega hits to destroy a castle. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. A shield blocks 2 hits.</div>
-        <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $500, buy a new one, and pick an open plot.</div>
+        <div><b>Knock down castles</b>It takes 15 Small, 7 Medium, 4 Large or 2 Mega hits to destroy a castle. A blob that lands on your own paint spreads for 30 seconds, and if it seeps into a castle that's a hit too. A wall makes a castle harder to hit and stops seeping paint.</div>
+        <div><b>Wrong answers hurt</b>A wrong answer damages your own castle like a Medium hit. Lost your castle? All your paint goes with it. Save $500, buy a new one, and pick an open plot.</div>
       </div>
     </section>
     <div class="subgrid">
@@ -678,6 +679,36 @@ const Q = [
  {id:108, dom:"Problem-Solving & Data Analysis", topic:"Rates", diff:"easy", type:"num", ans:250, q:`A car travels 150 miles in 3 hours. At that rate, how many miles does it travel in 5 hours?`, ex:`The rate is 150 ÷ 3 = 50 miles per hour, and 50 × 5 = 250.`},
  {id:109, dom:"Advanced Math", topic:"Factoring", diff:"easy", type:"mc", ans:3, q:`Which expression is equivalent to ${EQ("x² − 9")}`, ch:["(x − 3)²","(x − 9)(x + 1)","(x + 3)²","(x − 3)(x + 3)"], ex:`x² − 9 is a difference of squares: (x − 3)(x + 3).`},
  {id:110, dom:"Algebra", topic:"Systems of equations", diff:"easy", type:"num", ans:3, q:`${EQ("y = 3x")}${EQ("x + y = 12")}If (<i>x</i>, <i>y</i>) is the solution to the system above, what is the value of <i>x</i>?`, ex:`Substitute y = 3x: x + 3x = 12, so 4x = 12 and x = 3.`},
+ {id:111, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:23, q:`If <i>x</i> − 9 = 14, what is the value of <i>x</i>?`, ex:`Add 9 to both sides: x = 23.`},
+ {id:112, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:9, q:`If 7<i>x</i> = 63, what is the value of <i>x</i>?`, ex:`Divide both sides by 7: x = 9.`},
+ {id:113, dom:"Algebra", topic:"Expressions", diff:"easy", type:"num", ans:17, q:`What is the value of 3<i>x</i> + 2 when <i>x</i> = 5?`, ex:`3(5) + 2 = 17.`},
+ {id:114, dom:"Problem-Solving & Data Analysis", topic:"Percents", diff:"easy", type:"num", ans:45, q:`What is 50% of 90?`, ex:`50% is one half, and half of 90 is 45.`},
+ {id:115, dom:"Algebra", topic:"Slope", diff:"easy", type:"num", ans:4, q:`What is the slope of the line <i>y</i> = 4<i>x</i> − 7?`, ex:`In y = mx + b, the slope is m, which is 4.`},
+ {id:116, dom:"Geometry & Trigonometry", topic:"Area", diff:"easy", type:"num", ans:30, q:`A triangle has a base of 10 and a height of 6. What is its area?`, ex:`Area = ½ × base × height = ½ × 10 × 6 = 30.`},
+ {id:117, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:12, q:`If ${EQ(`${F("x","3")} + 2 = 6`)} what is the value of <i>x</i>?`, ex:`Subtract 2: x/3 = 4. Multiply by 3: x = 12.`},
+ {id:118, dom:"Advanced Math", topic:"Function notation", diff:"easy", type:"num", ans:18, q:`If <i>f</i>(<i>x</i>) = 2<i>x</i>², what is the value of <i>f</i>(3)?`, ex:`f(3) = 2 · 3² = 2 · 9 = 18.`},
+ {id:119, dom:"Problem-Solving & Data Analysis", topic:"Range", diff:"easy", type:"num", ans:11, q:`What is the range of the data set 4, 9, 15, 7?`, ex:`Range = greatest − least = 15 − 4 = 11.`},
+ {id:120, dom:"Algebra", topic:"Linear equations", diff:"easy", type:"num", ans:6, q:`If ${EQ("5(x + 1) = 35")} what is the value of <i>x</i>?`, ex:`Divide by 5: x + 1 = 7, so x = 6.`},
+ {id:121, dom:"Problem-Solving & Data Analysis", topic:"Probability", diff:"easy", type:"num", ans:0.3, ansText:"3/10 (or 0.3)", q:`A bag holds 3 red marbles and 7 blue marbles. If one marble is chosen at random, what is the probability that it is red?`, ex:`There are 3 red marbles out of 10 in all: 3/10.`},
+ {id:122, dom:"Algebra", topic:"Expressions", diff:"easy", type:"num", ans:14, q:`What is the value of 2<i>x</i> + 3<i>x</i> + 4 when <i>x</i> = 2?`, ex:`Combine like terms: 5x + 4 = 5(2) + 4 = 14.`},
+ {id:123, dom:"Algebra", topic:"Systems of equations", diff:"med", type:"num", ans:4, q:`${EQ("2x + y = 11")}${EQ("x − y = 1")}If (<i>x</i>, <i>y</i>) is the solution to the system above, what is the value of <i>x</i>?`, ex:`Add the equations: 3x = 12, so x = 4.`},
+ {id:124, dom:"Advanced Math", topic:"Equivalent expressions", diff:"med", type:"num", ans:9, q:`If ${EQ("(x − 3)(x + 3) = x² − k")} for all values of <i>x</i>, what is the value of <i>k</i>?`, ex:`(x − 3)(x + 3) = x² − 9, so k = 9.`},
+ {id:125, dom:"Advanced Math", topic:"Quadratics", diff:"med", type:"num", ans:5, q:`What is the minimum value of the function ${EQ("f(x) = 2(x − 3)² + 5")}`, ex:`In vertex form a(x − h)² + k with a > 0, the minimum value is k = 5.`},
+ {id:126, dom:"Advanced Math", topic:"Quadratics", diff:"med", type:"num", ans:3, q:`What is the greater of the two solutions to ${EQ("x² − 5x + 6 = 0")}`, ex:`Factor: (x − 2)(x − 3) = 0, so x = 2 or x = 3. The greater is 3.`},
+ {id:127, dom:"Advanced Math", topic:"Exponential equations", diff:"med", type:"num", ans:3, q:`If ${EQ("2<sup>x + 3</sup> = 64")} what is the value of <i>x</i>?`, ex:`64 = 2<sup>6</sup>, so x + 3 = 6 and x = 3.`},
+ {id:128, dom:"Advanced Math", topic:"Rational expressions", diff:"med", type:"num", ans:2, q:`For <i>x</i> ≠ 2, the expression ${EQ(F("x² − 4","x − 2"))} is equivalent to <i>x</i> + <i>k</i>. What is the value of <i>k</i>?`, ex:`x² − 4 = (x − 2)(x + 2). Cancel x − 2 to get x + 2, so k = 2.`},
+ {id:129, dom:"Advanced Math", topic:"Nonlinear systems", diff:"hard", type:"num", ans:3, q:`${EQ("y = x² − 3")}${EQ("y = 2x")}What is the positive <i>x</i>-coordinate of a solution to the system above?`, ex:`x² − 3 = 2x gives x² − 2x − 3 = 0, so (x − 3)(x + 1) = 0. The positive solution is x = 3.`},
+ {id:130, dom:"Algebra", topic:"Linear functions", diff:"hard", type:"num", ans:5, q:`A line has a slope of −2 and passes through the point (3, 4). What is the <i>x</i>-coordinate of its <i>x</i>-intercept?`, ex:`y − 4 = −2(x − 3), so y = −2x + 10. Set y = 0: x = 5.`},
+ {id:131, dom:"Advanced Math", topic:"Radical equations", diff:"med", type:"num", ans:10, q:`If ${EQ(`${R("x − 1")} = 3`)} what is the value of <i>x</i>?`, ex:`Square both sides: x − 1 = 9, so x = 10.`},
+ {id:132, dom:"Advanced Math", topic:"Discriminant", diff:"hard", type:"num", ans:12, q:`The equation ${EQ("3x² + 12x + c = 0")} has exactly one real solution. What is the value of <i>c</i>?`, ex:`The discriminant must be 0: 144 − 12c = 0, so c = 12.`},
+ {id:133, dom:"Advanced Math", topic:"Quadratics", diff:"hard", type:"num", ans:6, q:`The function <i>f</i> is defined by <i>f</i>(<i>x</i>) = <i>x</i>² − 4<i>x</i>. If <i>f</i>(<i>a</i>) = 12 and <i>a</i> &gt; 0, what is the value of <i>a</i>?`, ex:`a² − 4a − 12 = 0 factors as (a − 6)(a + 2) = 0. Since a > 0, a = 6.`},
+ {id:134, dom:"Geometry & Trigonometry", topic:"Circles", diff:"hard", type:"num", ans:5, q:`In the <i>xy</i>-plane, the graph of ${EQ("x² + y² = 10x")} is a circle. What is the radius of the circle?`, ex:`Rewrite as x² − 10x + y² = 0 and complete the square: (x − 5)² + y² = 25. The radius is 5.`},
+ {id:135, dom:"Advanced Math", topic:"Algebraic structure", diff:"expert", type:"num", ans:29, q:`If (<i>x</i> + <i>y</i>)² = 49 and <i>xy</i> = 10, what is the value of <i>x</i>² + <i>y</i>²?`, ex:`(x + y)² = x² + 2xy + y², so x² + y² = 49 − 2(10) = 29.`},
+ {id:136, dom:"Algebra", topic:"Absolute value", diff:"expert", type:"num", ans:8, q:`What is the sum of the solutions to ${EQ("|2x − 3| = x + 6")}`, ex:`Case 1: 2x − 3 = x + 6 gives x = 9. Case 2: 2x − 3 = −(x + 6) gives x = −1. Both make x + 6 positive, so both work. The sum is 8.`},
+ {id:137, dom:"Advanced Math", topic:"Quadratics", diff:"expert", type:"num", ans:-1, q:`The graph of the quadratic function <i>f</i> has its vertex at (2, −3) and passes through the point (0, 5). What is the value of <i>f</i>(3)?`, ex:`f(x) = a(x − 2)² − 3. At x = 0: 4a − 3 = 5, so a = 2. Then f(3) = 2(1) − 3 = −1.`},
+ {id:138, dom:"Advanced Math", topic:"Exponential equations", diff:"expert", type:"num", ans:2, q:`If ${EQ("4<sup>x</sup> − 2<sup>x</sup> = 12")} what is the value of <i>x</i>?`, ex:`Let u = 2<sup>x</sup>. Then u² − u − 12 = 0, so (u − 4)(u + 3) = 0. Since u is positive, u = 4 and x = 2.`},
+ {id:139, dom:"Advanced Math", topic:"Discriminant", diff:"expert", type:"num", ans:4, q:`What is the least integer value of <i>k</i> for which ${EQ("kx² − 6x + 3 = 0")} has no real solutions?`, ex:`No real solutions means 36 − 12k < 0, so k > 3. The least integer greater than 3 is 4.`},
+ {id:140, dom:"Advanced Math", topic:"Polynomials", diff:"expert", type:"num", ans:5, q:`For the polynomial ${EQ("p(x) = x³ + ax + b")} where <i>a</i> and <i>b</i> are constants, <i>p</i>(1) = 0 and <i>p</i>(2) = 9. What is the value of <i>a</i> − <i>b</i>?`, ex:`p(1) = 1 + a + b = 0 and p(2) = 8 + 2a + b = 9. Subtract: 7 + a = 9, so a = 2 and b = −3. Then a − b = 5.`},
 ];
 Q.forEach((q) => (q.sig = "f" + q.id));
 
@@ -881,6 +912,27 @@ const GENS = [
    return {dom:GT, topic:"Area and perimeter", diff:"easy", type:"num", ans:per?l*w:2*(l+w), sig:`ea${w},${l},${per}`,
    q: per?`A rectangle has a perimeter of ${2*(l+w)} and a width of ${w}. What is its area?`:`A rectangle has an area of ${l*w} and a width of ${w}. What is its perimeter?`,
    ex: per?`Half the perimeter is ${l+w}, so the length is ${l+w} − ${w} = ${l}. Area = ${l} × ${w} = ${l*w}.`:`The length is ${l*w} ÷ ${w} = ${l}. Perimeter = 2(${l} + ${w}) = ${2*(l+w)}.`}; }},
+ {key:"e_two", d:"easy", make(){ const a=ri(2,6), k=ri(1,9), b=ri(1,9);
+   return {dom:ALG, topic:"Linear equations", diff:"easy", type:"num", ans:a*k, sig:`et${a},${k},${b}`,
+   q:`If ${EQ(`${F("x",a)} + ${b} = ${k+b}`)} what is the value of <i>x</i>?`, ex:`Subtract ${b}: x/${a} = ${k}. Multiply by ${a}: x = ${a*k}.`}; }},
+ {key:"e_med", d:"easy", make(){ const set=new Set(); while (set.size<5) set.add(ri(1,30)); const v=[...set], sorted=[...v].sort((x,y)=>x-y);
+   return {dom:"Problem-Solving & Data Analysis", topic:"Median", diff:"easy", type:"num", ans:sorted[2], sig:`ed${sorted.join(".")}`,
+   q:`What is the median of ${v.slice(0,4).join(", ")} and ${v[4]}?`, ex:`In order: ${sorted.join(", ")}. The middle value is ${sorted[2]}.`}; }},
+ {key:"e_sale", d:"easy", make(){ const price=pick([20,40,60,80,120,200]), pc=pick([10,20,25,30,50]), off=price*pc/100;
+   return {dom:"Problem-Solving & Data Analysis", topic:"Percents", diff:"easy", type:"num", ans:price-off, sig:`es${price},${pc}`,
+   q:`A jacket that costs $${price} is on sale for ${pc}% off. What is the sale price, in dollars?`, ex:`${pc}% of ${price} is ${off}, and ${price} − ${off} = ${price-off}.`}; }},
+ {key:"m_vertex", make(){ const a=nz(-4,4), h=nz(-6,6), k=nz(-9,9); const as=a===1?"":a===-1?"−":neg(a);
+   return {dom:AM, topic:"Quadratics", diff:"med", type:"num", ans:k, sig:`mv${a},${h},${k}`,
+   q:`What is the ${a>0?"minimum":"maximum"} value of the function ${EQ(`f(x) = ${as}(${xm(h)})² ${sgn(k)}`)}`,
+   ex:`In vertex form a(x − h)² + k, the vertex is (h, k). Since a is ${a>0?"positive, the parabola opens up and the minimum":"negative, the parabola opens down and the maximum"} value is k = ${neg(k)}.`}; }},
+ {key:"m_xint", make(){ const m=nz(-4,4), x0=nz(-6,6), px=x0+nz(-3,3), py=m*(px-x0);
+   return {dom:ALG, topic:"Linear functions", diff:"hard", type:"num", ans:x0, sig:`mx${m},${x0},${px}`,
+   q:`A line has a slope of ${neg(m)} and passes through the point (${neg(px)}, ${neg(py)}). What is the <i>x</i>-coordinate of its <i>x</i>-intercept?`,
+   ex:`From (${neg(px)}, ${neg(py)}), y must change by ${neg(-py)} to reach 0. With slope ${neg(m)}, x changes by ${neg(-py)}/${m<0?`(${neg(m)})`:m} = ${neg(x0-px)}. So the x-intercept is at x = ${neg(px)} ${sgn(x0-px)} = ${neg(x0)}.`}; }},
+ {key:"m_sqsum", make(){ const a=ri(1,8), b=ri(1,8);
+   return {dom:AM, topic:"Algebraic structure", diff:"expert", type:"num", ans:a*a+b*b, sig:`mq${Math.min(a,b)},${Math.max(a,b)}`,
+   q:`If (<i>x</i> + <i>y</i>)² = ${(a+b)**2} and <i>xy</i> = ${a*b}, what is the value of <i>x</i>² + <i>y</i>²?`,
+   ex:`(x + y)² = x² + 2xy + y², so x² + y² = ${(a+b)**2} − 2(${a*b}) = ${a*a+b*b}.`}; }},
 ];
 
 /* ======================= Game constants ======================= */
@@ -900,7 +952,8 @@ const MAX_RANGE = 43, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const SPREAD_MS = 30000, GROW = 1.7, SEEP_PAD = 0.6, SEEP_LAG = 1500;
 const LEVELS = { 1: ["easy"], 2: ["med", "hard"], 3: ["hard", "expert"] }, LEVEL_NAME = { 1: "Level 1", 2: "Level 2", 3: "Level 3" };
 const START_MONEY = 50, START_PAINT = 0, VALUE = { easy: 50, med: 75, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 40;
-const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 420;
+const WALL_MS = 90000, WALL_AIM = 0.5, HEAL = 105, MISS_DMG = 60;
+const PRICE = { paint: 40, shield: 100, wall: 100, life: 75, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 420;
 function dmgOf(r) { return r <= 1.0 ? 28 : r <= 1.4 ? 60 : r <= 1.9 ? 105 : 210; }
 function dp(h) { return Math.min(100, Math.round((h / HITS_TO_FALL) * 100)); }
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
@@ -1032,7 +1085,6 @@ function destroy(c, ev, by) {
   Wd.conquests.push(conq); return conq;
 }
 function strike(c, by, ev, dmg) {
-  if (c.shield > 0) { c.shield--; return { owner: c.owner, blocked: true, left: c.shield }; }
   c.hits += dmg; const h = { owner: c.owner, hits: c.hits };
   if (c.hits >= HITS_TO_FALL) h.conq = destroy(c, ev, by);
   return h;
@@ -1041,7 +1093,9 @@ function checkHits(ev, po) {
   for (const c of [...Wd.castles.values()]) {
     if (c.owner === ev.by) continue;
     const d = Math.hypot(c.x - ev.x, c.z - ev.z);
-    if (d <= hitRadius(ev.r)) ev._hits.push(strike(c, ev.by, ev, dmgOf(ev.r)));
+    const walled = c.wall > ev.t;
+    if (d <= hitRadius(ev.r) * (walled ? WALL_AIM : 1)) ev._hits.push(strike(c, ev.by, ev, dmgOf(ev.r)));
+    else if (walled && d <= hitRadius(ev.r)) ev._hits.push({ owner: c.owner, blocked: true });
     else if (po.grow && d <= SEEP_PAD + ev.r * GROW) {
       // the blob will spread into this castle later: schedule a seep hit
       const g = (d - SEEP_PAD) / ev.r;
@@ -1058,6 +1112,7 @@ function advance(t) {
     const q = P.splice(bi, 1)[0], c = Wd.castles.get(q.target);
     if (q.po._dead || !c || c.t !== q.built || !Wd.castles.has(q.by)) continue;
     const pev = { id: q.id + ":s", t: q.t, by: q.by, seed: q.po.seed, _fell: [], _pos: [], _real: false };
+    if (c.wall > q.t) { out.push({ owner: c.owner, blocked: true, by: q.by, pev }); continue; }
     const h = strike(c, q.by, pev, dmgOf(q.po.r)); h.by = q.by; h.pev = pev; out.push(h);
   }
   if (t > Wd.clock) Wd.clock = t;
@@ -1081,7 +1136,7 @@ function applyEvent(ev) {
   const c = Wd.castles.get(ev.by);
   if (ev.k === "join") {
     if (c || !plotOk(ev.x, ev.z)) { ev._skip = true; return; }
-    Wd.castles.set(ev.by, { owner: ev.by, x: ev.x, z: ev.z, empire: ev.by, t: ev.t, hits: 0, shield: 0, bankrupt: false });
+    Wd.castles.set(ev.by, { owner: ev.by, x: ev.x, z: ev.z, empire: ev.by, t: ev.t, hits: 0, shield: 0, wall: 0, bankrupt: false });
     ev._emp = ev.by; ev._x = ev.x; ev._z = ev.z;
     ev._pos.push(addPaint({ k: "join", owner: ev.by, _x: ev.x, _z: ev.z, r: JOIN_R, seed: ev.seed, t: ev.t, ev }));
   } else if (ev.k === "shot") {
@@ -1093,9 +1148,16 @@ function applyEvent(ev) {
       const po = addPaint({ k: "shot", owner: ev.by, _x: ev.x, _z: ev.z, r: ev.r, seed: ev.seed, t: ev.t, _from: [c.x, c.z], ev, grow });
       ev._pos.push(po); checkHits(ev, po);
     } else ev._sea = true;
-  } else if (ev.k === "shield") {
+  } else if (ev.k === "wall") {
     if (!c) { ev._skip = true; return; }
-    c.shield = SHIELD_HITS;
+    c.wall = ev.t + WALL_MS;
+  } else if (ev.k === "heal") {
+    if (!c || c.hits <= -HITS_TO_FALL) { ev._skip = true; return; }
+    c.hits = Math.max(-HITS_TO_FALL, c.hits - HEAL);
+  } else if (ev.k === "miss") {
+    if (!c) { ev._skip = true; return; }
+    c.hits += MISS_DMG; ev._dmg = c.hits;
+    if (c.hits >= HITS_TO_FALL) destroy(c, ev, null);
   } else if (ev.k === "bankrupt") {
     if (!c) { ev._skip = true; return; }
     destroy(c, ev, null);
@@ -1140,12 +1202,12 @@ function seepFx(list) {
   computeWinner();
   for (const h of list) {
     arena.castleHit(h.owner, h.blocked); Sfx.play(h.blocked ? "block" : "hit", 0.8);
-    if (h.blocked) log(`${nameOf(h.owner)}'s shield stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner));
+    if (h.blocked) log(`${nameOf(h.owner)}'s wall stopped ${nameOf(h.by)}'s spreading paint.`, colorOf(h.owner));
     else {
-      log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (${dp(h.hits)}% damaged).`, colorOf(h.by));
+      log(`${nameOf(h.by)}'s paint seeped into ${nameOf(h.owner)}'s castle (health ${100 - dp(h.hits)}%).`, colorOf(h.by));
       if (h.hits < HITS_TO_FALL) {
-        if (h.owner === myId) toast(`${nameOf(h.by)}'s paint seeped into your castle! It's ${dp(h.hits)}% damaged.`);
-        else if (h.by === myId) toast(`Your paint seeped into ${nameOf(h.owner)}'s castle! It's ${dp(h.hits)}% damaged.`);
+        if (h.owner === myId) toast(`${nameOf(h.by)}'s paint seeped into your castle! Its health is now ${100 - dp(h.hits)}%.`);
+        else if (h.by === myId) toast(`Your paint seeped into ${nameOf(h.owner)}'s castle! Its health is now ${100 - dp(h.hits)}%.`);
       }
     }
     for (const po of h.pev._pos) arena.drawPaint(po);
@@ -1185,14 +1247,14 @@ function animateEvent(ev) {
       for (const h of ev._hits) {
         arena.castleHit(h.owner, h.blocked);
         if (h.blocked) {
-          log(`${nameOf(h.owner)}'s shield blocked a hit from ${nameOf(ev.by)}.`, colorOf(h.owner));
-          if (h.owner === myId) toast(h.left ? `Your shield blocked a hit! It can block ${h.left} more.` : "Your shield blocked a hit, and now it's used up.");
-          else if (ev.by === myId) toast(`Blocked! ${nameOf(h.owner)} has a shield.`);
+          log(`${nameOf(h.owner)}'s wall deflected a shot from ${nameOf(ev.by)}.`, colorOf(h.owner));
+          if (h.owner === myId) toast("Your wall deflected a shot!");
+          else if (ev.by === myId) toast(`Deflected! ${nameOf(h.owner)} has a wall up, so you need to land closer to the middle.`);
         } else {
-          log(`${nameOf(ev.by)} hit ${nameOf(h.owner)}'s castle (${dp(h.hits)}% damaged).`, colorOf(ev.by));
+          log(`${nameOf(ev.by)} hit ${nameOf(h.owner)}'s castle (health ${100 - dp(h.hits)}%).`, colorOf(ev.by));
           if (h.hits < HITS_TO_FALL) {
-            if (h.owner === myId) toast(`Direct hit on your castle! It's ${dp(h.hits)}% damaged. A shield blocks the next 2 hits.`);
-            else if (ev.by === myId) toast(`Direct hit! ${nameOf(h.owner)} is ${dp(h.hits)}% damaged.`);
+            if (h.owner === myId) toast(`Direct hit on your castle! Its health is now ${100 - dp(h.hits)}%. A wall makes you harder to hit.`);
+            else if (ev.by === myId) toast(`Direct hit! ${nameOf(h.owner)} is down to ${100 - dp(h.hits)}% health.`);
           }
         }
       }
@@ -1201,8 +1263,16 @@ function animateEvent(ev) {
   } else if (ev.k === "join") {
     arena.drawEvent(ev, true); Sfx.play("build", vol);
     log(Wd.fallen.has(ev.by) || ev.paid ? `${nameOf(ev.by)} bought a new castle.` : `${nameOf(ev.by)} built a castle.`, colorOf(ev.by));
-  } else if (ev.k === "shield") {
-    arena.sparkle(ev.by, "#FFFFFF"); if (ev.by !== myId) log(`${nameOf(ev.by)} raised a shield.`, colorOf(ev.by));
+  } else if (ev.k === "wall") {
+    Sfx.play("build", vol * 0.7); log(`${nameOf(ev.by)} put up a wall.`, colorOf(ev.by)); renderAll();
+  } else if (ev.k === "heal") {
+    arena.sparkle(ev.by, "#5BE08F"); if (ev.by !== myId) log(`${nameOf(ev.by)} repaired their castle.`, colorOf(ev.by)); renderAll();
+  } else if (ev.k === "miss") {
+    arena.castleHit(ev.by, false); if (ev.by !== myId) Sfx.play("hit", 0.35);
+    if (ev._fell.length) {
+      log(`${nameOf(ev.by)}'s castle crumbled after too many wrong answers!`, "#7D7A74"); arena.paintAll(); announce([]);
+    } else log(`${nameOf(ev.by)} missed a question. Their castle is at ${100 - dp(ev._dmg)}% health.`, colorOf(ev.by));
+    renderAll();
   } else if (ev.k === "bankrupt") {
     log(`${nameOf(ev.by)} went bankrupt. Their castle crumbled!`, "#7D7A74"); arena.paintAll(); announce([]); renderAll();
   }
@@ -1241,7 +1311,7 @@ function log(text, color) {
 function renderLog() {
   for (const [id, n] of [["log", 8], ["bLog", 6]]) {
     const el = $(id); el.innerHTML = "";
-    if (!feed.length) { const e = document.createElement("p"); e.className = "empty"; e.style.margin = "0"; e.textContent = "Hits, shields, bankruptcies and conquests show up here."; el.appendChild(e); continue; }
+    if (!feed.length) { const e = document.createElement("p"); e.className = "empty"; e.style.margin = "0"; e.textContent = "Hits, walls, wrong answers and fallen castles show up here."; el.appendChild(e); continue; }
     feed.slice(0, n).forEach((f) => {
       const row = document.createElement("div"); if (f.color) row.style.borderLeftColor = f.color;
       const t = document.createElement("time"); t.textContent = f.t;
@@ -1477,7 +1547,9 @@ class Arena {
     const prof = [[0, -0.17], [0.03, -0.165], [0.042, -0.14], [0.026, -0.115], [0.088, -0.1], [0.096, -0.07], [0.088, -0.055], [0.084, 0.09], [0.093, 0.095], [0.093, 0.118], [0.078, 0.123], [0.066, 0.4], [0.083, 0.41], [0.083, 0.452], [0.05, 0.458], [0.05, 0.3], [0, 0.3]].map(([a, b]) => new T.Vector2(a, b));
     const barrel = new T.LatheGeometry(prof, 18); barrel.rotateX(Math.PI / 2); barrel.translate(0, 0, -0.2);
     const band = new T.TorusGeometry(0.086, 0.012, 6, 18); band.translate(0, 0, 0.06);
-    this.castleGeo = { stone: merge(stone), roofs: merge(roofs), trim: merge(dark), carriage: merge(wood), barrel, band };
+    const ring = [], RW = 1.78;
+    for (let k = 0; k < 20; k++) { const a = (k / 20) * Math.PI * 2, cx = Math.cos(a) * RW, cz = Math.sin(a) * RW; ring.push([box(0.6, 0.44, 0.11), cx, 0.22, cz, -a + Math.PI / 2], [box(0.2, 0.11, 0.12), cx, 0.49, cz, -a + Math.PI / 2]); }
+    this.castleGeo = { wall: merge(ring), stone: merge(stone), roofs: merge(roofs), trim: merge(dark), carriage: merge(wood), barrel, band };
     this.stoneTex = this.stoneTexture(); this.woodTex = this.woodTexture();
     this.woodMat = new T.MeshStandardMaterial({ map: this.woodTex, roughness: 0.8 });
     this.ironMat = new T.MeshStandardMaterial({ color: "#3A3E48", metalness: 0.55, roughness: 0.32 });
@@ -1493,7 +1565,8 @@ class Arena {
     add(CG.stone, stone, true); add(CG.roofs, roof, true); add(CG.trim, this.mat("#2A1D14"), false);
     const flag = new T.Mesh(G.flag, flagM); flag.position.set(0, 2.1, 0); body.add(flag);
     const shieldM = new T.MeshStandardMaterial({ color: "#888888", transparent: true, opacity: 0.15, emissive: "#888888", emissiveIntensity: 0.25, depthWrite: false, side: T.DoubleSide });
-    const shield = new T.Mesh(G.dome, shieldM); shield.scale.setScalar(1.12); body.add(shield);
+    const shield = new T.Mesh(G.dome, shieldM); shield.scale.setScalar(1.12); shield.visible = false; body.add(shield);
+    const wall = add(CG.wall, stone, true, g); wall.scale.setScalar(1.55); wall.visible = false;
     const cannon = new T.Group();
     add(CG.carriage, this.woodMat, true, cannon);
     const pivot = new T.Group(); pivot.position.set(0, 0.27, 0); pivot.rotation.x = -0.6; cannon.add(pivot);
@@ -1507,10 +1580,10 @@ class Arena {
     const label = new T.Sprite(new T.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
     label.scale.set(2.6, 0.975, 1); label.position.set(0, 4.3, 0); label.renderOrder = 5; g.add(label);
     body.scale.setScalar(1.55);
-    return { g, body, stone, roof, flagM, shieldM, zoneM, zone, flag, shield, cannon, pivot, barrel, label, cv, tex, labelKey: "", colorKey: "", shake: 0, rise: 0, recoil: 0, ruin: 0, ruinTarget: 0, phase: Math.random() * 6 };
+    return { g, body, stone, roof, flagM, shieldM, zoneM, zone, flag, shield, wall, cannon, pivot, barrel, label, cv, tex, labelKey: "", colorKey: "", shake: 0, rise: 0, recoil: 0, ruin: 0, ruinTarget: 0, phase: Math.random() * 6 };
   }
   drawLabel(c, it) {
-    const k = [it.name, it.kos, it.hits, it.shield, it.bankrupt, it.isMe, it.color].join("|"); if (c.labelKey === k) return; c.labelKey = k;
+    const k = [it.name, it.kos, it.hits, it.wall, it.bankrupt, it.isMe, it.color].join("|"); if (c.labelKey === k) return; c.labelKey = k;
     const x = c.cv.getContext("2d"); x.clearRect(0, 0, 320, 120);
     x.fillStyle = it.bankrupt ? "rgba(70,68,64,0.9)" : it.hits >= HITS_TO_FALL * 0.7 ? "rgba(150,25,20,0.9)" : "rgba(14,20,40,0.82)";
     x.beginPath(); if (x.roundRect) x.roundRect(6, 6, 308, 108, 22); else x.rect(6, 6, 308, 108); x.fill();
@@ -1521,11 +1594,11 @@ class Arena {
     x.font = "600 19px 'Nunito Sans', sans-serif"; x.fillStyle = "#C9D2EA";
     x.fillText(it.kos ? it.kos + (it.kos === 1 ? " castle destroyed" : " castles destroyed") : "Kingdom", 160, 66);
     if (!it.bankrupt) {
-      const bw = it.shield > 0 ? 150 : 260, left = 1 - Math.min(1, it.hits / HITS_TO_FALL);
+      const bw = it.wall ? 170 : 260, left = Math.max(0, Math.min(1, 1 - it.hits / HITS_TO_FALL));
       x.fillStyle = "rgba(255,255,255,0.22)"; x.fillRect(30, 82, bw, 16);
       x.fillStyle = left > 0.5 ? "#5BE08F" : left > 0.25 ? "#F3B61F" : "#FF6B5E"; x.fillRect(30, 82, bw * left, 16);
-      x.strokeStyle = "#FFFFFF"; x.lineWidth = 2; x.strokeRect(30, 82, bw, 16);
-      if (it.shield > 0) { x.fillStyle = "#9FD8FF"; x.font = "700 20px 'Nunito Sans', sans-serif"; x.textAlign = "left"; x.fillText("Shield ×" + it.shield, 192, 98); }
+      x.strokeStyle = it.hits < 0 ? "#F3B61F" : "#FFFFFF"; x.lineWidth = it.hits < 0 ? 4 : 2; x.strokeRect(30, 82, bw, 16);
+      if (it.wall) { x.fillStyle = "#9FD8FF"; x.font = "700 20px 'Nunito Sans', sans-serif"; x.textAlign = "left"; x.fillText("Wall up", 212, 98); }
     }
     c.tex.needsUpdate = true;
   }
@@ -1554,14 +1627,14 @@ class Arena {
         else if (ruin) { c.shake = 0.7; this.puff(new this.T.Vector3(c.x, 0.8, c.z), "#BDB6A6", 30, 3.5); if (!it.bankrupt) this.puff(new this.T.Vector3(c.x, 0.8, c.z), it.color, 20, 3.5); }
       }
       c.ruinTarget = ruin ? 1 : 0; c.flag.visible = !it.bankrupt;
-      c.vuln = !it.bankrupt && it.hits >= HITS_TO_FALL * 0.7; c.shield.visible = it.shield > 0;
+      c.vuln = !it.bankrupt && it.hits >= HITS_TO_FALL * 0.7; c.shield.visible = false; c.wall.visible = !!it.wall;
       c.cannon.scale.setScalar(1.55 * (1 + (it.cannon - 1) * 0.28));
       this.drawLabel(c, it);
     }
     for (const [k, c] of this.castles) if (!keep.has(k)) { this.kill(c); this.castles.delete(k); }
   }
   kill(c) {
-    c.dy = 0.0001; c.label.visible = false; c.shield.visible = false; c.zone.visible = false; this.dying.push(c);
+    c.dy = 0.0001; c.label.visible = false; c.shield.visible = false; c.wall.visible = false; c.zone.visible = false; this.dying.push(c);
     this.puff(new this.T.Vector3(c.x, 1, c.z), "#BDB6A6", 40, 4.2); this.puff(new this.T.Vector3(c.x, 0.6, c.z), "#8E877B", 25, 3);
     Sfx.play("crumble", this.mode === "board" ? 1 : 0.7);
   }
@@ -1693,7 +1766,7 @@ function syncCastles() {
   for (const ev of Wd.order) if (ev._inFlight && ev._fell) for (const c of ev._fell) if (!Wd.castles.has(c.owner)) all.push({ ...c, hits: HITS_TO_FALL - 1 });
   for (const c of all) {
     const p = S.players.get(c.owner) || {};
-    list.push({ owner: c.owner, x: c.x, z: c.z, fresh: now() - c.t < 4000, color: colorOf(c.owner), name: nameOf(c.owner), kos: Wd.kos.get(c.owner) || 0, conquered: false, bankrupt: false, hits: c.hits, shield: c.shield, cannon: p.cannon || 1, isMe: c.owner === myId && route !== "teacher" });
+    list.push({ owner: c.owner, x: c.x, z: c.z, fresh: now() - c.t < 4000, color: colorOf(c.owner), name: nameOf(c.owner), kos: Wd.kos.get(c.owner) || 0, conquered: false, bankrupt: false, hits: c.hits, wall: c.wall > now(), cannon: p.cannon || 1, isMe: c.owner === myId && route !== "teacher" });
   }
   arena.syncCastles(list);
 }
@@ -1701,7 +1774,7 @@ function syncCastles() {
 /* ======================= Questions ======================= */
 let progress = { seen: [], sigs: [], n: 0 }, progressReady = false, lastGen = null;
 let current = null, answered = false, lastResult = null, cooldownUntil = 0, cdTimer = null;
-function saveProgress() { progress.sigs = progress.sigs.slice(-400); local.set("progress_" + myId, progress); }
+function saveProgress() { progress.sigs = progress.sigs.slice(-8000); local.set("progress_device", progress); }
 function pickQuestion() {
   const allow = LEVELS[S.level] || LEVELS[2];
   const unseen = Q.filter((q) => allow.includes(q.diff) && !progress.seen.includes(q.id));
@@ -1733,15 +1806,16 @@ function submitAnswer(choice) {
   const streak = ok ? (p.streak || 0) + 1 : 0;
   let delta;
   if (ok) { delta = VALUE[current.diff] || VALUE.med; if (streak % 3 === 0) delta += STREAK_BONUS; if (S.double) delta *= 2; }
-  else { delta = -WRONG_COST; cooldownUntil = Date.now() + WRONG_COOLDOWN * 1000; }
-  let money = (p.money || 0) + delta; const c = myCastle();
-  let fate = "";
-  if (c && money < -DEBT_LIMIT) { fate = "bankrupt"; money = 0; }
-  else if (!c) money = Math.max(money, -DEBT_LIMIT);
+  else { delta = 0; cooldownUntil = Date.now() + WRONG_COOLDOWN * 1000; }
+  const money = (p.money || 0) + delta, c = myCastle();
   Sfx.play(ok ? "correct" : "wrong");
-  lastResult = { ok, choice, delta, streak, typed, fate, money };
+  lastResult = { ok, choice, delta, streak, typed, fate: "", money, health: 0 };
   writeMe({ money, correct: (p.correct || 0) + (ok ? 1 : 0), answered: (p.answered || 0) + 1, streak });
-  if (fate === "bankrupt") pushEvent({ k: "bankrupt" });
+  if (!ok && c) {
+    pushEvent({ k: "miss" });
+    const after = myCastle();
+    lastResult.fate = after ? "hurt" : "fell"; lastResult.health = after ? 100 - dp(after.hits) : 0;
+  }
   renderQuestion(); renderAll();
   if (ok) { const a = $("paintAmt"); a.classList.remove("bump"); void a.offsetWidth; a.classList.add("bump"); }
 }
@@ -1756,14 +1830,14 @@ function renderQuestion() {
   if (q.type === "mc") {
     html += `<div class="choices">` + q.ch.map((c, i) => { let cls = "choice"; if (answered) { if (i === q.ans) cls += " right"; else if (r && i === r.choice) cls += " wrong"; } return `<button type="button" class="${cls}" data-i="${i}" ${answered ? "disabled" : ""}><span class="letter">${"ABCD"[i]}</span><span>${c}</span></button>`; }).join("") + `</div>`;
   } else {
-    html += `<form class="gridin" id="gridForm"><input id="gridIn" inputmode="text" autocomplete="off" aria-label="Your answer" placeholder="Your answer" ${answered ? "disabled" : ""}><button class="btn" ${answered ? "disabled" : ""}>Check</button></form><div class="hint">Student-produced response. Fractions like 7/2 or decimals like 3.5 both work. A wrong answer costs $${WRONG_COST}.</div>`;
+    html += `<form class="gridin" id="gridForm"><input id="gridIn" inputmode="text" autocomplete="off" aria-label="Your answer" placeholder="Your answer" ${answered ? "disabled" : ""}><button class="btn" ${answered ? "disabled" : ""}>Check</button></form><div class="hint">Student-produced response. Fractions like 7/2 or decimals like 3.5 both work. A wrong answer damages your castle.</div>`;
   }
   if (answered && r) {
     if (r.ok) html += `<div class="feedback ok"><strong>Correct! +$${r.delta}${r.streak % 3 === 0 ? " (streak bonus)" : ""}${S.double ? " · double money" : ""}${r.fate === "rebuilt" ? " · debt paid, castle rebuilt" : ""}</strong>${q.ex}</div><div class="next-row"><button class="btn" id="nextBtn" type="button">Next question</button><span class="cool">Streak: ${r.streak}</span></div>`;
     else {
       const shown = q.type === "mc" ? `The answer is ${"ABCD"[q.ans]}.` : `The answer is ${fmtAns(q)}.`;
-      const debt = r.fate === "bankrupt" ? ` You owed more than $${DEBT_LIMIT}, so your kingdom went bankrupt and your castle crumbled. Your debt is wiped. Save $${PRICE.castle} to buy a new castle.` : r.money < 0 ? ` You now owe ${money$(-r.money)}. Owe more than $${DEBT_LIMIT} and your castle goes bankrupt.` : "";
-      html += `<div class="feedback no"><strong>Not quite. ${shown}</strong>${q.ex}<span class="pun">You lost $${WRONG_COST}.${debt}</span></div><div class="next-row"><button class="btn" id="nextBtn" type="button" disabled>Next question</button><span class="cool" id="cdText"></span></div>`;
+      const debt = r.fate === "fell" ? `That wrong answer finished off your castle. It crumbled, and your paint went with it. Save $${PRICE.castle} to buy a new one.` : r.fate === "hurt" ? `Your castle took damage, like a Medium hit. Its health is now ${r.health}%.` : "You have no castle to damage right now.";
+      html += `<div class="feedback no"><strong>Not quite. ${shown}</strong>${q.ex}<span class="pun">${debt}</span></div><div class="next-row"><button class="btn" id="nextBtn" type="button" disabled>Next question</button><span class="cool" id="cdText"></span></div>`;
     }
   }
   area.innerHTML = html;
@@ -1914,9 +1988,13 @@ function buy(item) {
   if (!c) return;
   if (item === "paint") { if (need(PRICE.paint)) return; writeMe({ money: money - PRICE.paint, paint: (p.paint || 0) + PAINT_PACK }); toast(`Bought ${PAINT_PACK} paint.`); }
   else if (item === "shield") {
-    if (c.shield > 0) { toast("Your shield is still up."); return; }
-    if (need(PRICE.shield)) return;
-    writeMe({ money: money - PRICE.shield }); pushEvent({ k: "shield" }); toast(`Shield up! It blocks the next ${SHIELD_HITS} direct hits.`);
+    if (c.wall > now()) { toast("Your wall is still up."); return; }
+    if (need(PRICE.wall)) return;
+    writeMe({ money: money - PRICE.wall }); pushEvent({ k: "wall" }); toast(`Wall up for ${WALL_MS / 1000} seconds! You're harder to hit, and spreading paint can't seep in.`);
+  } else if (item === "life") {
+    if (c.hits <= -HITS_TO_FALL) { toast("Your castle is already at maximum health."); return; }
+    if (need(PRICE.life)) return;
+    writeMe({ money: money - PRICE.life }); pushEvent({ k: "heal" }); toast("Castle health +25%.");
   } else if (item === "cannon") {
     const lvl = cannonLevel(); if (lvl >= 3) return;
     const cost = PRICE.cannon[lvl - 1]; if (need(cost)) return;
@@ -1944,7 +2022,9 @@ function renderShop() {
   const set = (k, title, price, note, dis, hide) => { const b = box.querySelector(`[data-buy="${k}"]`); b.hidden = !!hide; b.querySelector("b").textContent = title; b.querySelector(".price").textContent = price; b.querySelector("small").textContent = note; b.disabled = dis; };
   set("castle", "New castle", "$" + PRICE.castle, placing ? "now click an open plot on the map" : money >= PRICE.castle ? "buy it, then pick an open plot on the map" : `save ${money$(PRICE.castle - money)} more to get back in the game`, over || placing || money < PRICE.castle, !!c);
   set("paint", `Paint ×${PAINT_PACK}`, "$" + PRICE.paint, `you have ${p.paint || 0}`, over || money < PRICE.paint, !c);
-  set("shield", "Shield", c && c.shield > 0 ? "Active" : "$" + PRICE.shield, c && c.shield > 0 ? `blocks ${c.shield} more hit${c.shield > 1 ? "s" : ""}` : `blocks ${SHIELD_HITS} direct hits`, over || !c || c.shield > 0 || money < PRICE.shield, !c);
+  const wallLeft = c ? Math.ceil((c.wall - now()) / 1000) : 0;
+  set("shield", "Wall", wallLeft > 0 ? `Up · ${wallLeft}s` : "$" + PRICE.wall, wallLeft > 0 ? "harder to hit, no seeping" : `${WALL_MS / 1000}s: harder to hit, no seeping`, over || !c || wallLeft > 0 || money < PRICE.wall, !c);
+  set("life", "Health +25%", "$" + PRICE.life, c ? `castle health ${100 - dp(c.hits)}%` : "", over || !c || money < PRICE.life || c.hits <= -HITS_TO_FALL, !c);
   set("cannon", lvl >= 3 ? "Cannon maxed" : `Cannon level ${lvl + 1}`, lvl >= 3 ? "Level 3" : "$" + PRICE.cannon[lvl - 1], lvl >= 3 ? "biggest blobs" : lvl === 1 ? "unlocks Large loads" : "unlocks Mega loads", over || lvl >= 3 || money < PRICE.cannon[lvl - 1], !c);
   document.querySelectorAll("[data-size]").forEach((b) => { const sz = SIZES[b.dataset.size]; b.disabled = lvl < sz.lvl; b.querySelector("small").textContent = lvl < sz.lvl ? `cannon level ${sz.lvl}` : `${sz.cost} paint`; });
   if (lvl < SIZES[paintSize].lvl) document.querySelector('[data-size="medium"]').click();
@@ -2029,7 +2109,7 @@ function renderWell() {
   if (!p) { cs.innerHTML = ""; mt.hidden = true; renderShop(); return; }
   if (!c) cs.innerHTML = `<span class="shield down">No castle</span>`;
   else {
-    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span>Castle health: <b>${100 - dp(c.hits)}%</b></span>${c.shield > 0 ? `<span class="shield">Shield ×${c.shield}</span>` : ""}`;
+    cs.innerHTML = `<span class="empire-tag"><i style="background:${colorOf(emp)}"></i>Kingdom: ${escapeHtml(nameOf(emp))}</span><span>Castle health: <b>${100 - dp(c.hits)}%</b></span>${c.wall > now() ? `<span class="shield">Wall up · ${Math.ceil((c.wall - now()) / 1000)}s</span>` : ""}`;
   }
   if (m < 0) {
     mt.hidden = false;
@@ -2227,7 +2307,12 @@ async function connectClass(code) {
   renderAll();
   return true;
 }
-function loadProgress() { progress = { seen: [], sigs: [], n: 0, ...local.get("progress_" + myId, {}) }; progressReady = true; renderAll(); }
+function loadProgress() {
+  // one history per Chromebook, so questions never repeat even if the player rejoins
+  const dev = local.get("progress_device", {}), old = local.get("progress_" + myId, {});
+  progress = { seen: [...new Set([...(dev.seen || []), ...(old.seen || [])])], sigs: [...new Set([...(dev.sigs || []), ...(old.sigs || [])])], n: Math.max(dev.n || 0, old.n || 0) };
+  progressReady = true; renderAll();
+}
 async function boot() {
   renderLog(); applyRoute(); renderAll();
   const cfg = window.FIREBASE_CONFIG;
