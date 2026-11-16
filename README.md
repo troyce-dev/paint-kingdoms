@@ -59,6 +59,7 @@ Open the student page. The pill at the top should say **Live**, not "Practice mo
 3. Teacher buttons on the projector:
    - **Turn on double money**: every correct answer pays double.
    - **Start a new round**: wipes the map. Students keep the code and rejoin.
+   - **Hide class code**: hides the code on the projector once everyone has joined. Click again to show it.
    - **New class code**: a fresh code and map for the next period. The old class is deleted.
 
 Teacher control is tied to the browser that created the class. If you change computers or clear your browser data, create a new class code.
@@ -68,9 +69,9 @@ Teacher control is tied to the browser that created the class. If you change com
 - **Money:** every correct answer pays cash: $50 for Medium, $100 for Hard, $150 for Challenge questions, plus a $25 bonus for every 3 in a row. Every wrong answer costs $50 and locks the next question for 10 seconds. Everyone starts with $100 and 4 paint.
 - **Shop:** Paint ×5 for $40. A shield for $100 that blocks the next 2 direct hits. A bigger cannon: level 2 for $150 (more range, Large loads) and level 3 for $300 (longest range, Mega loads).
 - **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. A dot on the aim line shows where the blob will land. Loads use 1 to 4 paint. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
-- **3 direct hits:** a castle that takes 3 direct hits crumbles to the ground and disappears, leaving a splat of the attacker's paint. The player who lands the final hit gets $100 in plunder.
+- **3 direct hits:** a castle that takes 3 direct hits crumbles to the ground and disappears, and all the paint that kingdom laid down disappears with it. A splat of the attacker's paint marks the spot. The player who lands the final hit gets $100 in plunder.
 - **Debt and bankruptcy:** students can go into debt, but owing more than $150 makes their castle go bankrupt and crumble. Bankruptcy wipes the debt back to $0.
-- **Getting back in:** a student without a castle can't fire or shop, but keeps answering questions. A new castle costs $500. After buying it, the student clicks an open plot on the map (away from other castles and the edge) to build it. Cannon upgrades and paint carry over.
+- **Getting back in:** a student without a castle can't fire or shop, but keeps answering questions. A new castle costs $750. After buying it, the student clicks an open plot on the map (away from other castles and the edge) to build it. Cannon upgrades and paint carry over.
 - **Sound:** cannons, splats, hits, shields, crumbling castles, and right and wrong answers all have sound effects. Each screen has a *Sound: on/off* button.
 - **Questions:** 80 written SAT-style math items plus 35 question types that generate new numbers every time, chosen at random. Each Chromebook remembers which questions it has seen, so students don't get repeats.
 - **Teacher buttons:** *Double money* doubles every correct answer's payout.

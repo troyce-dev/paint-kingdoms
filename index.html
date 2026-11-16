@@ -308,7 +308,7 @@ a.btn { text-decoration: none; display: inline-block; }
         <div><b>Earn and spend</b>Correct answers pay $50, $100 or $150 by difficulty. Spend it in the shop on paint, a shield, or a bigger cannon.</div>
         <div><b>Aim and fire</b>Point to turn your cannon. Hold to charge; the power dot shows where the blob will land. Let go to fire.</div>
         <div><b>3 direct hits</b>A castle that takes 3 direct hits crumbles to the ground and is gone. A shield blocks 2 hits. The last castle standing wins.</div>
-        <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? Save $500, buy a new one, and pick an open plot.</div>
+        <div><b>Wrong answers cost $50</b>Owe more than $150 and your castle goes bankrupt and crumbles. Lost your castle? All your paint goes with it. Save $750, buy a new one, and pick an open plot.</div>
       </div>
     </section>
     <div class="subgrid">
@@ -340,6 +340,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <button class="btn small" type="button" data-act="double" hidden>Turn on double money</button>
     <button class="btn small" type="button" data-act="round" hidden>Start a new round</button>
     <button class="btn small" type="button" data-act="newclass" hidden>New class code</button>
+    <button class="btn small ghost" type="button" data-act="hidecode" hidden>Hide class code</button>
     <button class="btn small ghost" type="button" data-mute>Sound: on</button>
     <a class="btn small ghost" href="#play">Student view</a>
   </div>
@@ -815,7 +816,7 @@ function newCode() { let c = ""; const a = new Uint32Array(5); crypto.getRandomV
 const SIZES = { small: { r: 0.95, cost: 1, name: "Small", lvl: 1 }, medium: { r: 1.35, cost: 2, name: "Medium", lvl: 1 }, large: { r: 1.85, cost: 3, name: "Large", lvl: 2 }, mega: { r: 2.4, cost: 4, name: "Mega", lvl: 3 } };
 const RANGES = [13, 17, 21], MAX_RANGE = 21, MIN_RANGE = 1.5, CASTLE_ZONE = 1.25;
 const START_MONEY = 100, START_PAINT = 4, VALUE = { med: 50, hard: 100, expert: 150 }, STREAK_BONUS = 25, WRONG_COST = 50, DEBT_LIMIT = 150, PLUNDER = 100;
-const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 500 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
+const PRICE = { paint: 40, shield: 100, cannon: [150, 300], castle: 750 }, MIN_GAP = 3.4, EDGE = 2.2, PAINT_PACK = 5, SHIELD_HITS = 2, HITS_TO_FALL = 3;
 const WRONG_COOLDOWN = 10, FORTIFY_R = 1.25, JOIN_R = 1.9, ERASE_R = 0.95, FALL_SPLAT_R = 2.3;
 function money$(n) { return (n < 0 ? "−$" : "$") + Math.abs(n); }
 
@@ -897,7 +898,7 @@ function shapeOf(seed) {
 }
 function radiusAt(sh, ang) { let m = 1; for (const h of sh.k) m += h.a * Math.sin(h.f * ang + h.p); return m; }
 
-const Wd = { order: [], grid: new Int16Array(GW * GH).fill(-1), ids: [], idx: new Map(), castles: new Map(), vuln: new Map(), conquests: [], winner: null, zones: new Map(), fallen: new Map(), kos: new Map() };
+const Wd = { order: [], grid: new Int16Array(GW * GH).fill(-1), ids: [], idx: new Map(), castles: new Map(), vuln: new Map(), conquests: [], winner: null, zones: new Map(), fallen: new Map(), kos: new Map(), paint: new Map() };
 function idIndex(id) { if (!Wd.idx.has(id)) { Wd.idx.set(id, Wd.ids.length); Wd.ids.push(id); } return Wd.idx.get(id); }
 function headOf(id) { return id; }
 const cmpEv = (a, b) => a.t - b.t || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -930,13 +931,20 @@ function hitRadius(r) { return 0.55 + r * 0.5; }
 function destroy(c, ev, by) {
   Wd.castles.delete(c.owner); Wd.fallen.set(c.owner, { t: ev.t, by });
   ev._fell.push({ ...c });
+  // the fallen kingdom's paint goes with its castle
+  for (const o of Wd.paint.get(c.owner) || []) o._dead = true;
+  Wd.paint.delete(c.owner);
+  const gone = Wd.idx.get(c.owner);
+  if (gone != null) for (let i = 0; i < Wd.grid.length; i++) if (Wd.grid[i] === gone) Wd.grid[i] = -1;
   if (!by) return;
   const seed = (((ev.seed || 1) ^ Math.imul(ev._fell.length, 2654435761)) >>> 0) || 7;
   stamp(idIndex(by), c.x, c.z, FALL_SPLAT_R, seed);
-  ev._splats.push({ k: "splat", _x: c.x, _z: c.z, r: FALL_SPLAT_R, seed, _emp: by });
+  const sp = { k: "splat", _x: c.x, _z: c.z, r: FALL_SPLAT_R, seed, _emp: by };
+  ev._splats.push(sp); ownPaint(by, sp);
   Wd.kos.set(by, (Wd.kos.get(by) || 0) + 1);
   Wd.conquests.push({ key: ev.id + ":" + c.owner, t: ev.t, attacker: by, castle: c.owner, by });
 }
+function ownPaint(owner, o) { if (!Wd.paint.has(owner)) Wd.paint.set(owner, []); Wd.paint.get(owner).push(o); }
 function checkHits(ev) {
   for (const c of [...Wd.castles.values()]) {
     if (c.owner === ev.by) continue;
@@ -952,17 +960,17 @@ function plotOk(x, z) {
   return true;
 }
 function applyEvent(ev) {
-  ev._skip = false; ev._sea = false; ev._splats = []; ev._hits = []; ev._fell = [];
+  ev._skip = false; ev._sea = false; ev._dead = false; ev._splats = []; ev._hits = []; ev._fell = [];
   const c = Wd.castles.get(ev.by);
   if (ev.k === "join") {
     if (c || !plotOk(ev.x, ev.z)) { ev._skip = true; return; }
     Wd.castles.set(ev.by, { owner: ev.by, x: ev.x, z: ev.z, empire: ev.by, t: ev.t, hits: 0, shield: 0, bankrupt: false });
     ev._emp = ev.by; ev._x = ev.x; ev._z = ev.z;
-    stamp(idIndex(ev.by), ev.x, ev.z, JOIN_R, ev.seed);
+    stamp(idIndex(ev.by), ev.x, ev.z, JOIN_R, ev.seed); ownPaint(ev.by, ev);
   } else if (ev.k === "shot") {
     if (!c || !(ev.r > 0)) { ev._skip = true; return; }
     ev._emp = ev.by; ev._from = [c.x, c.z]; ev._x = ev.x; ev._z = ev.z;
-    if (onBoard(ev.x, ev.z)) { stamp(idIndex(ev.by), ev.x, ev.z, ev.r, ev.seed); checkHits(ev); } else ev._sea = true;
+    if (onBoard(ev.x, ev.z)) { stamp(idIndex(ev.by), ev.x, ev.z, ev.r, ev.seed); ownPaint(ev.by, ev); checkHits(ev); } else ev._sea = true;
   } else if (ev.k === "shield") {
     if (!c) { ev._skip = true; return; }
     c.shield = SHIELD_HITS;
@@ -975,7 +983,7 @@ function computeWinner() {
   Wd.winner = Wd.castles.size === 1 && Wd.fallen.size >= 1 ? [...Wd.castles.keys()][0] : null;
 }
 function fullReplay() {
-  Wd.grid.fill(-1); Wd.castles.clear(); Wd.vuln.clear(); Wd.conquests = []; Wd.fallen.clear(); Wd.kos.clear();
+  Wd.grid.fill(-1); Wd.castles.clear(); Wd.vuln.clear(); Wd.conquests = []; Wd.fallen.clear(); Wd.kos.clear(); Wd.paint.clear();
   Wd.order = [...S.events.values()].filter((e) => e.round === S.round).sort(cmpEv);
   for (const e of Wd.order) applyEvent(e);
   computeWinner();
@@ -1010,7 +1018,7 @@ function announce(list) {
     if (c.by === myId) { const p = me(); if (p) writeMe({ money: (p.money || 0) + PLUNDER }); toast(`Castle destroyed! You plundered $${PLUNDER}.`); }
     else if (c.castle === myId) toast(`${nameOf(c.attacker)} destroyed your castle! Save $${PRICE.castle} to buy a new one.`);
   }
-  if (list.length) renderAll();
+  if (list.length) { arena.paintAll(); renderAll(); }
   const w = Wd.winner;
   if (w && !announced.has("win:" + w + ":" + S.round)) { announced.add("win:" + w + ":" + S.round); log(`${nameOf(w)} is the last castle standing!`, colorOf(w)); Sfx.play("win"); renderAll(); }
 }
@@ -1047,7 +1055,7 @@ function animateEvent(ev) {
   } else if (ev.k === "shield") {
     arena.sparkle(ev.by, "#FFFFFF"); if (ev.by !== myId) log(`${nameOf(ev.by)} raised a shield.`, colorOf(ev.by));
   } else if (ev.k === "bankrupt") {
-    log(`${nameOf(ev.by)} went bankrupt. Their castle crumbled!`, "#7D7A74"); announce([]);
+    log(`${nameOf(ev.by)} went bankrupt. Their castle crumbled!`, "#7D7A74"); arena.paintAll(); announce([]); renderAll();
   }
 }
 
@@ -1242,8 +1250,8 @@ class Arena {
   colorFor(ev) { return colorOf(headOf(ev._emp)); }
   drawEvent(ev, live) {
     if (!this.ok || ev._skip) return;
-    if ((ev.k === "join" || ev.k === "shot") && !ev._sea) this.layer.draw(ev, this.colorFor(ev));
-    for (const sp of ev._splats || []) this.layer.draw(sp, colorOf(headOf(sp._emp)));
+    if ((ev.k === "join" || ev.k === "shot") && !ev._sea && !ev._dead) this.layer.draw(ev, this.colorFor(ev));
+    for (const sp of ev._splats || []) if (!sp._dead) this.layer.draw(sp, colorOf(headOf(sp._emp)));
   }
   castleHit(owner, blocked) { const c = this.castleOf(owner); if (!c) return; c.shake = 0.5; this.puff(new this.T.Vector3(c.x, 1.2, c.z), blocked ? "#FFFFFF" : "#DCD6C8", 14, 3.2); }
   paintAll() { if (!this.ok) return; clearTimeout(this.pl); this.layer.clear(); for (const ev of Wd.order) if (!ev._inFlight) this.drawEvent(ev, false); }
@@ -1888,7 +1896,7 @@ function renderBanner() {
   if (p && !c && !Wd.winner && (!online || CLASS)) {
     if (!Wd.fallen.has(myId)) { key = "none"; html = `<div class="banner"><span><b>You don't have a castle on the map yet.</b></span><button class="btn small" id="buildBtn" type="button">Build my castle</button></div>`; }
     else if (placing) { key = "placing"; html = `<div class="banner"><span><b>Pick your plot.</b> Click an open spot on the map, away from other castles and the edge. The ring turns green where you can build.</span><button class="btn small ghost" id="cancelPlace" type="button">Cancel</button></div>`; }
-    else { key = "fallen"; html = `<div class="banner"><span><b>Your castle crumbled to the ground.</b> You're out until you buy a new castle for $${PRICE.castle} in the shop. Keep answering questions to earn it.</span></div>`; }
+    else { key = "fallen"; html = `<div class="banner"><span><b>Your castle crumbled to the ground and your paint went with it.</b> You're out until you buy a new castle for $${PRICE.castle} in the shop. Keep answering questions to earn it.</span></div>`; }
   }
   if (b.dataset.k === key) return;
   b.dataset.k = key; b.innerHTML = html;
@@ -1932,7 +1940,10 @@ function renderTeacher() {
   isTeacher = online ? !!CLASS && S.owner === myId : true;
   document.querySelectorAll("[data-act]").forEach((b) => { b.hidden = !isTeacher; if (b.dataset.act === "double") b.textContent = S.double ? "Turn off double money" : "Turn on double money"; });
   $("codePill").hidden = !CLASS; $("codePill").textContent = CLASS ? `Class ${CLASS}` : "";
-  $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = CLASS || "";
+  $("bCodeBox").hidden = !(isTeacher && CLASS); $("bCode").textContent = hideCode ? "Hidden" : CLASS || "";
+  $("bCode").style.opacity = hideCode ? 0.35 : 1;
+  document.querySelectorAll('[data-act="hidecode"]').forEach((b) => (b.textContent = hideCode ? "Show class code" : "Hide class code"));
+  if (route === "teacher") { $("codePill").hidden = true; }
   $("bJoined").textContent = `${joinedCount()} of ${COLORS.length} players joined`;
   $("bUrl").textContent = location.host ? location.host + location.pathname.replace(/index\.html$/, "") : "this website";
   const st = $("bStart");
@@ -1963,6 +1974,8 @@ async function startNewRound() {
     setTimeout(() => classRef().update({ events: null, colors: null }).catch(() => {}), 2500);
   } catch { toast("Couldn't start a new round. Only the teacher who made this class can."); }
 }
+let hideCode = !!local.get("hideCode", false);
+document.querySelectorAll('[data-act="hidecode"]').forEach((btn) => btn.addEventListener("click", () => { hideCode = !hideCode; local.set("hideCode", hideCode); if (hideCode) { const t = $("toast"); t.textContent = ""; t.classList.remove("show"); } renderTeacher(); }));
 let armReset = 0;
 document.querySelectorAll('[data-act="round"]').forEach((btn) => btn.addEventListener("click", () => {
   if (Date.now() - armReset > 4000) { armReset = Date.now(); btn.textContent = "Click again to wipe the map"; setTimeout(() => (btn.textContent = "Start a new round"), 4000); return; }
@@ -1986,7 +1999,7 @@ async function createClass() {
     const code = newCode();
     try {
       const res = await fdb.ref(`classes/${code}/meta`).transaction((cur) => (cur ? undefined : { owner: myId, round: 1, double: false, created: Date.now() }));
-      if (res.committed) { local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
+      if (res.committed) { hideCode = false; local.set("hideCode", false); local.set("teacherCode", code); await connectClass(code); toast(`Class code ${code} is live. Students can join now.`); return true; }
     } catch (e) {
       const why = String((e && (e.code || e.message)) || "unknown error"), st = $("bStart");
       st.innerHTML = `<h2>Couldn't create a class</h2><p>${/permission/i.test(why) ? "Firebase refused the request. Open Realtime Database → Rules in the Firebase console, paste in the rules from database.rules.json, and click Publish." : "The game couldn't reach the database. Check your internet connection, then try again."}</p><p style="font-size:13px">Details: ${escapeHtml(why)}</p><button class="btn" type="button" id="mkClass">Try again</button>`;
