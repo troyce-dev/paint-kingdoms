@@ -1,6 +1,6 @@
 # Paint Kingdoms
 
-A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn paint, aim cannons to fire it, and swamp each other's castles until one empire rules the map. No student sign-in: students go to the website and type a class code.
+A 3D classroom math game for up to 25 players. Students answer SAT-style questions (mostly Algebra 2) to earn money, buy paint, shields and bigger cannons, and knock down each other's castles until one empire rules the map. No student sign-in: students go to the website and type a class code.
 
 - **Student page:** `https://troyce-dev.github.io/paint-kingdoms/`
 - **Teacher / projector page:** `https://troyce-dev.github.io/paint-kingdoms/#teacher`
@@ -57,7 +57,7 @@ Open the student page. The pill at the top should say **Live**, not "Practice mo
 1. On the projector computer, open `https://troyce-dev.github.io/paint-kingdoms/#teacher` and click **Create class code**.
 2. Students go to `troyce-dev.github.io/paint-kingdoms` on their Chromebooks, type the code, choose a kingdom name and one of 25 colors, and start answering.
 3. Teacher buttons on the projector:
-   - **Turn on double paint**: every correct answer is worth twice the paint.
+   - **Turn on double money**: every correct answer pays double.
    - **Start a new round**: wipes the map. Students keep the code and rejoin.
    - **New class code**: a fresh code and map for the next period. The old class is deleted.
 
@@ -65,12 +65,14 @@ Teacher control is tied to the browser that created the class. If you change com
 
 ## How the game works
 - **Goal:** conquer every kingdom. The game is won when one empire owns every castle on the map.
-- **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. The power sets how far the blob flies (1.5 to 15 away), and a dot on the aim line shows where it will land. Choose a Small (1 paint), Medium (2) or Large (3) load. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
-- **Swamping:** every castle has a ring around it. Cover 70% of that ring with your empire's paint to capture the castle. Capture a kingdom's *home* castle and its whole empire, every castle it owns, joins you.
-- **Conquered players keep playing.** They fight for the empire that captured them, their shots paint in that empire's color, and they win if it wins.
-- **Correct answer:** 3 paint (medium) or 5 paint (hard), +2 for every 3 in a row, and a fresh coat of your color splashed on your own castle.
-- **Wrong answer:** your shield drops for 45 seconds (your castle can be captured at 45% instead of 70%), 3 of your blobs explode off the board, and the next question is locked for 10 seconds.
-- **Questions:** 42 written SAT-style items plus 23 question types that generate new numbers every time. Each Chromebook remembers which questions it has seen, so students don't get repeats.
+- **Money:** every correct answer pays cash: $50 for Medium, $100 for Hard, $150 for Challenge questions, plus a $25 bonus for every 3 in a row. Every wrong answer costs $50 and locks the next question for 10 seconds. Everyone starts with $100 and 4 paint.
+- **Shop:** Paint ×5 for $40. A shield for $100 that blocks the next 2 direct hits. A bigger cannon: level 2 for $150 (more range, Large loads) and level 3 for $300 (longest range, Mega loads).
+- **Aim and fire:** point at the table to turn your cannon. Hold the mouse button (or Space) to charge, then let go. A dot on the aim line shows where the blob will land. Loads use 1 to 4 paint. Arrow keys fine-tune the aim. The ⟲ ⟳ buttons turn the table.
+- **3 direct hits:** a castle that takes 3 direct hits crumbles and joins the kingdom that landed the last hit. Knock down a kingdom's *home* castle and its whole empire joins you. The player who lands the final hit gets $100 in plunder.
+- **Conquered players keep playing.** They still earn money, their shots count for the empire that took them, and they win if it wins.
+- **Debt and bankruptcy:** students can go into debt, but owing more than $150 makes their castle go bankrupt and crumble. A bankrupt player can't fire or shop, and a single hit lets a rival claim the ruins. Getting back to $0 rebuilds the castle.
+- **Questions:** 80 written SAT-style math items plus 35 question types that generate new numbers every time, chosen at random. Each Chromebook remembers which questions it has seen, so students don't get repeats.
+- **Teacher buttons:** *Double money* doubles every correct answer's payout.
 
 ## School network notes
 If the game won't load on student Chromebooks, ask IT to allow:
